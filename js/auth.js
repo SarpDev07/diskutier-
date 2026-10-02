@@ -80,8 +80,8 @@ function updateNavAuth(){
   } else {
     navAuth.innerHTML = `
       <button class="searchBtn" onclick="showPage('search')" aria-label="Suche">Suche</button>
-      <span onclick="showPage('login')">Anmelden</span>
-      <span onclick="showPage('register')">Registrieren</span>
+      <span onclick="location.href='login.html'">Anmelden</span>
+      <span onclick="location.href='register.html'">Registrieren</span>
     `;
   }
 }
@@ -228,7 +228,7 @@ async function renderProfilePage(){
     profPostsCount.textContent = "0";
     profCommentsCount.textContent = "0";
     profActivity.innerHTML = `
-      <p style="color:#777;padding:20px 0">Du bist als Gast unterwegs. <span class="category" onclick="showPage('login')" style="cursor:pointer;font-weight:900">Jetzt anmelden</span> oder <span class="category" onclick="showPage('register')" style="cursor:pointer;font-weight:900">Registrieren</span> um ein Profil zu erstellen.</p>
+      <p style="color:#777;padding:20px 0">Du bist als Gast unterwegs. <span class="category" onclick="location.href='login.html'" style="cursor:pointer;font-weight:900">Jetzt anmelden</span> oder <span class="category" onclick="location.href='register.html'" style="cursor:pointer;font-weight:900">Registrieren</span> um ein Profil zu erstellen.</p>
     `;
   }
 }
