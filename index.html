@@ -491,6 +491,32 @@ function formatTimeAgo(isoString){
   return `vor ${Math.floor(diff/86400)} Tagen`;
 }
 
+// REALISTISCHE SCHWEIZER BASIS-DATEN FÜR FRAGEN
+const POLL_BASELINES = {
+  "Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?": { baseVotes: 8421, optionCounts: [2610, 4547, 1264] },
+  "Ist es komisch, mit 25 noch bei den Eltern zu wohnen?": { baseVotes: 5783, optionCounts: [1619, 2718, 1446] },
+  "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 3196, optionCounts: [958, 2238] },
+  "Coop oder Migros?": { baseVotes: 11847, optionCounts: [5450, 5094, 1303] },
+  "Sollte man seinem Partner das Handy-Passwort geben?": { baseVotes: 7231, optionCounts: [1807, 4122, 1302] },
+  "Sind 30 Franken für eine Pizza in der Schweiz zu viel?": { baseVotes: 4829, optionCounts: [3380, 580, 869] },
+  "iPhone oder Samsung?": { baseVotes: 9404, optionCounts: [5172, 3479, 753] },
+  "Homeoffice oder Büro?": { baseVotes: 6122, optionCounts: [3673, 857, 1592] },
+  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 2941, optionCounts: [1970, 412, 559] }
+};
+
+// INITIALE SCHWEIZER COMMUNITY-KOMMENTARE
+const SEED_COMMENTS = [
+  { username: "AlpenFuchs", canton: "BE", time: "vor 12 Min.", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 184, downvotes: 23 },
+  { username: "NinaZH", canton: "ZH", time: "vor 9 Min.", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 137, downvotes: 11 },
+  { username: "romand92", canton: "VD", time: "vor 6 Min.", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 88, downvotes: 19 }
+];
+
+const SEED_FORUM_REPLIES = [
+  { username: "Rheinknie", canton: "BS", time: "vor 5 Min.", content: "Ich würde zuerst ganz normal das Gespräch suchen. Viele merken gar nicht, dass es andere stört. Wenn danach nichts passiert, kannst du immer noch der Verwaltung schreiben.", upvotes: 42 },
+  { username: "sina90", canton: "AG", time: "vor 3 Min.", content: "Direkt ansprechen, freundlich und ohne Vorwurf. Schriftlich über die Verwaltung eskaliert so etwas meiner Erfahrung nach nur unnötig schnell.", upvotes: 29 },
+  { username: "JuraNord", canton: "SO", time: "vor 1 Min.", content: "Kommt vor allem auch darauf an, ob der Fluchtweg betroffen ist. Wenn es wirklich eng wird bei einem Notfall, würde ich nicht ewig warten.", upvotes: 18 }
+];
+
 // POLLS / ABSTIMMUNGEN LADEN
 async function loadPolls(){
   if(!db) return;
@@ -499,9 +525,18 @@ async function loadPolls(){
 
   currentPolls = polls.map(p => {
     const votes = p.poll_votes || [];
-    const totalVotes = votes.length;
-    const optionCounts = (p.options || []).map((_, idx) => votes.filter(v => v.option_index === idx).length);
+    const base = POLL_BASELINES[p.title] || { baseVotes: 0, optionCounts: (p.options || []).map(()=>0) };
+    
+    // Kombiniere Basis-Stimmen mit echten DB-Stimmen
+    const optionCounts = (p.options || []).map((_, idx) => {
+      const baseCount = base.optionCounts && base.optionCounts[idx] !== undefined ? base.optionCounts[idx] : 0;
+      const dbCount = votes.filter(v => v.option_index === idx).length;
+      return baseCount + dbCount;
+    });
+
+    const totalVotes = optionCounts.reduce((a, b) => a + b, 0) || votes.length;
     const userVote = votes.find(v => (currentUser && v.user_id === currentUser.id) || v.session_token === getGuestSession());
+    
     return {
       id: p.id,
       category: p.category,
@@ -650,25 +685,47 @@ async function openPollDetail(pollId){
   showPage("detail");
 }
 
+const POST_BASELINES = {
+  "Nachbar stellt ständig Sachen ins Treppenhaus – was würdet ihr machen?": { comments: 37, views: 1284 },
+  "Chef erwartet, dass ich nach Feierabend auf WhatsApp antworte": { comments: 64, views: 2931 },
+  "Freundeskreis verändert sich komplett seit alle in Beziehungen sind": { comments: 51, views: 2106 },
+  "Wie viel zahlt ihr aktuell für eine 2.5-Zimmer-Wohnung?": { comments: 128, views: 5447 },
+  "Lohnt sich ein Handywechsel überhaupt noch alle zwei Jahre?": { comments: 42, views: 1765 },
+  "Studium abbrechen nach drei Semestern – Erfahrungen?": { comments: 73, views: 3082 }
+};
+
 async function loadPollComments(pollId){
-  if(!db) return;
-  const { data: comments, error } = await db.from("comments").select("*, profiles(username, canton)").eq("poll_id", pollId).order("created_at", { ascending: false });
   const container = document.getElementById("comments");
   const countSpan = document.getElementById("pollCommentsCount");
   
-  if(!comments || comments.length === 0){
-    countSpan.textContent = "0";
-    container.innerHTML = '<p style="color:#777;font-size:13px;padding:15px 0">Noch keine Meinungen vorhanden. Sei der Erste!</p>';
-    return;
+  let dbComments = [];
+  if(db){
+    const { data } = await db.from("comments").select("*, profiles(username, canton)").eq("poll_id", pollId).order("created_at", { ascending: false });
+    if(data) dbComments = data;
   }
-  countSpan.textContent = comments.length;
-  container.innerHTML = comments.map(c => `
+  
+  // Kombiniere echte DB-Kommentare mit Schweizer Seed-Kommentaren
+  const allComments = [
+    ...dbComments.map(c => ({
+      username: c.profiles?.username || 'Anonym',
+      canton: c.profiles?.canton || 'CH',
+      time: formatTimeAgo(c.created_at),
+      content: c.content,
+      upvotes: c.upvotes || 0,
+      downvotes: c.downvotes || 0,
+      id: c.id
+    })),
+    ...SEED_COMMENTS
+  ];
+
+  countSpan.textContent = allComments.length;
+  container.innerHTML = allComments.map(c => `
     <div class="comment">
-      <div class="user">${c.profiles?.username || 'Anonym'} · ${c.profiles?.canton || 'CH'} · <span style="font-weight:400;color:#777">${formatTimeAgo(c.created_at)}</span></div>
+      <div class="user">${c.username} · ${c.canton} · <span style="font-weight:400;color:#777">${c.time}</span></div>
       <p>${c.content}</p>
       <div class="score">
-        <span onclick="voteComment('${c.id}', 1, this)" style="cursor:pointer">+ ${c.upvotes || 0}</span>&nbsp;&nbsp;&nbsp;
-        <span onclick="voteComment('${c.id}', -1, this)" style="cursor:pointer">− ${c.downvotes || 0}</span>
+        <span onclick="voteComment('${c.id||''}', 1, this)" style="cursor:pointer">+ ${c.upvotes}</span>&nbsp;&nbsp;&nbsp;
+        <span onclick="voteComment('${c.id||''}', -1, this)" style="cursor:pointer">− ${c.downvotes}</span>
       </div>
     </div>
   `).join("");
@@ -695,18 +752,22 @@ async function loadForum(){
   const { data: posts, error } = await db.from("posts").select("*, profiles(username, canton), comments(id)").order("created_at", { ascending: false });
   if(error || !posts) return;
 
-  currentPosts = posts.map(p => ({
-    id: p.id,
-    cat: p.category,
-    time: formatTimeAgo(p.created_at),
-    title: p.title,
-    excerpt: p.excerpt || (Array.isArray(p.body) ? p.body[0] : p.body) || "",
-    body: Array.isArray(p.body) ? p.body : [p.body],
-    user: p.profiles?.username || "Community",
-    canton: p.profiles?.canton || "CH",
-    comments: p.comments ? p.comments.length : 0,
-    views: p.views || 1
-  }));
+  currentPosts = posts.map(p => {
+    const base = POST_BASELINES[p.title] || { comments: 0, views: 1 };
+    const dbCommentsCount = p.comments ? p.comments.length : 0;
+    return {
+      id: p.id,
+      cat: p.category,
+      time: formatTimeAgo(p.created_at),
+      title: p.title,
+      excerpt: p.excerpt || (Array.isArray(p.body) ? p.body[0] : p.body) || "",
+      body: Array.isArray(p.body) ? p.body : [p.body],
+      user: p.profiles?.username || "Community",
+      canton: p.profiles?.canton || "CH",
+      comments: base.comments + dbCommentsCount,
+      views: Math.max(base.views, p.views || 1)
+    };
+  });
 
   renderForum();
 }
@@ -741,7 +802,6 @@ async function openPost(postId){
   currentPost = currentPosts.find(p => p.id === postId);
   if(!currentPost) return;
 
-  // View count increment
   if(db){
     db.from("posts").update({ views: (currentPost.views || 0) + 1 }).eq("id", postId).then();
   }
@@ -757,19 +817,31 @@ async function openPost(postId){
 }
 
 async function loadForumComments(postId){
-  if(!db) return;
-  const { data: replies, error } = await db.from("comments").select("*, profiles(username, canton)").eq("post_id", postId).order("created_at", { ascending: true });
   const container = document.getElementById("forumComments");
-  if(!replies || replies.length === 0){
-    container.innerHTML = '<p style="color:#777;font-size:13px;padding:15px 0">Noch keine Antworten. Hilf als Erster weiter!</p>';
-    return;
+  let dbReplies = [];
+  if(db){
+    const { data } = await db.from("comments").select("*, profiles(username, canton)").eq("post_id", postId).order("created_at", { ascending: true });
+    if(data) dbReplies = data;
   }
-  container.innerHTML = replies.map(r => `
+  
+  const allReplies = [
+    ...SEED_FORUM_REPLIES.map(r => ({ ...r, isSeed: true })),
+    ...dbReplies.map(r => ({
+      username: r.profiles?.username || 'Anonym',
+      canton: r.profiles?.canton || 'CH',
+      time: formatTimeAgo(r.created_at),
+      content: r.content,
+      upvotes: r.upvotes || 0,
+      id: r.id
+    }))
+  ];
+
+  container.innerHTML = allReplies.map(r => `
     <div class="forumComment">
-      <div class="forumCommentHead">${r.profiles?.username || 'Anonym'} · ${r.profiles?.canton || 'CH'} <span>· ${formatTimeAgo(r.created_at)}</span></div>
+      <div class="forumCommentHead">${r.username} · ${r.canton} <span>· ${r.time}</span></div>
       <p>${r.content}</p>
       <div class="forumCommentActions">
-        <span onclick="voteComment('${r.id}', 1, this)" style="cursor:pointer">Hilfreich (+${r.upvotes||0})</span>
+        <span onclick="voteComment('${r.id||''}', 1, this)" style="cursor:pointer">Hilfreich (+${r.upvotes})</span>
       </div>
     </div>
   `).join("");
