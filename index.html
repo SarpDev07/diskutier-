@@ -72,6 +72,11 @@ aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:
 .commentComposer button{margin-top:8px;background:#111;color:#fff;border:0;padding:11px 15px;font-weight:900;border-radius:1px}
 .forumComment{padding:20px 0;border-bottom:1px solid #ccc}.forumCommentHead{font-size:12px;font-weight:900}.forumCommentHead span{font-weight:400;color:#777}.forumComment p{font-size:14px;line-height:1.55;margin:9px 0}.forumCommentActions{font-size:11px;color:#666;font-weight:800}
 .typeSwitch{display:flex;border-bottom:1px solid #bbb;margin-bottom:20px}.typeSwitch button{border:0;background:transparent;padding:10px 14px 10px 0;margin-right:18px;font-size:13px;font-weight:900}.typeSwitch button.on{color:var(--red)}
+
+.toast-box{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:92%;width:380px}
+.toast{background:#111;color:#fff;border-left:3px solid var(--red);padding:13px 17px;font-size:13px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.2);border-radius:1px;opacity:0;transform:translateY(12px);transition:.22s ease;pointer-events:auto}
+.toast.show{opacity:1;transform:translateY(0)}
+
 @media(max-width:850px){
   body{background:#f4f4f1}
   .nav{height:54px;padding:0 14px;gap:10px}
@@ -193,7 +198,7 @@ aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:
   <div class="votes" id="detailVotes"></div>
   <div class="results" id="detailResults"></div>
  </div>
- <div class="actions"><button class="smallbtn" onclick="shareCurrent()">Ergebnis teilen</button><button class="smallbtn" onclick="alert('Frage gemerkt.')">Frage speichern</button><button class="smallbtn" onclick="alert('Vielen Dank für den Hinweis.')">Melden</button></div>
+ <div class="actions"><button class="smallbtn" onclick="shareCurrent()">Ergebnis teilen</button><button class="smallbtn" onclick="showToast('Frage gemerkt.')">Frage speichern</button><button class="smallbtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button></div>
  
  <div class="commentComposer" style="margin-top:25px;border-top:1px solid #dedede">
    <b>Deine Meinung zu dieser Abstimmung</b>
@@ -219,7 +224,7 @@ aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:
   <div class="meta"><span class="category" id="postCategory">Alltag</span><span>·</span><span id="postTime">vor 8 Min.</span></div>
   <h1 class="postDetailTitle" id="postTitle">Titel</h1>
   <div class="postBody" id="postBody"></div>
-  <div class="actions"><button class="smallbtn" onclick="alert('Gespeichert.')">Speichern</button><button class="smallbtn" onclick="shareCurrent()">Teilen</button><button class="smallbtn" onclick="alert('Vielen Dank für den Hinweis.')">Melden</button></div>
+  <div class="actions"><button class="smallbtn" onclick="showToast('Beitrag gespeichert.')">Speichern</button><button class="smallbtn" onclick="shareCurrent()">Teilen</button><button class="smallbtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button></div>
   <div class="commentComposer">
     <b>Deine Antwort</b>
     <textarea id="newComment" placeholder="Schreib deine Antwort …"></textarea>
@@ -466,7 +471,7 @@ async function handleRegister(){
   if(error){
     errDiv.textContent = "Registrierung fehlgeschlagen: " + error.message;
   } else {
-    alert("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
+    showToast("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
     currentUser = data.user;
     await fetchProfile();
     showPage("home");
@@ -917,7 +922,7 @@ async function submitCreate(){
       errDiv.textContent = "Fehler beim Erstellen: " + error.message;
       return;
     }
-    alert("Beitrag erfolgreich veröffentlicht!");
+    showToast("Beitrag erfolgreich veröffentlicht!");
     document.getElementById("createTitle").value = "";
     document.getElementById("createBody").value = "";
     await loadForum();
@@ -937,7 +942,7 @@ async function submitCreate(){
       errDiv.textContent = "Fehler beim Erstellen: " + error.message;
       return;
     }
-    alert("Abstimmung erfolgreich veröffentlicht!");
+    showToast("Abstimmung erfolgreich veröffentlicht!");
     document.getElementById("createTitle").value = "";
     document.getElementById("createBody").value = "";
     await loadPolls();
@@ -1084,8 +1089,28 @@ function shareCurrent(){
     navigator.share({ title: document.title, url: window.location.href }).catch(()=>{});
   } else {
     navigator.clipboard.writeText(window.location.href);
-    alert("Link in die Zwischenablage kopiert!");
+    showToast("Link in die Zwischenablage kopiert!");
   }
+}
+
+// TOAST BENACHRICHTIGUNGEN
+function showToast(msg, dur = 3200){
+  let container = document.getElementById("toastContainer");
+  if(!container){
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast-box";
+    document.body.appendChild(container);
+  }
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.classList.add("show"), 20);
+  setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => el.remove(), 260);
+  }, dur);
 }
 
 // INITIALER START
