@@ -127,8 +127,15 @@ async function handleStandaloneRegister(){
     }
   });
   if(error){
-    errDiv.textContent = "Registrierung fehlgeschlagen: " + error.message;
+    if(error.message.includes("User already registered") || error.message.includes("already registered")){
+      errDiv.innerHTML = `Diese E-Mail ist bereits registriert. <a href="login.html" style="color:var(--red);font-weight:900">Hier anmelden</a>`;
+    } else {
+      errDiv.textContent = "Registrierung fehlgeschlagen: " + error.message;
+    }
   } else {
+    if(data.user){
+      await ensureProfileRecord(data.user, username, canton);
+    }
     location.href = "index.html";
   }
 }

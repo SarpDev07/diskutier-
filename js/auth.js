@@ -7,6 +7,7 @@ async function initAuth(){
   const { data: { session } } = await db.auth.getSession();
   if(session?.user){
     currentUser = session.user;
+    await ensureProfileRecord(currentUser);
     await fetchProfile();
   }
   updateNavAuth();
@@ -14,6 +15,7 @@ async function initAuth(){
   db.auth.onAuthStateChange(async (event, session)=>{
     currentUser = session?.user || null;
     if(currentUser){
+      await ensureProfileRecord(currentUser);
       await fetchProfile();
     } else {
       currentProfile = null;
@@ -23,6 +25,24 @@ async function initAuth(){
       renderProfilePage();
     }
   });
+}
+
+async function ensureProfileRecord(user, overrideUsername = null, overrideCanton = null){
+  if(!user || !db) return;
+  const uname = overrideUsername || user.user_metadata?.username || user.email?.split("@")[0] || "User";
+  const ucanton = overrideCanton || user.user_metadata?.canton || "CH";
+  const initials = uname.substring(0,2).toUpperCase();
+  
+  try {
+    await db.from("profiles").upsert({
+      id: user.id,
+      username: sanitizeText(uname, 30),
+      canton: sanitizeText(ucanton, 10),
+      avatar_initials: sanitizeText(initials, 4)
+    }, { onConflict: 'id' });
+  } catch(e) {
+    console.warn("Profile sync:", e);
+  }
 }
 
 async function fetchProfile(){
@@ -41,6 +61,7 @@ async function fetchProfile(){
       canton: sanitizeText(currentUser.user_metadata?.canton || "CH", 10),
       avatar_initials: sanitizeText(rawUsername.substring(0,2).toUpperCase(), 2)
     };
+    await ensureProfileRecord(currentUser);
   }
 }
 
@@ -88,6 +109,7 @@ async function handleLogin(){
     }
   } else {
     currentUser = data.user;
+    await ensureProfileRecord(currentUser);
     await fetchProfile();
     updateNavAuth();
     showToast("Willkommen zurück, " + (currentProfile?.username || ""));
@@ -101,7 +123,7 @@ async function handleRegister(){
   const email = sanitizeText(document.getElementById("regEmail").value, 100);
   const password = document.getElementById("regPassword").value;
   const errDiv = document.getElementById("regError");
-  errDiv.textContent = "";
+  errDiv.innerHTML = "";
 
   if(!checkRateLimit("auth_register", 3000)) return;
 
@@ -129,9 +151,16 @@ async function handleRegister(){
     }
   });
   if(error){
-    errDiv.textContent = "Registrierung fehlgeschlagen: " + error.message;
+    if(error.message.includes("User already registered") || error.message.includes("already registered")){
+      errDiv.innerHTML = `Diese E-Mail ist bereits registriert. <a href="#" onclick="showPage('login');return false;" style="color:var(--red);font-weight:900">Hier anmelden</a>`;
+    } else {
+      errDiv.textContent = "Registrierung fehlgeschlagen: " + error.message;
+    }
   } else {
     currentUser = data.user;
+    if(currentUser){
+      await ensureProfileRecord(currentUser, username, canton);
+    }
     await fetchProfile();
     updateNavAuth();
     showToast("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
