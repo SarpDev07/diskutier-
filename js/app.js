@@ -117,10 +117,10 @@ function doSearch(){
 
 // KATEGORIEN SEITE
 const categoriesList = [
-  ["Beziehungen", 384], ["Geld & Beruf", 517], ["Gaming", 219],
-  ["Technologie", 441], ["Auto & Mobilität", 186], ["Essen", 302],
-  ["Sport", 277], ["Schule & Ausbildung", 164], ["Wohnen", 238],
-  ["Schweiz", 623], ["Gesellschaft", 355], ["Alltag", 491]
+  ["Beziehungen", 48], ["Geld & Beruf", 64], ["Gaming", 29],
+  ["Technologie", 52], ["Auto & Mobilität", 23], ["Essen", 41],
+  ["Sport", 35], ["Schule & Ausbildung", 21], ["Wohnen", 32],
+  ["Schweiz", 76], ["Gesellschaft", 45], ["Alltag", 58]
 ];
 
 const catGridEl = document.getElementById("categoryGrid");

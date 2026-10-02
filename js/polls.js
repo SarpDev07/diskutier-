@@ -2,24 +2,24 @@
 let currentPolls = [];
 let currentPoll = null;
 
-// REALISTISCHE SCHWEIZER BASIS-DATEN FÜR FRAGEN
+// REALISTISCHE SCHWEIZER BASIS-DATEN FÜR FRAGEN (Maximal unter 800 Stimmen)
 const POLL_BASELINES = {
-  "Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?": { baseVotes: 8421, optionCounts: [2610, 4547, 1264] },
-  "Ist es komisch, mit 25 noch bei den Eltern zu wohnen?": { baseVotes: 5783, optionCounts: [1619, 2718, 1446] },
-  "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 3196, optionCounts: [958, 2238] },
-  "Coop oder Migros?": { baseVotes: 11847, optionCounts: [5450, 5094, 1303] },
-  "Sollte man seinem Partner das Handy-Passwort geben?": { baseVotes: 7231, optionCounts: [1807, 4122, 1302] },
-  "Sind 30 Franken für eine Pizza in der Schweiz zu viel?": { baseVotes: 4829, optionCounts: [3380, 580, 869] },
-  "iPhone oder Samsung?": { baseVotes: 9404, optionCounts: [5172, 3479, 753] },
-  "Homeoffice oder Büro?": { baseVotes: 6122, optionCounts: [3673, 857, 1592] },
-  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 2941, optionCounts: [1970, 412, 559] }
+  "Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?": { baseVotes: 642, optionCounts: [198, 348, 96] },
+  "Ist es komisch, mit 25 noch bei den Eltern zu wohnen?": { baseVotes: 489, optionCounts: [136, 231, 122] },
+  "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 318, optionCounts: [95, 223] },
+  "Coop oder Migros?": { baseVotes: 742, optionCounts: [341, 319, 82] },
+  "Sollte man seinem Partner das Handy-Passwort geben?": { baseVotes: 521, optionCounts: [130, 297, 94] },
+  "Sind 30 Franken für eine Pizza in der Schweiz zu viel?": { baseVotes: 382, optionCounts: [267, 46, 69] },
+  "iPhone oder Samsung?": { baseVotes: 612, optionCounts: [336, 227, 49] },
+  "Homeoffice oder Büro?": { baseVotes: 467, optionCounts: [280, 65, 122] },
+  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 279, optionCounts: [187, 39, 53] }
 };
 
 // INITIALE SCHWEIZER COMMUNITY-KOMMENTARE
 const SEED_COMMENTS = [
-  { username: "AlpenFuchs", canton: "BE", time: "vor 12 Min.", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 184, downvotes: 23 },
-  { username: "NinaZH", canton: "ZH", time: "vor 9 Min.", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 137, downvotes: 11 },
-  { username: "romand92", canton: "VD", time: "vor 6 Min.", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 88, downvotes: 19 }
+  { username: "AlpenFuchs", canton: "BE", time: "vor 12 Min.", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 24, downvotes: 3 },
+  { username: "NinaZH", canton: "ZH", time: "vor 9 Min.", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 18, downvotes: 2 },
+  { username: "romand92", canton: "VD", time: "vor 6 Min.", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 11, downvotes: 4 }
 ];
 
 async function loadPolls(){

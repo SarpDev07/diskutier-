@@ -3,18 +3,18 @@ let currentPosts = [];
 let currentPost = null;
 
 const POST_BASELINES = {
-  "Nachbar stellt ständig Sachen ins Treppenhaus – was würdet ihr machen?": { comments: 37, views: 1284 },
-  "Chef erwartet, dass ich nach Feierabend auf WhatsApp antworte": { comments: 64, views: 2931 },
-  "Freundeskreis verändert sich komplett seit alle in Beziehungen sind": { comments: 51, views: 2106 },
-  "Wie viel zahlt ihr aktuell für eine 2.5-Zimmer-Wohnung?": { comments: 128, views: 5447 },
-  "Lohnt sich ein Handywechsel überhaupt noch alle zwei Jahre?": { comments: 42, views: 1765 },
-  "Studium abbrechen nach drei Semestern – Erfahrungen?": { comments: 73, views: 3082 }
+  "Nachbar stellt ständig Sachen ins Treppenhaus – was würdet ihr machen?": { comments: 14, views: 342 },
+  "Chef erwartet, dass ich nach Feierabend auf WhatsApp antworte": { comments: 23, views: 618 },
+  "Freundeskreis verändert sich komplett seit alle in Beziehungen sind": { comments: 18, views: 429 },
+  "Wie viel zahlt ihr aktuell für eine 2.5-Zimmer-Wohnung?": { comments: 29, views: 694 },
+  "Lohnt sich ein Handywechsel überhaupt noch alle zwei Jahre?": { comments: 16, views: 395 },
+  "Studium abbrechen nach drei Semestern – Erfahrungen?": { comments: 21, views: 512 }
 };
 
 const SEED_FORUM_REPLIES = [
-  { username: "Rheinknie", canton: "BS", time: "vor 5 Min.", content: "Ich würde zuerst ganz normal das Gespräch suchen. Viele merken gar nicht, dass es andere stört. Wenn danach nichts passiert, kannst du immer noch der Verwaltung schreiben.", upvotes: 42 },
-  { username: "sina90", canton: "AG", time: "vor 3 Min.", content: "Direkt ansprechen, freundlich und ohne Vorwurf. Schriftlich über die Verwaltung eskaliert so etwas meiner Erfahrung nach nur unnötig schnell.", upvotes: 29 },
-  { username: "JuraNord", canton: "SO", time: "vor 1 Min.", content: "Kommt vor allem auch darauf an, ob der Fluchtweg betroffen ist. Wenn es wirklich eng wird bei einem Notfall, würde ich nicht ewig warten.", upvotes: 18 }
+  { username: "Rheinknie", canton: "BS", time: "vor 5 Min.", content: "Ich würde zuerst ganz normal das Gespräch suchen. Viele merken gar nicht, dass es andere stört. Wenn danach nichts passiert, kannst du immer noch der Verwaltung schreiben.", upvotes: 12 },
+  { username: "sina90", canton: "AG", time: "vor 3 Min.", content: "Direkt ansprechen, freundlich und ohne Vorwurf. Schriftlich über die Verwaltung eskaliert so etwas meiner Erfahrung nach nur unnötig schnell.", upvotes: 8 },
+  { username: "JuraNord", canton: "SO", time: "vor 1 Min.", content: "Kommt vor allem auch darauf an, ob der Fluchtweg betroffen ist. Wenn es wirklich eng wird bei einem Notfall, würde ich nicht ewig warten.", upvotes: 5 }
 ];
 
 async function loadForum(){
