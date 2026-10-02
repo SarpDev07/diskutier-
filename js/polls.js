@@ -1,0 +1,238 @@
+// ABSTIMMUNGEN (POLLS) & LIVE-VOTING
+let currentPolls = [];
+let currentPoll = null;
+
+// REALISTISCHE SCHWEIZER BASIS-DATEN FÜR FRAGEN
+const POLL_BASELINES = {
+  "Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?": { baseVotes: 8421, optionCounts: [2610, 4547, 1264] },
+  "Ist es komisch, mit 25 noch bei den Eltern zu wohnen?": { baseVotes: 5783, optionCounts: [1619, 2718, 1446] },
+  "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 3196, optionCounts: [958, 2238] },
+  "Coop oder Migros?": { baseVotes: 11847, optionCounts: [5450, 5094, 1303] },
+  "Sollte man seinem Partner das Handy-Passwort geben?": { baseVotes: 7231, optionCounts: [1807, 4122, 1302] },
+  "Sind 30 Franken für eine Pizza in der Schweiz zu viel?": { baseVotes: 4829, optionCounts: [3380, 580, 869] },
+  "iPhone oder Samsung?": { baseVotes: 9404, optionCounts: [5172, 3479, 753] },
+  "Homeoffice oder Büro?": { baseVotes: 6122, optionCounts: [3673, 857, 1592] },
+  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 2941, optionCounts: [1970, 412, 559] }
+};
+
+// INITIALE SCHWEIZER COMMUNITY-KOMMENTARE
+const SEED_COMMENTS = [
+  { username: "AlpenFuchs", canton: "BE", time: "vor 12 Min.", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 184, downvotes: 23 },
+  { username: "NinaZH", canton: "ZH", time: "vor 9 Min.", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 137, downvotes: 11 },
+  { username: "romand92", canton: "VD", time: "vor 6 Min.", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 88, downvotes: 19 }
+];
+
+async function loadPolls(){
+  if(!db) return;
+  const { data: polls, error } = await db.from("polls").select("*, poll_votes(id, option_index, user_id, session_token)").order("created_at", { ascending: false });
+  if(error || !polls) return;
+
+  currentPolls = polls.map(p => {
+    const votes = p.poll_votes || [];
+    const base = POLL_BASELINES[p.title] || { baseVotes: 0, optionCounts: (p.options || []).map(()=>0) };
+    
+    // Kombiniere Basis-Stimmen mit echten DB-Stimmen
+    const optionCounts = (p.options || []).map((_, idx) => {
+      const baseCount = base.optionCounts && base.optionCounts[idx] !== undefined ? base.optionCounts[idx] : 0;
+      const dbCount = votes.filter(v => v.option_index === idx).length;
+      return baseCount + dbCount;
+    });
+
+    const totalVotes = optionCounts.reduce((a, b) => a + b, 0) || votes.length;
+    const userVote = votes.find(v => (currentUser && v.user_id === currentUser.id) || v.session_token === getGuestSession());
+    
+    return {
+      id: p.id,
+      category: p.category,
+      title: p.title,
+      description: p.description || "",
+      options: p.options || ["JA", "NEIN"],
+      is_featured: p.is_featured,
+      time: formatTimeAgo(p.created_at),
+      totalVotes: totalVotes,
+      optionCounts: optionCounts,
+      userVotedIndex: userVote !== undefined ? userVote.option_index : null
+    };
+  });
+
+  renderPollsUI();
+}
+
+function renderPollsUI(){
+  if(!currentPolls.length) return;
+  const featured = currentPolls.find(p => p.is_featured) || currentPolls[0];
+  const feed = currentPolls.filter(p => p.id !== featured.id);
+
+  // Featured Render
+  document.getElementById("featCat").textContent = featured.category;
+  document.getElementById("featTime").textContent = featured.time;
+  document.getElementById("featTitle").textContent = featured.title;
+  
+  const featCountText = featured.totalVotes > 0 ? `${featured.totalVotes.toLocaleString('de-CH')} Personen haben abgestimmt` : "Noch keine Stimmen – sei der Erste!";
+  document.getElementById("featCount").textContent = featCountText;
+
+  const featVotesContainer = document.getElementById("featuredVotes");
+  const featResultsContainer = document.getElementById("featuredResults");
+
+  if(featured.userVotedIndex !== null){
+    featVotesContainer.style.display = "none";
+    featResultsContainer.style.display = "block";
+    renderResultsHTML(featResultsContainer, featured);
+  } else {
+    featVotesContainer.style.display = "grid";
+    featResultsContainer.style.display = "none";
+    featVotesContainer.innerHTML = featured.options.map((opt, idx) => `<button class="vote" onclick="submitPollVote('${featured.id}', ${idx}, true)">${opt}</button>`).join("");
+  }
+
+  // Feed Render
+  document.getElementById("feed").innerHTML = feed.map((q, i) => `
+    <article class="feedItem">
+      <div class="meta"><span class="category">${q.category}</span><span>·</span><span>${q.time}</span></div>
+      <h2 onclick="openPollDetail('${q.id}')">${q.title}</h2>
+      <div class="feedStats">${q.totalVotes.toLocaleString('de-CH')} Stimmen</div>
+      <div class="quickVotes" id="qv-${q.id}">
+        ${q.options.map((opt, idx) => `
+          <button class="qv ${q.userVotedIndex === idx ? 'active' : ''}" onclick="submitPollVote('${q.id}', ${idx}, false)">${opt}</button>
+        `).join("")}
+      </div>
+    </article>
+    ${i === 1 ? '<div class="ad">Werbung</div>' : ''}
+  `).join("");
+
+  // Trending Sidebar
+  document.getElementById("trending").innerHTML = currentPolls.slice(0, 5).map(q => `
+    <div class="trend" onclick="openPollDetail('${q.id}')">
+      <strong>${q.title}</strong>
+      <small>${q.totalVotes.toLocaleString('de-CH')} Stimmen · ${q.category}</small>
+    </div>
+  `).join("");
+}
+
+function renderResultsHTML(container, poll){
+  const total = poll.totalVotes || 1;
+  const html = poll.options.map((opt, idx) => {
+    const count = poll.optionCounts[idx] || 0;
+    const pct = Math.round((count / total) * 100);
+    const isSel = poll.userVotedIndex === idx;
+    return `
+      <div class="result ${isSel ? 'selected' : ''}">
+        <div class="resulttop"><span>${opt}</span><span>${pct} %</span></div>
+        <div class="track"><div class="bar" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  }).join("");
+
+  let youText = "";
+  if(poll.userVotedIndex !== null){
+    const userPct = Math.round(((poll.optionCounts[poll.userVotedIndex] || 0) / total) * 100);
+    youText = `<div class="you">Du hast wie ${userPct} % abgestimmt.</div>`;
+  }
+  container.innerHTML = html + youText;
+}
+
+async function submitPollVote(pollId, optionIndex, isFeatured){
+  if(!db) return;
+  const guestSession = getGuestSession();
+  const payload = {
+    poll_id: pollId,
+    option_index: optionIndex,
+    user_id: currentUser ? currentUser.id : null,
+    session_token: currentUser ? null : guestSession
+  };
+
+  const { error } = await db.from("poll_votes").upsert(payload, { onConflict: currentUser ? 'poll_id,user_id' : 'poll_id,session_token' });
+  if(error){
+    console.error("Vote error:", error);
+  }
+  await loadPolls();
+  if(currentPoll && currentPoll.id === pollId){
+    openPollDetail(pollId);
+  }
+}
+
+function openFeaturedDetail(){
+  const featured = currentPolls.find(p => p.is_featured) || currentPolls[0];
+  if(featured) openPollDetail(featured.id);
+}
+
+async function openPollDetail(pollId){
+  currentPoll = currentPolls.find(p => p.id === pollId) || currentPolls[0];
+  if(!currentPoll) return;
+
+  document.getElementById("detailCat").textContent = currentPoll.category;
+  document.getElementById("detailTime").textContent = currentPoll.time;
+  document.getElementById("detailTitle").textContent = currentPoll.title;
+  document.getElementById("detailDesc").textContent = currentPoll.description || "Stimme ab und diskutiere mit der Community über diese Frage.";
+
+  const votesContainer = document.getElementById("detailVotes");
+  const resultsContainer = document.getElementById("detailResults");
+
+  if(currentPoll.userVotedIndex !== null){
+    votesContainer.style.display = "none";
+    resultsContainer.style.display = "block";
+    renderResultsHTML(resultsContainer, currentPoll);
+  } else {
+    votesContainer.style.display = "grid";
+    resultsContainer.style.display = "none";
+    votesContainer.innerHTML = currentPoll.options.map((opt, idx) => `<button class="vote" onclick="submitPollVote('${currentPoll.id}', ${idx}, false)">${opt}</button>`).join("");
+  }
+
+  const otherPoll = currentPolls.find(p => p.id !== currentPoll.id);
+  if(otherPoll){
+    document.getElementById("detailNextTitle").textContent = otherPoll.title;
+  }
+
+  await loadPollComments(currentPoll.id);
+  showPage("detail");
+}
+
+async function loadPollComments(pollId){
+  const container = document.getElementById("comments");
+  const countSpan = document.getElementById("pollCommentsCount");
+  
+  let dbComments = [];
+  if(db){
+    const { data } = await db.from("comments").select("*, profiles(username, canton)").eq("poll_id", pollId).order("created_at", { ascending: false });
+    if(data) dbComments = data;
+  }
+  
+  const allComments = [
+    ...dbComments.map(c => ({
+      username: c.profiles?.username || 'Anonym',
+      canton: c.profiles?.canton || 'CH',
+      time: formatTimeAgo(c.created_at),
+      content: c.content,
+      upvotes: c.upvotes || 0,
+      downvotes: c.downvotes || 0,
+      id: c.id
+    })),
+    ...SEED_COMMENTS
+  ];
+
+  countSpan.textContent = allComments.length;
+  container.innerHTML = allComments.map(c => `
+    <div class="comment">
+      <div class="user">${c.username} · ${c.canton} · <span style="font-weight:400;color:#777">${c.time}</span></div>
+      <p>${c.content}</p>
+      <div class="score">
+        <span onclick="voteComment('${c.id||''}', 1, this)" style="cursor:pointer">+ ${c.upvotes}</span>&nbsp;&nbsp;&nbsp;
+        <span onclick="voteComment('${c.id||''}', -1, this)" style="cursor:pointer">− ${c.downvotes}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function addPollComment(){
+  const textarea = document.getElementById("newPollComment");
+  const content = textarea.value.trim();
+  if(!content || !currentPoll) return;
+  
+  const payload = {
+    poll_id: currentPoll.id,
+    content: content,
+    user_id: currentUser ? currentUser.id : null
+  };
+  await db.from("comments").insert([payload]);
+  textarea.value = "";
+  await loadPollComments(currentPoll.id);
+}

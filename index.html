@@ -1,176 +1,42 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>diskutier.ch — Die Schweiz stimmt ab</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3662739009730293" crossorigin="anonymous"></script>
-<style>
-:root{--red:#e30613;--ink:#111;--muted:#6d6d6d;--line:#dedede;--paper:#fafafa;--white:#fff;--soft:#ecebe7}
-*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
-button,input,select,textarea{font:inherit} button{cursor:pointer}
-header{position:sticky;top:0;z-index:30;background:rgba(250,250,250,.98);border-bottom:1px solid #cfcfcf}
-.nav{height:62px;max-width:1180px;margin:auto;display:flex;align-items:center;gap:26px;padding:0 20px}
-.logo{font-weight:900;font-size:22px;letter-spacing:-1.2px;cursor:pointer}.logo b{color:var(--red)}
-.navlinks{display:flex;gap:22px;font-size:14px;font-weight:700}.navlinks span,.auth span{cursor:pointer}
-.navlinks span:hover,.auth span:hover{text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:5px}
-.auth{margin-left:auto;display:flex;align-items:center;gap:18px;font-size:14px;font-weight:700}
-.ask{border:0;background:var(--ink);color:white;padding:10px 14px;border-radius:1px;font-weight:800}
-.searchBtn{border:0;background:transparent;font-size:13px;font-weight:700;padding:8px}
-.shell{max-width:1180px;margin:auto;padding:34px 20px 70px;display:grid;grid-template-columns:minmax(0,760px) 300px;gap:54px}
-.eyebrow{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:13px}
-.feature{background:transparent;border-top:3px solid var(--red);border-bottom:1px solid #cfcfcf;padding:25px 0 22px;background:transparent}
-.meta{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}.category{color:var(--red);font-weight:900}
-h1{font-size:35px;line-height:1.08;letter-spacing:-1.4px;margin:15px 0 11px;max-width:690px}
-.count{font-size:14px;color:var(--muted);margin-bottom:22px}
-.votes{display:grid;grid-template-columns:1fr 1fr 1.35fr;gap:8px}
-.vote{min-height:51px;border:1px solid #aaa;background:#fff;border-radius:1px;font-weight:900;transition:.12s transform,.12s background,.12s color}
-.vote:hover{border-color:#111;background:#f2f2ef}.vote:active{transform:scale(.98)}
-.results{display:none;margin-top:18px}.result{margin:14px 0}.resulttop{display:flex;justify-content:space-between;font-size:13px;font-weight:900;margin-bottom:6px}
-.track{height:9px;background:#e6e5e1;overflow:hidden}.bar{height:100%;width:0;background:#161616;transition:width .55s cubic-bezier(.2,.8,.2,1)}.result.selected .bar{background:var(--red)}
-.you{font-size:13px;font-weight:800;margin-top:15px}
-.actions{display:flex;gap:8px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
-.smallbtn{border:0;background:transparent;padding:6px 0;margin-right:17px;font-size:13px;font-weight:800;color:#333}.smallbtn:hover{text-decoration:underline}
-.next{margin-left:auto;color:var(--red)}
-.sectionTitle{font-size:14px;text-transform:uppercase;letter-spacing:.08em;margin:34px 0 4px;font-weight:900}
-.feedItem{padding:23px 3px 22px;border-bottom:1px solid #cfcfcf}
-.feedItem h2{font-size:23px;line-height:1.18;letter-spacing:-.5px;margin:9px 0 10px;cursor:pointer}.feedItem h2:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
-.feedStats{font-size:12px;color:var(--muted);margin-bottom:14px}
-.quickVotes{display:flex;flex-wrap:wrap;gap:7px}.qv{background:transparent;border:1px solid #aaa;border-radius:1px;padding:9px 15px;font-size:12px;font-weight:900}.qv:hover{border-color:#111;background:white}
-.qv.active{background:#111;color:#fff;border-color:#111}
-.ad{height:92px;margin:24px 0;border:1px dashed #bdbdbd;display:grid;place-items:center;color:#999;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
-aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;padding-bottom:11px;border-bottom:3px solid #111}
-.trend{padding:15px 0;border-bottom:1px solid #ccc;cursor:pointer}.trend strong{font-size:14px;line-height:1.25;display:block}.trend small{display:block;color:var(--muted);margin-top:6px}
-.trend:hover strong{text-decoration:underline}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}.chip{font-size:12px;border:1px solid #bbb;padding:7px 9px;background:transparent;border-radius:1px;cursor:pointer}.chip:hover{background:#111;color:#fff;border-color:#111}
-.page{display:none}.page.active{display:block}
-.detail h1{font-size:40px}.description{font-size:17px;line-height:1.55;color:#444;max-width:680px}
-.notice{font-size:12px;color:#777;margin-top:13px}.commentsHead{margin:38px 0 0;border-bottom:1px solid #aaa;padding-bottom:13px;display:flex;justify-content:space-between;align-items:end}
-.sort button{border:0;background:transparent;font-size:12px;font-weight:800}.comment{padding:22px 0;border-bottom:1px solid #ccc}.user{font-size:13px;font-weight:900}.comment p{font-size:15px;line-height:1.5;margin:10px 0}.score{font-size:12px;font-weight:800;color:#555}.reply{margin-left:42px;border-left:2px solid #ccc;padding-left:17px}
-.nextBlock{background:#171717;color:#fff;margin-top:30px;padding:25px}.nextBlock small{color:#aaa;text-transform:uppercase;font-weight:900}.nextBlock h3{font-size:23px;margin:9px 0 18px}.nextBlock button{background:white;border:0;padding:11px 14px;font-weight:900;border-radius:1px}
-.gridcats{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:3px solid #111}.catrow{padding:22px 16px;border-bottom:1px solid #ccc;cursor:pointer}.catrow:hover{background:#f3f3f0}.catrow:nth-child(odd){border-right:1px solid #ccc}.catrow h3{margin:0 0 6px;font-size:19px}.catrow p{margin:0;color:#777;font-size:12px}
-.formbox{max-width:690px;background:transparent;border-top:3px solid var(--red);padding:26px 0}.formbox label{font-size:12px;font-weight:900;text-transform:uppercase;display:block;margin:18px 0 7px}.formbox input,.formbox textarea,.formbox select{width:100%;padding:13px;border:1px solid #aaa;border-radius:1px;background:white}.formbox textarea{height:90px;resize:vertical}.publish{margin-top:22px;border:0;background:var(--red);color:#fff;font-weight:900;padding:13px 18px;border-radius:1px}.preview{margin-top:25px;padding-top:18px;border-top:1px solid #ccc}.preview small{font-weight:900;color:#777}.preview h3{font-size:22px;margin:8px 0}
-.searchPage input{width:100%;border:0;border-bottom:3px solid #111;background:transparent;padding:14px 2px;font-size:29px;font-weight:800;outline:none}.searchResult{padding:18px 0;border-bottom:1px solid #ccc;cursor:pointer}.searchResult:hover b{text-decoration:underline}
-.profileTop{display:flex;gap:20px;align-items:center;border-bottom:3px solid #111;padding-bottom:25px}.avatar{width:72px;height:72px;background:#222;color:#fff;display:grid;place-items:center;font-size:25px;font-weight:900;border-radius:50%}.profileTop h1{font-size:29px;margin:0 0 6px}.stats{display:flex;gap:26px;margin:24px 0}.stat b{font-size:22px;display:block}.stat small{color:#777}.tabs{display:flex;gap:20px;border-bottom:1px solid #aaa;padding-bottom:10px;font-weight:800;font-size:13px}.tabs span{cursor:pointer}.tabs span.active{color:var(--red);border-bottom:2px solid var(--red);padding-bottom:10px;margin-bottom:-11px}
-.authbox{max-width:430px;background:transparent;padding:28px 0;border-top:3px solid #111}.authbox h1{font-size:30px}.authbox input{width:100%;padding:13px;margin:6px 0;border:1px solid #aaa}.authbox button{width:100%;padding:13px;margin-top:10px;background:#111;color:white;border:0;font-weight:900}
-.authMsg{font-size:13px;color:var(--red);font-weight:700;margin-top:8px}
-.mobileNav{display:none}
-.skeleton{animation:pulse 1s infinite alternate;background:#ddd;height:16px;margin:10px 0}@keyframes pulse{to{opacity:.45}}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>diskutier.ch — Die Schweiz stimmt ab</title>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
 
-.forumHead{display:flex;justify-content:space-between;align-items:end;border-bottom:1px solid #aaa;padding-bottom:10px;margin-bottom:0;font-family:Arial,Helvetica,sans-serif}
-.forumHead h1{margin:0;font-size:22px;line-height:1.2;letter-spacing:0;font-weight:700}.forumHead p{margin:4px 0 0;color:#777;font-size:12px}
-.forumTabs{display:flex;gap:16px;font-size:12px;font-weight:700}.forumTabs span{cursor:pointer}.forumTabs .activeTab{color:var(--red)}
-.postRow{display:grid;grid-template-columns:62px 1fr;gap:14px;padding:15px 2px;border-bottom:1px solid #d5d5d5;cursor:pointer;font-family:Arial,Helvetica,sans-serif}
-.postRow:hover .postTitle{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
-.replyCount{text-align:left;color:#888;font-size:11px;padding-top:2px}.replyCount b{display:block;color:#444;font-size:14px;font-weight:700;margin-bottom:2px}
-.postTitle{font-size:16px;font-weight:700;line-height:1.3;margin-bottom:5px;letter-spacing:0}.postExcerpt{font-size:12px;line-height:1.45;color:#666;margin-bottom:6px;max-width:680px}
-.postMeta{font-size:11px;color:#888}.postMeta b{color:#666;font-weight:700}
-.postDetailTitle{font-size:27px;line-height:1.25;letter-spacing:0;margin:12px 0 18px;font-weight:700}
-.postBody{font-size:15px;line-height:1.6;max-width:720px;font-family:Arial,Helvetica,sans-serif}.postBody p{margin:0 0 17px}
-.commentComposer{margin:27px 0;border-top:1px solid #aaa;padding-top:17px}.commentComposer textarea{width:100%;min-height:105px;resize:vertical;border:1px solid #aaa;background:#fff;padding:13px;outline:none}.commentComposer textarea:focus{border-color:#111}
-.commentComposer button{margin-top:8px;background:#111;color:#fff;border:0;padding:11px 15px;font-weight:900;border-radius:1px}
-.forumComment{padding:20px 0;border-bottom:1px solid #ccc}.forumCommentHead{font-size:12px;font-weight:900}.forumCommentHead span{font-weight:400;color:#777}.forumComment p{font-size:14px;line-height:1.55;margin:9px 0}.forumCommentActions{font-size:11px;color:#666;font-weight:800}
-.typeSwitch{display:flex;border-bottom:1px solid #bbb;margin-bottom:20px}.typeSwitch button{border:0;background:transparent;padding:10px 14px 10px 0;margin-right:18px;font-size:13px;font-weight:900}.typeSwitch button.on{color:var(--red)}
-
-.toast-box{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:92%;width:380px}
-.toast{background:#111;color:#fff;border-left:3px solid var(--red);padding:13px 17px;font-size:13px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.2);border-radius:1px;opacity:0;transform:translateY(12px);transition:.22s ease;pointer-events:auto}
-.toast.show{opacity:1;transform:translateY(0)}
-
-@media(max-width:850px){
-  body{background:#f4f4f1}
-  .nav{height:54px;padding:0 14px;gap:10px}
-  .navlinks,.auth span{display:none}
-  .logo{font-size:20px}
-  .ask{padding:8px 12px;font-size:12px;border-radius:1px}
-  .auth{gap:4px}
-  .searchBtn{padding:6px 8px;font-size:12px}
-  .shell{display:block;padding:12px 10px 96px}
-  
-  /* Strukturierte Karten auf Mobilgeräten */
-  .feature{background:#fff;border-top:3px solid var(--red);border-bottom:1px solid #dcdbd7;border-left:1px solid #e5e4e0;border-right:1px solid #e5e4e0;padding:18px 16px;margin-bottom:16px}
-  .eyebrow{font-size:11px;margin-bottom:8px;color:#555}
-  h1{font-size:22px;line-height:1.22;letter-spacing:-0.4px;margin:8px 0}
-  .detail h1{font-size:23px;line-height:1.22}
-  .count{font-size:12px;margin-bottom:14px;color:#777}
-  
-  .votes{grid-template-columns:1fr;gap:8px}
-  .vote{min-height:46px;font-size:13px;background:#fafafa;border:1px solid #bbb}
-  .vote:active{background:#ecebe7}
-  
-  .actions{margin-top:16px;padding-top:12px;gap:8px;flex-wrap:wrap;border-top:1px solid #eee}
-  .smallbtn{margin-right:10px;font-size:12px;padding:4px 0}
-  
-  .sectionTitle{font-size:12px;letter-spacing:.09em;margin:20px 4px 10px;color:#555}
-  
-  /* Feed-Einträge als saubere, strukturierte Foren-Karten */
-  .feedItem{background:#fff;border:1px solid #deddd8;padding:16px;margin-bottom:12px}
-  .feedItem h2{font-size:17px;line-height:1.28;margin:8px 0 10px}
-  .feedStats{font-size:11px;margin-bottom:12px;color:#777}
-  .quickVotes{gap:7px}
-  .qv{background:#fafafa;border:1px solid #bbb;padding:9px 14px;font-size:11px;min-height:38px}
-  
-  aside{display:none}
-  .gridcats{grid-template-columns:1fr;background:#fff;border:1px solid #deddd8;border-top:3px solid #111}
-  .catrow{padding:16px 14px;border-bottom:1px solid #eee}
-  .catrow:nth-child(odd){border-right:0}
-  .catrow h3{font-size:16px}
-  
-  /* Feste mobile Navigationsleiste */
-  .mobileNav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:#ffffff;border-top:1px solid #cfcfcb;display:flex;height:54px;box-shadow:0 -3px 10px rgba(0,0,0,.04)}
-  .mobileNav button{flex:1;border:0;background:transparent;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#666;padding:0;display:flex;align-items:center;justify-content:center;border-top:2px solid transparent}
-  .mobileNav button.active{color:var(--red);border-top-color:var(--red);background:#f9f9f8}
-  
-  .formbox{background:#fff;border:1px solid #deddd8;border-top:3px solid var(--red);padding:18px 14px;margin-bottom:16px}
-  .formbox input,.formbox textarea,.formbox select{font-size:16px;padding:12px;background:#fafafa;border:1px solid #bbb}
-  .publish{width:100%;padding:14px;font-size:14px}
-  
-  .forumHead{background:#fff;border:1px solid #deddd8;border-bottom:0;padding:16px 14px 12px;align-items:start;gap:10px}
-  .forumHead h1{font-size:19px}
-  .forumTabs{gap:12px;font-size:11px}
-  
-  /* Forenbeiträge Liste auf Mobile */
-  #forumList{background:#fff;border:1px solid #deddd8}
-  .postRow{grid-template-columns:52px 1fr;gap:12px;padding:14px 12px;border-bottom:1px solid #eee}
-  .replyCount{background:#f3f3f0;padding:6px 4px;text-align:center;border:1px solid #e0dfdb}
-  .replyCount b{font-size:15px;margin-bottom:0}
-  .postTitle{font-size:15px;line-height:1.32}
-  .postExcerpt{display:none}
-  .postDetailTitle{font-size:21px;margin:10px 0 14px}
-  .postBody{font-size:14px;line-height:1.55}
-  
-  .commentComposer{background:#fff;border:1px solid #deddd8;padding:16px 14px;margin:20px 0}
-  .commentComposer textarea{font-size:16px;min-height:90px;background:#fafafa}
-  
-  .forumComment{background:#fff;border:1px solid #deddd8;padding:14px;margin-bottom:10px}
-  
-  .searchPage input{font-size:22px;padding:10px 0}
-  .searchResult{background:#fff;border:1px solid #deddd8;padding:14px;margin-bottom:8px}
-  
-  .profileTop{background:#fff;border:1px solid #deddd8;border-bottom:3px solid #111;padding:18px 14px}
-  .stats{background:#fff;border:1px solid #deddd8;padding:14px;margin:14px 0;gap:14px;flex-wrap:wrap}
-  .stat b{font-size:19px}
-  
-  .authbox{background:#fff;border:1px solid #deddd8;border-top:3px solid #111;padding:20px 16px}
-  .authbox h1{font-size:23px}
-  .authbox input,.authbox select{font-size:16px;padding:12px}
-}
-</style>
+  <!-- Externe SDKs -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3662739009730293" crossorigin="anonymous"></script>
 </head>
 <body>
-<header><div class="nav">
-  <div class="logo" onclick="showPage('home')">diskutier<b>.ch</b></div>
-  <nav class="navlinks"><span onclick="showPage('home')">Abstimmungen</span><span onclick="showPage('forum')">Beiträge</span><span onclick="showPage('categories')">Kategorien</span></nav>
-  <button class="ask" onclick="showPage('create')">Beitrag erstellen</button>
-  <div class="auth" id="navAuth">
-    <button class="searchBtn" onclick="showPage('search')" aria-label="Suche">Suche</button>
-    <span onclick="showPage('login')">Anmelden</span>
-    <span onclick="showPage('register')">Registrieren</span>
-  </div>
-</div></header>
 
+<!-- Header & Desktop Navigation -->
+<header>
+  <div class="nav">
+    <div class="logo" onclick="showPage('home')">diskutier<b>.ch</b></div>
+    <nav class="navlinks">
+      <span onclick="showPage('home')">Abstimmungen</span>
+      <span onclick="showPage('forum')">Beiträge</span>
+      <span onclick="showPage('categories')">Kategorien</span>
+    </nav>
+    <button class="ask" onclick="showPage('create')">Beitrag erstellen</button>
+    <div class="auth" id="navAuth">
+      <button class="searchBtn" onclick="showPage('search')" aria-label="Suche">Suche</button>
+      <span onclick="showPage('login')">Anmelden</span>
+      <span onclick="showPage('register')">Registrieren</span>
+    </div>
+  </div>
+</header>
+
+<!-- Hauptbereich -->
 <div class="shell">
 <main>
+
+<!-- SEITE 1: ABSTIMMUNGEN (HOME) -->
 <section id="home" class="page active">
   <div class="eyebrow">Heute diskutiert die Schweiz</div>
   <article class="feature" id="featuredContainer">
@@ -190,27 +56,33 @@ aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:
   <div id="feed"></div>
 </section>
 
+<!-- SEITE 2: DETAILANSICHT ABSTIMMUNG -->
 <section id="detail" class="page detail">
- <div class="meta"><span class="category" id="detailCat">Geld & Beruf</span><span>·</span><span id="detailTime">vor 18 Min.</span></div>
- <h1 id="detailTitle">Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?</h1>
- <p class="description" id="detailDesc"></p>
- <div class="feature" style="margin-top:25px;border-top-width:1px">
-  <div class="votes" id="detailVotes"></div>
-  <div class="results" id="detailResults"></div>
- </div>
- <div class="actions"><button class="smallbtn" onclick="shareCurrent()">Ergebnis teilen</button><button class="smallbtn" onclick="showToast('Frage gemerkt.')">Frage speichern</button><button class="smallbtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button></div>
+  <div class="meta"><span class="category" id="detailCat">Geld & Beruf</span><span>·</span><span id="detailTime">vor 18 Min.</span></div>
+  <h1 id="detailTitle">Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?</h1>
+  <p class="description" id="detailDesc"></p>
+  <div class="feature" style="margin-top:25px;border-top-width:1px">
+    <div class="votes" id="detailVotes"></div>
+    <div class="results" id="detailResults"></div>
+  </div>
+  <div class="actions">
+    <button class="smallbtn" onclick="shareCurrent()">Ergebnis teilen</button>
+    <button class="smallbtn" onclick="showToast('Frage gemerkt.')">Frage speichern</button>
+    <button class="smallbtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button>
+  </div>
  
- <div class="commentComposer" style="margin-top:25px;border-top:1px solid #dedede">
-   <b>Deine Meinung zu dieser Abstimmung</b>
-   <textarea id="newPollComment" placeholder="Schreib deinen Kommentar…"></textarea>
-   <button onclick="addPollComment()">Kommentar veröffentlichen</button>
- </div>
+  <div class="commentComposer" style="margin-top:25px;border-top:1px solid #dedede">
+    <b>Deine Meinung zu dieser Abstimmung</b>
+    <textarea id="newPollComment" placeholder="Schreib deinen Kommentar…"></textarea>
+    <button onclick="addPollComment()">Kommentar veröffentlichen</button>
+  </div>
 
- <div class="commentsHead"><b><span id="pollCommentsCount">0</span> Meinungen</b><div class="sort"><button>Beliebt</button><button>Neu</button></div></div>
- <div id="comments"></div>
- <div class="nextBlock"><small>Bereit für die nächste Meinung?</small><h3 id="detailNextTitle">Ist es komisch, mit 25 noch bei den Eltern zu wohnen?</h3><button onclick="showPage('home');setTimeout(scrollFeed,100)">Abstimmen</button></div>
+  <div class="commentsHead"><b><span id="pollCommentsCount">0</span> Meinungen</b><div class="sort"><button>Beliebt</button><button>Neu</button></div></div>
+  <div id="comments"></div>
+  <div class="nextBlock"><small>Bereit für die nächste Meinung?</small><h3 id="detailNextTitle">Ist es komisch, mit 25 noch bei den Eltern zu wohnen?</h3><button onclick="showPage('home');setTimeout(scrollFeed,100)">Abstimmen</button></div>
 </section>
 
+<!-- SEITE 3: FORUM / BEITRÄGE -->
 <section id="forum" class="page">
   <div class="forumHead">
     <div><h1>Neue Beiträge</h1><p>Fragen und Diskussionen von Nutzern</p></div>
@@ -220,11 +92,16 @@ aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:
   <div class="ad">Werbung</div>
 </section>
 
+<!-- SEITE 4: FORUMS-BEITRAG DETAIL -->
 <section id="postdetail" class="page">
   <div class="meta"><span class="category" id="postCategory">Alltag</span><span>·</span><span id="postTime">vor 8 Min.</span></div>
   <h1 class="postDetailTitle" id="postTitle">Titel</h1>
   <div class="postBody" id="postBody"></div>
-  <div class="actions"><button class="smallbtn" onclick="showToast('Beitrag gespeichert.')">Speichern</button><button class="smallbtn" onclick="shareCurrent()">Teilen</button><button class="smallbtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button></div>
+  <div class="actions">
+    <button class="smallbtn" onclick="showToast('Beitrag gespeichert.')">Speichern</button>
+    <button class="smallbtn" onclick="shareCurrent()">Teilen</button>
+    <button class="smallbtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button>
+  </div>
   <div class="commentComposer">
     <b>Deine Antwort</b>
     <textarea id="newComment" placeholder="Schreib deine Antwort …"></textarea>
@@ -234,49 +111,82 @@ aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:
   <div id="forumComments"></div>
 </section>
 
+<!-- SEITE 5: KATEGORIEN -->
 <section id="categories" class="page">
- <div class="eyebrow">Themen</div><h1>Worüber möchtest du diskutieren?</h1>
- <div class="gridcats" id="categoryGrid"></div>
+  <div class="eyebrow">Themen</div><h1>Worüber möchtest du diskutieren?</h1>
+  <div class="gridcats" id="categoryGrid"></div>
 </section>
 
+<!-- SEITE 6: ERSTELLEN -->
 <section id="create" class="page">
- <div class="formbox"><div class="eyebrow">Neuer Beitrag</div><h1>Was möchtest du fragen?</h1>
-  <div class="typeSwitch"><button id="btnTypePost" class="on" onclick="setCreateType('post')">Beitrag</button><button id="btnTypePoll" onclick="setCreateType('poll')">Abstimmung</button></div>
-  <label>Titel / Frage</label><input id="createTitle" maxlength="140" placeholder="Deine Frage oder Beitragstitel…" oninput="updateCreatePreview()">
-  <label>Beschreibung / Text <span style="font-weight:400;color:#888">(optional bei Abstimmung)</span></label><textarea id="createBody" placeholder="Etwas Kontext für die Community…"></textarea>
-  <label>Kategorie</label>
-  <select id="createCategory">
-    <option>Alltag</option>
-    <option>Beziehungen</option>
-    <option>Geld & Beruf</option>
-    <option>Technologie</option>
-    <option>Gaming</option>
-    <option>Schweiz</option>
-    <option>Wohnen</option>
-    <option>Essen</option>
-    <option>Gesellschaft</option>
-  </select>
-  <div id="pollFields" style="display:none">
-    <label>Optionen (durch Komma getrennt)</label>
-    <input id="createOptions" placeholder="z. B. JA, NEIN, KOMMT DARAUF AN" value="JA, NEIN, KOMMT DARAUF AN" oninput="updateCreatePreview()">
+  <div class="formbox">
+    <div class="eyebrow">Neuer Beitrag</div>
+    <h1>Was möchtest du fragen?</h1>
+    <div class="typeSwitch">
+      <button id="btnTypePost" class="on" onclick="setCreateType('post')">Beitrag</button>
+      <button id="btnTypePoll" onclick="setCreateType('poll')">Abstimmung</button>
+    </div>
+    <label>Titel / Frage</label>
+    <input id="createTitle" maxlength="140" placeholder="Deine Frage oder Beitragstitel…" oninput="updateCreatePreview()">
+    
+    <label>Beschreibung / Text <span style="font-weight:400;color:#888">(optional bei Abstimmung)</span></label>
+    <textarea id="createBody" placeholder="Etwas Kontext für die Community…"></textarea>
+    
+    <label>Kategorie</label>
+    <select id="createCategory">
+      <option>Alltag</option>
+      <option>Beziehungen</option>
+      <option>Geld & Beruf</option>
+      <option>Technologie</option>
+      <option>Gaming</option>
+      <option>Schweiz</option>
+      <option>Wohnen</option>
+      <option>Essen</option>
+      <option>Gesellschaft</option>
+    </select>
+    
+    <div id="pollFields" style="display:none">
+      <label>Optionen (durch Komma getrennt)</label>
+      <input id="createOptions" placeholder="z. B. JA, NEIN, KOMMT DARAUF AN" value="JA, NEIN, KOMMT DARAUF AN" oninput="updateCreatePreview()">
+    </div>
+    
+    <div class="preview">
+      <small>VORSCHAU</small>
+      <h3 id="previewText">Deine Frage erscheint hier.</h3>
+      <div class="quickVotes" id="previewVotes" style="display:none"></div>
+    </div>
+    
+    <div id="createError" class="authMsg"></div>
+    <button class="publish" onclick="submitCreate()">Veröffentlichen</button>
   </div>
-  <div class="preview"><small>VORSCHAU</small><h3 id="previewText">Deine Frage erscheint hier.</h3><div class="quickVotes" id="previewVotes" style="display:none"></div></div>
-  <div id="createError" class="authMsg"></div>
-  <button class="publish" onclick="submitCreate()">Veröffentlichen</button>
- </div>
 </section>
 
+<!-- SEITE 7: SUCHE -->
 <section id="search" class="page searchPage">
- <div class="eyebrow">Suche</div><input id="searchInput" placeholder="Wonach möchtest du suchen?" oninput="doSearch()"><div id="searchResults"></div>
+  <div class="eyebrow">Suche</div>
+  <input id="searchInput" placeholder="Wonach möchtest du suchen?" oninput="doSearch()">
+  <div id="searchResults"></div>
 </section>
 
+<!-- SEITE 8: BENUTZERPROFIL -->
 <section id="profile" class="page">
- <div class="profileTop"><div class="avatar" id="profAvatar">?</div><div><h1 id="profUsername">Nicht angemeldet</h1><div class="meta" id="profMeta">Schweiz</div></div></div>
- <div class="stats"><div class="stat"><b id="profPollsCount">0</b><small>Abstimmungen</small></div><div class="stat"><b id="profPostsCount">0</b><small>Beiträge</small></div><div class="stat"><b id="profCommentsCount">0</b><small>Kommentare</small></div></div>
- <div class="tabs"><span class="active">Aktivitäten</span></div>
- <div id="profileActivity" style="margin-top:20px"></div>
+  <div class="profileTop">
+    <div class="avatar" id="profAvatar">?</div>
+    <div>
+      <h1 id="profUsername">Nicht angemeldet</h1>
+      <div class="meta" id="profMeta">Schweiz</div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="profPollsCount">0</b><small>Abstimmungen</small></div>
+    <div class="stat"><b id="profPostsCount">0</b><small>Beiträge</small></div>
+    <div class="stat"><b id="profCommentsCount">0</b><small>Kommentare</small></div>
+  </div>
+  <div class="tabs"><span class="active">Aktivitäten</span></div>
+  <div id="profileActivity" style="margin-top:20px"></div>
 </section>
 
+<!-- SEITE 9: ANMELDEN -->
 <section id="login" class="page">
   <div class="authbox">
     <h1>Anmelden</h1>
@@ -288,6 +198,7 @@ aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:
   </div>
 </section>
 
+<!-- SEITE 10: REGISTRIEREN -->
 <section id="register" class="page">
   <div class="authbox">
     <h1>Mitdiskutieren.</h1>
@@ -328,22 +239,26 @@ aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:
     <p class="meta">Du kannst auch ohne Konto abstimmen.</p>
   </div>
 </section>
+
 </main>
 
+<!-- Sidebar Desktop -->
 <aside>
- <div class="sideTitle">Gerade angesagt</div><div id="trending"></div>
- <div class="sideTitle" style="margin-top:34px">Beliebte Kategorien</div>
- <div class="chips" id="sideChips">
-   <span class="chip" onclick="filterByCat('Alltag')">Alltag</span>
-   <span class="chip" onclick="filterByCat('Geld & Beruf')">Geld & Beruf</span>
-   <span class="chip" onclick="filterByCat('Beziehungen')">Beziehungen</span>
-   <span class="chip" onclick="filterByCat('Schweiz')">Schweiz</span>
-   <span class="chip" onclick="filterByCat('Technologie')">Technologie</span>
-   <span class="chip" onclick="filterByCat('Essen')">Essen</span>
- </div>
+  <div class="sideTitle">Gerade angesagt</div>
+  <div id="trending"></div>
+  <div class="sideTitle" style="margin-top:34px">Beliebte Kategorien</div>
+  <div class="chips" id="sideChips">
+    <span class="chip" onclick="filterByCat('Alltag')">Alltag</span>
+    <span class="chip" onclick="filterByCat('Geld & Beruf')">Geld & Beruf</span>
+    <span class="chip" onclick="filterByCat('Beziehungen')">Beziehungen</span>
+    <span class="chip" onclick="filterByCat('Schweiz')">Schweiz</span>
+    <span class="chip" onclick="filterByCat('Technologie')">Technologie</span>
+    <span class="chip" onclick="filterByCat('Essen')">Essen</span>
+  </div>
 </aside>
 </div>
 
+<!-- Mobile Feste Navigation -->
 <nav class="mobileNav">
   <button data-tab="home" class="active" onclick="showPage('home')">Abstimmen</button>
   <button data-tab="forum" onclick="showPage('forum')">Beiträge</button>
@@ -352,795 +267,12 @@ aside{padding-top:30px}.sideTitle{font-size:14px;font-weight:900;text-transform:
   <button data-tab="profile" onclick="showPage('profile')">Profil</button>
 </nav>
 
-<script>
-// SUPABASE INITIALISIERUNG
-const SUPABASE_URL = "https://rmkvhzxrbzotxohvngjj.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJta3ZoenhyYnpvdHhvaHZuZ2pqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4OTUyOTAsImV4cCI6MjEwNjQ3MTI5MH0.fz6XJnEpK9sUk_0xYG_IL-QUYoRb4NiTq7pe4RTwrvM";
-const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+<!-- Modulare Anwendungs-Skripte -->
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/polls.js"></script>
+<script src="js/forum.js"></script>
+<script src="js/app.js"></script>
 
-// GAST-SESSION FÜR ANONYMES ABSTIMMEN
-function getGuestSession(){
-  let s = localStorage.getItem("diskutier_guest_session");
-  if(!s){
-    s = "guest_" + Math.random().toString(36).substring(2, 15) + "_" + Date.now();
-    localStorage.setItem("diskutier_guest_session", s);
-  }
-  return s;
-}
-
-let currentUser = null;
-let currentProfile = null;
-let currentPolls = [];
-let currentPosts = [];
-let currentPoll = null;
-let currentPost = null;
-let activeCreateType = "post";
-
-// AUTH VERWALTUNG
-async function initAuth(){
-  if(!db) return;
-  const { data: { session } } = await db.auth.getSession();
-  if(session?.user){
-    currentUser = session.user;
-    await fetchProfile();
-  }
-  updateNavAuth();
-
-  db.auth.onAuthStateChange(async (event, session)=>{
-    currentUser = session?.user || null;
-    if(currentUser){
-      await fetchProfile();
-    } else {
-      currentProfile = null;
-    }
-    updateNavAuth();
-    if(document.getElementById("profile").classList.contains("active")){
-      renderProfilePage();
-    }
-  });
-}
-
-async function fetchProfile(){
-  if(!currentUser || !db) return;
-  const { data } = await db.from("profiles").select("*").eq("id", currentUser.id).single();
-  if(data){
-    currentProfile = data;
-  } else {
-    currentProfile = {
-      username: currentUser.user_metadata?.username || currentUser.email.split("@")[0],
-      canton: currentUser.user_metadata?.canton || "CH",
-      avatar_initials: (currentUser.user_metadata?.username || currentUser.email).substring(0,2).toUpperCase()
-    };
-  }
-}
-
-function updateNavAuth(){
-  const navAuth = document.getElementById("navAuth");
-  if(currentUser && currentProfile){
-    navAuth.innerHTML = `
-      <button class="searchBtn" onclick="showPage('search')" aria-label="Suche">Suche</button>
-      <span onclick="showPage('profile')" style="color:var(--ink);font-weight:900">${currentProfile.username} (${currentProfile.canton||'CH'})</span>
-      <span onclick="handleLogout()" style="color:var(--muted)">Abmelden</span>
-    `;
-  } else {
-    navAuth.innerHTML = `
-      <button class="searchBtn" onclick="showPage('search')" aria-label="Suche">Suche</button>
-      <span onclick="showPage('login')">Anmelden</span>
-      <span onclick="showPage('register')">Registrieren</span>
-    `;
-  }
-}
-
-async function handleLogin(){
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const errDiv = document.getElementById("loginError");
-  errDiv.textContent = "";
-  if(!email || !password){
-    errDiv.textContent = "Bitte E-Mail und Passwort eingeben.";
-    return;
-  }
-  const { data, error } = await db.auth.signInWithPassword({ email, password });
-  if(error){
-    if(error.message.includes("Invalid login credentials")){
-      errDiv.textContent = "E-Mail oder Passwort ist nicht korrekt.";
-    } else if(error.message.includes("Email not confirmed")){
-      errDiv.textContent = "Bitte bestätige zuerst deine E-Mail-Adresse (oder deaktiviere E-Mail-Bestätigung in Supabase).";
-    } else {
-      errDiv.textContent = "Anmeldung fehlgeschlagen: " + error.message;
-    }
-  } else {
-    currentUser = data.user;
-    await fetchProfile();
-    updateNavAuth();
-    showToast("Willkommen zurück, " + (currentProfile?.username || ""));
-    showPage("home");
-  }
-}
-
-async function handleRegister(){
-  const username = document.getElementById("regUsername").value.trim();
-  const canton = document.getElementById("regCanton").value;
-  const email = document.getElementById("regEmail").value.trim();
-  const password = document.getElementById("regPassword").value;
-  const errDiv = document.getElementById("regError");
-  errDiv.textContent = "";
-  if(!username || !email || !password){
-    errDiv.textContent = "Bitte alle Pflichtfelder ausfüllen.";
-    return;
-  }
-  if(password.length < 6){
-    errDiv.textContent = "Das Passwort muss mindestens 6 Zeichen lang sein.";
-    return;
-  }
-  const { data, error } = await db.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { username, canton }
-    }
-  });
-  if(error){
-    errDiv.textContent = "Registrierung fehlgeschlagen: " + error.message;
-  } else {
-    if(data.session){
-      currentUser = data.user;
-      await fetchProfile();
-      updateNavAuth();
-      showToast("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
-      showPage("home");
-    } else {
-      // Falls E-Mail-Bestaetigung in Supabase aktiv ist
-      currentUser = data.user;
-      await fetchProfile();
-      updateNavAuth();
-      showToast("Konto erstellt! Du bist jetzt eingeloggt.");
-      showPage("home");
-    }
-  }
-}
-
-async function handleLogout(){
-  if(db) await db.auth.signOut();
-  currentUser = null;
-  currentProfile = null;
-  updateNavAuth();
-  showPage("home");
-}
-
-// FORMATIERUNG VON ZEIT
-function formatTimeAgo(isoString){
-  if(!isoString) return "vor kurzem";
-  const diff = Math.floor((new Date() - new Date(isoString))/1000);
-  if(diff < 60) return "gerade eben";
-  if(diff < 3600) return `vor ${Math.floor(diff/60)} Min.`;
-  if(diff < 86400) return `vor ${Math.floor(diff/3600)} Std.`;
-  return `vor ${Math.floor(diff/86400)} Tagen`;
-}
-
-// REALISTISCHE SCHWEIZER BASIS-DATEN FÜR FRAGEN
-const POLL_BASELINES = {
-  "Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?": { baseVotes: 8421, optionCounts: [2610, 4547, 1264] },
-  "Ist es komisch, mit 25 noch bei den Eltern zu wohnen?": { baseVotes: 5783, optionCounts: [1619, 2718, 1446] },
-  "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 3196, optionCounts: [958, 2238] },
-  "Coop oder Migros?": { baseVotes: 11847, optionCounts: [5450, 5094, 1303] },
-  "Sollte man seinem Partner das Handy-Passwort geben?": { baseVotes: 7231, optionCounts: [1807, 4122, 1302] },
-  "Sind 30 Franken für eine Pizza in der Schweiz zu viel?": { baseVotes: 4829, optionCounts: [3380, 580, 869] },
-  "iPhone oder Samsung?": { baseVotes: 9404, optionCounts: [5172, 3479, 753] },
-  "Homeoffice oder Büro?": { baseVotes: 6122, optionCounts: [3673, 857, 1592] },
-  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 2941, optionCounts: [1970, 412, 559] }
-};
-
-// INITIALE SCHWEIZER COMMUNITY-KOMMENTARE
-const SEED_COMMENTS = [
-  { username: "AlpenFuchs", canton: "BE", time: "vor 12 Min.", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 184, downvotes: 23 },
-  { username: "NinaZH", canton: "ZH", time: "vor 9 Min.", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 137, downvotes: 11 },
-  { username: "romand92", canton: "VD", time: "vor 6 Min.", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 88, downvotes: 19 }
-];
-
-const SEED_FORUM_REPLIES = [
-  { username: "Rheinknie", canton: "BS", time: "vor 5 Min.", content: "Ich würde zuerst ganz normal das Gespräch suchen. Viele merken gar nicht, dass es andere stört. Wenn danach nichts passiert, kannst du immer noch der Verwaltung schreiben.", upvotes: 42 },
-  { username: "sina90", canton: "AG", time: "vor 3 Min.", content: "Direkt ansprechen, freundlich und ohne Vorwurf. Schriftlich über die Verwaltung eskaliert so etwas meiner Erfahrung nach nur unnötig schnell.", upvotes: 29 },
-  { username: "JuraNord", canton: "SO", time: "vor 1 Min.", content: "Kommt vor allem auch darauf an, ob der Fluchtweg betroffen ist. Wenn es wirklich eng wird bei einem Notfall, würde ich nicht ewig warten.", upvotes: 18 }
-];
-
-// POLLS / ABSTIMMUNGEN LADEN
-async function loadPolls(){
-  if(!db) return;
-  const { data: polls, error } = await db.from("polls").select("*, poll_votes(id, option_index, user_id, session_token)").order("created_at", { ascending: false });
-  if(error || !polls) return;
-
-  currentPolls = polls.map(p => {
-    const votes = p.poll_votes || [];
-    const base = POLL_BASELINES[p.title] || { baseVotes: 0, optionCounts: (p.options || []).map(()=>0) };
-    
-    // Kombiniere Basis-Stimmen mit echten DB-Stimmen
-    const optionCounts = (p.options || []).map((_, idx) => {
-      const baseCount = base.optionCounts && base.optionCounts[idx] !== undefined ? base.optionCounts[idx] : 0;
-      const dbCount = votes.filter(v => v.option_index === idx).length;
-      return baseCount + dbCount;
-    });
-
-    const totalVotes = optionCounts.reduce((a, b) => a + b, 0) || votes.length;
-    const userVote = votes.find(v => (currentUser && v.user_id === currentUser.id) || v.session_token === getGuestSession());
-    
-    return {
-      id: p.id,
-      category: p.category,
-      title: p.title,
-      description: p.description || "",
-      options: p.options || ["JA", "NEIN"],
-      is_featured: p.is_featured,
-      time: formatTimeAgo(p.created_at),
-      totalVotes: totalVotes,
-      optionCounts: optionCounts,
-      userVotedIndex: userVote !== undefined ? userVote.option_index : null
-    };
-  });
-
-  renderPollsUI();
-}
-
-function renderPollsUI(){
-  if(!currentPolls.length) return;
-  const featured = currentPolls.find(p => p.is_featured) || currentPolls[0];
-  const feed = currentPolls.filter(p => p.id !== featured.id);
-
-  // Featured Render
-  document.getElementById("featCat").textContent = featured.category;
-  document.getElementById("featTime").textContent = featured.time;
-  document.getElementById("featTitle").textContent = featured.title;
-  
-  const featCountText = featured.totalVotes > 0 ? `${featured.totalVotes.toLocaleString('de-CH')} Personen haben abgestimmt` : "Noch keine Stimmen – sei der Erste!";
-  document.getElementById("featCount").textContent = featCountText;
-
-  const featVotesContainer = document.getElementById("featuredVotes");
-  const featResultsContainer = document.getElementById("featuredResults");
-
-  if(featured.userVotedIndex !== null){
-    featVotesContainer.style.display = "none";
-    featResultsContainer.style.display = "block";
-    renderResultsHTML(featResultsContainer, featured);
-  } else {
-    featVotesContainer.style.display = "grid";
-    featResultsContainer.style.display = "none";
-    featVotesContainer.innerHTML = featured.options.map((opt, idx) => `<button class="vote" onclick="submitPollVote('${featured.id}', ${idx}, true)">${opt}</button>`).join("");
-  }
-
-  // Feed Render
-  document.getElementById("feed").innerHTML = feed.map((q, i) => `
-    <article class="feedItem">
-      <div class="meta"><span class="category">${q.category}</span><span>·</span><span>${q.time}</span></div>
-      <h2 onclick="openPollDetail('${q.id}')">${q.title}</h2>
-      <div class="feedStats">${q.totalVotes.toLocaleString('de-CH')} Stimmen</div>
-      <div class="quickVotes" id="qv-${q.id}">
-        ${q.options.map((opt, idx) => `
-          <button class="qv ${q.userVotedIndex === idx ? 'active' : ''}" onclick="submitPollVote('${q.id}', ${idx}, false)">${opt}</button>
-        `).join("")}
-      </div>
-    </article>
-    ${i === 1 ? '<div class="ad">Werbung</div>' : ''}
-  `).join("");
-
-  // Trending Sidebar
-  document.getElementById("trending").innerHTML = currentPolls.slice(0, 5).map(q => `
-    <div class="trend" onclick="openPollDetail('${q.id}')">
-      <strong>${q.title}</strong>
-      <small>${q.totalVotes.toLocaleString('de-CH')} Stimmen · ${q.category}</small>
-    </div>
-  `).join("");
-}
-
-function renderResultsHTML(container, poll){
-  const total = poll.totalVotes || 1;
-  const html = poll.options.map((opt, idx) => {
-    const count = poll.optionCounts[idx] || 0;
-    const pct = Math.round((count / total) * 100);
-    const isSel = poll.userVotedIndex === idx;
-    return `
-      <div class="result ${isSel ? 'selected' : ''}">
-        <div class="resulttop"><span>${opt}</span><span>${pct} %</span></div>
-        <div class="track"><div class="bar" style="width:${pct}%"></div></div>
-      </div>
-    `;
-  }).join("");
-
-  let youText = "";
-  if(poll.userVotedIndex !== null){
-    const userPct = Math.round(((poll.optionCounts[poll.userVotedIndex] || 0) / total) * 100);
-    youText = `<div class="you">Du hast wie ${userPct} % abgestimmt.</div>`;
-  }
-  container.innerHTML = html + youText;
-}
-
-// ABSTIMMEN
-async function submitPollVote(pollId, optionIndex, isFeatured){
-  if(!db) return;
-  const guestSession = getGuestSession();
-  const payload = {
-    poll_id: pollId,
-    option_index: optionIndex,
-    user_id: currentUser ? currentUser.id : null,
-    session_token: currentUser ? null : guestSession
-  };
-
-  const { error } = await db.from("poll_votes").upsert(payload, { onConflict: currentUser ? 'poll_id,user_id' : 'poll_id,session_token' });
-  if(error){
-    console.error("Vote error:", error);
-  }
-  await loadPolls();
-  if(currentPoll && currentPoll.id === pollId){
-    openPollDetail(pollId);
-  }
-}
-
-// DETAIL SEITE FÜR POLLS
-function openFeaturedDetail(){
-  const featured = currentPolls.find(p => p.is_featured) || currentPolls[0];
-  if(featured) openPollDetail(featured.id);
-}
-
-async function openPollDetail(pollId){
-  currentPoll = currentPolls.find(p => p.id === pollId) || currentPolls[0];
-  if(!currentPoll) return;
-
-  document.getElementById("detailCat").textContent = currentPoll.category;
-  document.getElementById("detailTime").textContent = currentPoll.time;
-  document.getElementById("detailTitle").textContent = currentPoll.title;
-  document.getElementById("detailDesc").textContent = currentPoll.description || "Stimme ab und diskutiere mit der Community über diese Frage.";
-
-  const votesContainer = document.getElementById("detailVotes");
-  const resultsContainer = document.getElementById("detailResults");
-
-  if(currentPoll.userVotedIndex !== null){
-    votesContainer.style.display = "none";
-    resultsContainer.style.display = "block";
-    renderResultsHTML(resultsContainer, currentPoll);
-  } else {
-    votesContainer.style.display = "grid";
-    resultsContainer.style.display = "none";
-    votesContainer.innerHTML = currentPoll.options.map((opt, idx) => `<button class="vote" onclick="submitPollVote('${currentPoll.id}', ${idx}, false)">${opt}</button>`).join("");
-  }
-
-  // Next Question Teaser
-  const otherPoll = currentPolls.find(p => p.id !== currentPoll.id);
-  if(otherPoll){
-    document.getElementById("detailNextTitle").textContent = otherPoll.title;
-  }
-
-  await loadPollComments(currentPoll.id);
-  showPage("detail");
-}
-
-const POST_BASELINES = {
-  "Nachbar stellt ständig Sachen ins Treppenhaus – was würdet ihr machen?": { comments: 37, views: 1284 },
-  "Chef erwartet, dass ich nach Feierabend auf WhatsApp antworte": { comments: 64, views: 2931 },
-  "Freundeskreis verändert sich komplett seit alle in Beziehungen sind": { comments: 51, views: 2106 },
-  "Wie viel zahlt ihr aktuell für eine 2.5-Zimmer-Wohnung?": { comments: 128, views: 5447 },
-  "Lohnt sich ein Handywechsel überhaupt noch alle zwei Jahre?": { comments: 42, views: 1765 },
-  "Studium abbrechen nach drei Semestern – Erfahrungen?": { comments: 73, views: 3082 }
-};
-
-async function loadPollComments(pollId){
-  const container = document.getElementById("comments");
-  const countSpan = document.getElementById("pollCommentsCount");
-  
-  let dbComments = [];
-  if(db){
-    const { data } = await db.from("comments").select("*, profiles(username, canton)").eq("poll_id", pollId).order("created_at", { ascending: false });
-    if(data) dbComments = data;
-  }
-  
-  // Kombiniere echte DB-Kommentare mit Schweizer Seed-Kommentaren
-  const allComments = [
-    ...dbComments.map(c => ({
-      username: c.profiles?.username || 'Anonym',
-      canton: c.profiles?.canton || 'CH',
-      time: formatTimeAgo(c.created_at),
-      content: c.content,
-      upvotes: c.upvotes || 0,
-      downvotes: c.downvotes || 0,
-      id: c.id
-    })),
-    ...SEED_COMMENTS
-  ];
-
-  countSpan.textContent = allComments.length;
-  container.innerHTML = allComments.map(c => `
-    <div class="comment">
-      <div class="user">${c.username} · ${c.canton} · <span style="font-weight:400;color:#777">${c.time}</span></div>
-      <p>${c.content}</p>
-      <div class="score">
-        <span onclick="voteComment('${c.id||''}', 1, this)" style="cursor:pointer">+ ${c.upvotes}</span>&nbsp;&nbsp;&nbsp;
-        <span onclick="voteComment('${c.id||''}', -1, this)" style="cursor:pointer">− ${c.downvotes}</span>
-      </div>
-    </div>
-  `).join("");
-}
-
-async function addPollComment(){
-  const textarea = document.getElementById("newPollComment");
-  const content = textarea.value.trim();
-  if(!content || !currentPoll) return;
-  
-  const payload = {
-    poll_id: currentPoll.id,
-    content: content,
-    user_id: currentUser ? currentUser.id : null
-  };
-  await db.from("comments").insert([payload]);
-  textarea.value = "";
-  await loadPollComments(currentPoll.id);
-}
-
-// FORUM / BEITRÄGE LADEN
-async function loadForum(){
-  if(!db) return;
-  const { data: posts, error } = await db.from("posts").select("*, profiles(username, canton), comments(id)").order("created_at", { ascending: false });
-  if(error || !posts) return;
-
-  currentPosts = posts.map(p => {
-    const base = POST_BASELINES[p.title] || { comments: 0, views: 1 };
-    const dbCommentsCount = p.comments ? p.comments.length : 0;
-    return {
-      id: p.id,
-      cat: p.category,
-      time: formatTimeAgo(p.created_at),
-      title: p.title,
-      excerpt: p.excerpt || (Array.isArray(p.body) ? p.body[0] : p.body) || "",
-      body: Array.isArray(p.body) ? p.body : [p.body],
-      user: p.profiles?.username || "Community",
-      canton: p.profiles?.canton || "CH",
-      comments: base.comments + dbCommentsCount,
-      views: Math.max(base.views, p.views || 1)
-    };
-  });
-
-  renderForum();
-}
-
-function renderForum(){
-  document.getElementById("forumList").innerHTML = currentPosts.map(p => `
-    <article class="postRow" onclick="openPost('${p.id}')">
-      <div class="replyCount"><b>${p.comments}</b>Antworten</div>
-      <div>
-        <div class="postTitle">${p.title}</div>
-        <div class="postExcerpt">${p.excerpt}</div>
-        <div class="postMeta"><b>${p.cat}</b> · ${p.user} (${p.canton}) · ${p.time} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
-      </div>
-    </article>
-  `).join("");
-}
-
-function filterForum(type){
-  document.querySelectorAll(".forumTabs span").forEach(s => s.classList.remove("activeTab"));
-  event.target.classList.add("activeTab");
-  if(type === 'top'){
-    currentPosts.sort((a,b) => b.comments - a.comments);
-  } else if(type === 'none'){
-    currentPosts.sort((a,b) => a.comments - b.comments);
-  } else {
-    currentPosts.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-  }
-  renderForum();
-}
-
-async function openPost(postId){
-  currentPost = currentPosts.find(p => p.id === postId);
-  if(!currentPost) return;
-
-  if(db){
-    db.from("posts").update({ views: (currentPost.views || 0) + 1 }).eq("id", postId).then();
-  }
-
-  document.getElementById("postCategory").textContent = currentPost.cat;
-  document.getElementById("postTime").textContent = `${currentPost.time} · ${currentPost.user} (${currentPost.canton})`;
-  document.getElementById("postTitle").textContent = currentPost.title;
-  document.getElementById("postBody").innerHTML = currentPost.body.map(x => `<p>${x}</p>`).join("");
-  document.getElementById("postCommentCount").textContent = currentPost.comments;
-
-  await loadForumComments(currentPost.id);
-  showPage("postdetail");
-}
-
-async function loadForumComments(postId){
-  const container = document.getElementById("forumComments");
-  let dbReplies = [];
-  if(db){
-    const { data } = await db.from("comments").select("*, profiles(username, canton)").eq("post_id", postId).order("created_at", { ascending: true });
-    if(data) dbReplies = data;
-  }
-  
-  const allReplies = [
-    ...SEED_FORUM_REPLIES.map(r => ({ ...r, isSeed: true })),
-    ...dbReplies.map(r => ({
-      username: r.profiles?.username || 'Anonym',
-      canton: r.profiles?.canton || 'CH',
-      time: formatTimeAgo(r.created_at),
-      content: r.content,
-      upvotes: r.upvotes || 0,
-      id: r.id
-    }))
-  ];
-
-  container.innerHTML = allReplies.map(r => `
-    <div class="forumComment">
-      <div class="forumCommentHead">${r.username} · ${r.canton} <span>· ${r.time}</span></div>
-      <p>${r.content}</p>
-      <div class="forumCommentActions">
-        <span onclick="voteComment('${r.id||''}', 1, this)" style="cursor:pointer">Hilfreich (+${r.upvotes})</span>
-      </div>
-    </div>
-  `).join("");
-}
-
-async function addForumComment(){
-  const t = document.getElementById("newComment");
-  const content = t.value.trim();
-  if(!content || !currentPost) return;
-
-  const payload = {
-    post_id: currentPost.id,
-    content: content,
-    user_id: currentUser ? currentUser.id : null
-  };
-  await db.from("comments").insert([payload]);
-  t.value = "";
-  currentPost.comments++;
-  document.getElementById("postCommentCount").textContent = currentPost.comments;
-  await loadForumComments(currentPost.id);
-  await loadForum();
-}
-
-async function voteComment(commentId, diff, el){
-  if(!db) return;
-  if(diff > 0){
-    await db.rpc ? db.rpc('increment_upvote', { comment_id: commentId }) : null;
-  }
-  el.textContent = "Danke!";
-}
-
-// BEITRAG ODER ABSTIMMUNG ERSTELLEN
-function setCreateType(type){
-  activeCreateType = type;
-  document.getElementById("btnTypePost").classList.toggle("on", type === "post");
-  document.getElementById("btnTypePoll").classList.toggle("on", type === "poll");
-  document.getElementById("pollFields").style.display = type === "poll" ? "block" : "none";
-  document.getElementById("previewVotes").style.display = type === "poll" ? "flex" : "none";
-  updateCreatePreview();
-}
-
-function updateCreatePreview(){
-  const title = document.getElementById("createTitle").value.trim() || "Deine Frage erscheint hier.";
-  document.getElementById("previewText").textContent = title;
-  if(activeCreateType === "poll"){
-    const opts = document.getElementById("createOptions").value.split(",").map(s => s.trim()).filter(Boolean);
-    document.getElementById("previewVotes").innerHTML = opts.map(o => `<button class="qv">${o}</button>`).join("");
-  }
-}
-
-async function submitCreate(){
-  const title = document.getElementById("createTitle").value.trim();
-  const body = document.getElementById("createBody").value.trim();
-  const category = document.getElementById("createCategory").value;
-  const errDiv = document.getElementById("createError");
-  errDiv.textContent = "";
-
-  if(!title){
-    errDiv.textContent = "Bitte einen Titel / Frage angeben.";
-    return;
-  }
-
-  if(activeCreateType === "post"){
-    const paragraphs = body ? body.split("\n\n").filter(Boolean) : [title];
-    const { error } = await db.from("posts").insert([{
-      title,
-      category,
-      excerpt: paragraphs[0],
-      body: paragraphs,
-      user_id: currentUser ? currentUser.id : null
-    }]);
-    if(error){
-      errDiv.textContent = "Fehler beim Erstellen: " + error.message;
-      return;
-    }
-    showToast("Beitrag erfolgreich veröffentlicht!");
-    document.getElementById("createTitle").value = "";
-    document.getElementById("createBody").value = "";
-    await loadForum();
-    showPage("forum");
-  } else {
-    const opts = document.getElementById("createOptions").value.split(",").map(s => s.trim()).filter(Boolean);
-    const options = opts.length > 1 ? opts : ["JA", "NEIN"];
-    const { error } = await db.from("polls").insert([{
-      title,
-      description: body || null,
-      category,
-      options: options,
-      user_id: currentUser ? currentUser.id : null,
-      is_featured: false
-    }]);
-    if(error){
-      errDiv.textContent = "Fehler beim Erstellen: " + error.message;
-      return;
-    }
-    showToast("Abstimmung erfolgreich veröffentlicht!");
-    document.getElementById("createTitle").value = "";
-    document.getElementById("createBody").value = "";
-    await loadPolls();
-    showPage("home");
-  }
-}
-
-// SUCHE
-function doSearch(){
-  const s = document.getElementById("searchInput").value.toLowerCase().trim();
-  if(!s){
-    document.getElementById("searchResults").innerHTML = "";
-    return;
-  }
-  const pollMatches = currentPolls.filter(q => q.title.toLowerCase().includes(s) || q.category.toLowerCase().includes(s));
-  const postMatches = currentPosts.filter(p => p.title.toLowerCase().includes(s) || p.cat.toLowerCase().includes(s));
-
-  let html = "";
-  if(pollMatches.length > 0){
-    html += `<div class="eyebrow" style="margin-top:20px">Abstimmungen</div>` + pollMatches.slice(0, 5).map(q => `
-      <div class="searchResult" onclick="openPollDetail('${q.id}')">
-        <div class="meta"><span class="category">${q.category}</span> · ${q.totalVotes} Stimmen</div>
-        <b>${q.title}</b>
-      </div>
-    `).join("");
-  }
-  if(postMatches.length > 0){
-    html += `<div class="eyebrow" style="margin-top:20px">Beiträge</div>` + postMatches.slice(0, 5).map(p => `
-      <div class="searchResult" onclick="openPost('${p.id}')">
-        <div class="meta"><span class="category">${p.cat}</span> · ${p.comments} Antworten</div>
-        <b>${p.title}</b>
-      </div>
-    `).join("");
-  }
-  if(!html){
-    html = `<p style="color:#777;padding:20px 0">Keine passenden Fragen oder Beiträge gefunden.</p>`;
-  }
-  document.getElementById("searchResults").innerHTML = html;
-}
-
-// PROFIL SEITE
-async function renderProfilePage(){
-  if(currentUser && currentProfile){
-    document.getElementById("profAvatar").textContent = currentProfile.avatar_initials || currentProfile.username.substring(0,2).toUpperCase();
-    document.getElementById("profUsername").textContent = currentProfile.username;
-    document.getElementById("profMeta").textContent = `${currentProfile.canton || 'Schweiz'} · Mitglied`;
-
-    const { data: userPolls } = await db.from("polls").select("id, title, category, created_at").eq("user_id", currentUser.id);
-    const { data: userPosts } = await db.from("posts").select("id, title, category, created_at").eq("user_id", currentUser.id);
-    const { data: userComments } = await db.from("comments").select("id, content, created_at").eq("user_id", currentUser.id);
-
-    document.getElementById("profPollsCount").textContent = userPolls ? userPolls.length : 0;
-    document.getElementById("profPostsCount").textContent = userPosts ? userPosts.length : 0;
-    document.getElementById("profCommentsCount").textContent = userComments ? userComments.length : 0;
-
-    let activityHTML = "";
-    if(userPosts && userPosts.length > 0){
-      activityHTML += userPosts.map(p => `
-        <div class="feedItem" onclick="openPost('${p.id}')">
-          <div class="meta">${formatTimeAgo(p.created_at)} · Beitrag</div>
-          <h2>${p.title}</h2>
-        </div>
-      `).join("");
-    }
-    if(userPolls && userPolls.length > 0){
-      activityHTML += userPolls.map(p => `
-        <div class="feedItem" onclick="openPollDetail('${p.id}')">
-          <div class="meta">${formatTimeAgo(p.created_at)} · Abstimmung</div>
-          <h2>${p.title}</h2>
-        </div>
-      `).join("");
-    }
-    if(!activityHTML){
-      activityHTML = '<p style="color:#777;padding:20px 0">Noch keine Aktivitäten. Erstelle deinen ersten Beitrag oder stimme ab!</p>';
-    }
-    document.getElementById("profileActivity").innerHTML = activityHTML;
-  } else {
-    document.getElementById("profAvatar").textContent = "?";
-    document.getElementById("profUsername").textContent = "Gast";
-    document.getElementById("profMeta").textContent = "Nicht angemeldet";
-    document.getElementById("profPollsCount").textContent = "0";
-    document.getElementById("profPostsCount").textContent = "0";
-    document.getElementById("profCommentsCount").textContent = "0";
-    document.getElementById("profileActivity").innerHTML = `
-      <p style="color:#777;padding:20px 0">Du bist als Gast unterwegs. <span class="category" onclick="showPage('login')" style="cursor:pointer;font-weight:900">Jetzt anmelden</span> oder <span class="category" onclick="showPage('register')" style="cursor:pointer;font-weight:900">Registrieren</span> um ein Profil zu erstellen.</p>
-    `;
-  }
-}
-
-// KATEGORIEN SEITE
-const categoriesList = [
-  ["Beziehungen", 384], ["Geld & Beruf", 517], ["Gaming", 219],
-  ["Technologie", 441], ["Auto & Mobilität", 186], ["Essen", 302],
-  ["Sport", 277], ["Schule & Ausbildung", 164], ["Wohnen", 238],
-  ["Schweiz", 623], ["Gesellschaft", 355], ["Alltag", 491]
-];
-document.getElementById("categoryGrid").innerHTML = categoriesList.map(c => `
-  <div class="catrow" onclick="filterByCat('${c[0]}')">
-    <h3>${c[0]}</h3>
-    <p>${c[1]} aktive Themen · Fragen & Beiträge ansehen</p>
-  </div>
-`).join("");
-
-function filterByCat(catName){
-  showPage('forum');
-  const filtered = currentPosts.filter(p => p.cat.toLowerCase() === catName.toLowerCase());
-  if(filtered.length > 0){
-    document.getElementById("forumList").innerHTML = filtered.map(p => `
-      <article class="postRow" onclick="openPost('${p.id}')">
-        <div class="replyCount"><b>${p.comments}</b>Antworten</div>
-        <div>
-          <div class="postTitle">${p.title}</div>
-          <div class="postExcerpt">${p.excerpt}</div>
-          <div class="postMeta"><b>${p.cat}</b> · ${p.user} (${p.canton}) · ${p.time} · ${p.views} Aufrufe</div>
-        </div>
-      </article>
-    `).join("");
-  } else {
-    document.getElementById("forumList").innerHTML = `<p style="color:#777;padding:20px 0">Keine Beiträge in "${catName}" gefunden. <a href="#" onclick="showPage('create');return false;" style="color:var(--red);font-weight:900">Erstelle den ersten Beitrag!</a></p>`;
-  }
-}
-
-// WEITERE HELPER
-function showPage(id){
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  const target = document.getElementById(id);
-  if(target) target.classList.add("active");
-  if(id === "profile") renderProfilePage();
-  
-  // Mobile Nav Active State
-  document.querySelectorAll(".mobileNav button").forEach(b => {
-    b.classList.toggle("active", b.dataset.tab === id);
-  });
-  
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function scrollFeed(){
-  document.getElementById("feedStart").scrollIntoView({ behavior: "smooth" });
-}
-
-function shareCurrent(){
-  if(navigator.share){
-    navigator.share({ title: document.title, url: window.location.href }).catch(()=>{});
-  } else {
-    navigator.clipboard.writeText(window.location.href);
-    showToast("Link in die Zwischenablage kopiert!");
-  }
-}
-
-// TOAST BENACHRICHTIGUNGEN
-function showToast(msg, dur = 3200){
-  let container = document.getElementById("toastContainer");
-  if(!container){
-    container = document.createElement("div");
-    container.id = "toastContainer";
-    container.className = "toast-box";
-    document.body.appendChild(container);
-  }
-  const el = document.createElement("div");
-  el.className = "toast";
-  el.textContent = msg;
-  container.appendChild(el);
-  setTimeout(() => el.classList.add("show"), 20);
-  setTimeout(() => {
-    el.classList.remove("show");
-    setTimeout(() => el.remove(), 260);
-  }, dur);
-}
-
-// INITIALER START
-(async function init(){
-  await initAuth();
-  await loadPolls();
-  await loadForum();
-})();
-</script>
 </body>
 </html>
