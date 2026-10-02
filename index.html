@@ -442,10 +442,18 @@ async function handleLogin(){
   }
   const { data, error } = await db.auth.signInWithPassword({ email, password });
   if(error){
-    errDiv.textContent = "Anmeldung fehlgeschlagen: " + error.message;
+    if(error.message.includes("Invalid login credentials")){
+      errDiv.textContent = "E-Mail oder Passwort ist nicht korrekt.";
+    } else if(error.message.includes("Email not confirmed")){
+      errDiv.textContent = "Bitte bestätige zuerst deine E-Mail-Adresse (oder deaktiviere E-Mail-Bestätigung in Supabase).";
+    } else {
+      errDiv.textContent = "Anmeldung fehlgeschlagen: " + error.message;
+    }
   } else {
     currentUser = data.user;
     await fetchProfile();
+    updateNavAuth();
+    showToast("Willkommen zurück, " + (currentProfile?.username || ""));
     showPage("home");
   }
 }
@@ -461,6 +469,10 @@ async function handleRegister(){
     errDiv.textContent = "Bitte alle Pflichtfelder ausfüllen.";
     return;
   }
+  if(password.length < 6){
+    errDiv.textContent = "Das Passwort muss mindestens 6 Zeichen lang sein.";
+    return;
+  }
   const { data, error } = await db.auth.signUp({
     email,
     password,
@@ -471,10 +483,20 @@ async function handleRegister(){
   if(error){
     errDiv.textContent = "Registrierung fehlgeschlagen: " + error.message;
   } else {
-    showToast("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
-    currentUser = data.user;
-    await fetchProfile();
-    showPage("home");
+    if(data.session){
+      currentUser = data.user;
+      await fetchProfile();
+      updateNavAuth();
+      showToast("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
+      showPage("home");
+    } else {
+      // Falls E-Mail-Bestaetigung in Supabase aktiv ist
+      currentUser = data.user;
+      await fetchProfile();
+      updateNavAuth();
+      showToast("Konto erstellt! Du bist jetzt eingeloggt.");
+      showPage("home");
+    }
   }
 }
 
