@@ -27,15 +27,16 @@ async function loadForum(){
     const dbCommentsCount = p.comments ? p.comments.length : 0;
     return {
       id: p.id,
-      cat: p.category,
+      cat: p.category || "Alltag",
       time: formatTimeAgo(p.created_at),
-      title: p.title,
+      title: p.title || "",
       excerpt: p.excerpt || (Array.isArray(p.body) ? p.body[0] : p.body) || "",
       body: Array.isArray(p.body) ? p.body : [p.body],
       user: p.profiles?.username || "Community",
       canton: p.profiles?.canton || "CH",
       comments: base.comments + dbCommentsCount,
-      views: Math.max(base.views, p.views || 1)
+      views: Math.max(base.views, p.views || 1),
+      created_at: p.created_at
     };
   });
 
@@ -43,13 +44,16 @@ async function loadForum(){
 }
 
 function renderForum(){
-  document.getElementById("forumList").innerHTML = currentPosts.map(p => `
-    <article class="postRow" onclick="openPost('${p.id}')">
+  const container = document.getElementById("forumList");
+  if(!container) return;
+  
+  container.innerHTML = currentPosts.map(p => `
+    <article class="postRow" onclick="openPost('${escapeHTML(p.id)}')">
       <div class="replyCount"><b>${p.comments}</b>Antworten</div>
       <div>
-        <div class="postTitle">${p.title}</div>
-        <div class="postExcerpt">${p.excerpt}</div>
-        <div class="postMeta"><b>${p.cat}</b> · ${p.user} (${p.canton}) · ${p.time} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
+        <div class="postTitle">${escapeHTML(p.title)}</div>
+        <div class="postExcerpt">${escapeHTML(p.excerpt)}</div>
+        <div class="postMeta"><b>${escapeHTML(p.cat)}</b> · ${escapeHTML(p.user)} (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
       </div>
     </article>
   `).join("");
@@ -57,13 +61,13 @@ function renderForum(){
 
 function filterForum(type){
   document.querySelectorAll(".forumTabs span").forEach(s => s.classList.remove("activeTab"));
-  event.target.classList.add("activeTab");
+  if(event && event.target) event.target.classList.add("activeTab");
   if(type === 'top'){
     currentPosts.sort((a,b) => b.comments - a.comments);
   } else if(type === 'none'){
     currentPosts.sort((a,b) => a.comments - b.comments);
   } else {
-    currentPosts.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    currentPosts.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
   }
   renderForum();
 }
@@ -79,7 +83,7 @@ async function openPost(postId){
   document.getElementById("postCategory").textContent = currentPost.cat;
   document.getElementById("postTime").textContent = `${currentPost.time} · ${currentPost.user} (${currentPost.canton})`;
   document.getElementById("postTitle").textContent = currentPost.title;
-  document.getElementById("postBody").innerHTML = currentPost.body.map(x => `<p>${x}</p>`).join("");
+  document.getElementById("postBody").innerHTML = currentPost.body.map(x => `<p>${escapeHTML(x)}</p>`).join("");
   document.getElementById("postCommentCount").textContent = currentPost.comments;
 
   await loadForumComments(currentPost.id);
@@ -88,6 +92,8 @@ async function openPost(postId){
 
 async function loadForumComments(postId){
   const container = document.getElementById("forumComments");
+  if(!container) return;
+
   let dbReplies = [];
   if(db){
     const { data } = await db.from("comments").select("*, profiles(username, canton)").eq("post_id", postId).order("created_at", { ascending: true });
@@ -108,10 +114,10 @@ async function loadForumComments(postId){
 
   container.innerHTML = allReplies.map(r => `
     <div class="forumComment">
-      <div class="forumCommentHead">${r.username} · ${r.canton} <span>· ${r.time}</span></div>
-      <p>${r.content}</p>
+      <div class="forumCommentHead">${escapeHTML(r.username)} · ${escapeHTML(r.canton)} <span>· ${escapeHTML(r.time)}</span></div>
+      <p>${escapeHTML(r.content)}</p>
       <div class="forumCommentActions">
-        <span onclick="voteComment('${r.id||''}', 1, this)" style="cursor:pointer">Hilfreich (+${r.upvotes})</span>
+        <span onclick="voteComment('${escapeHTML(r.id||'')}', 1, this)" style="cursor:pointer">Hilfreich (+${r.upvotes})</span>
       </div>
     </div>
   `).join("");
@@ -119,8 +125,11 @@ async function loadForumComments(postId){
 
 async function addForumComment(){
   const t = document.getElementById("newComment");
-  const content = t.value.trim();
+  const content = sanitizeText(t.value, 2000);
   if(!content || !currentPost) return;
+
+  // Rate-limiting check
+  if(!checkRateLimit("add_forum_comment", 3000)) return;
 
   const payload = {
     post_id: currentPost.id,
@@ -131,14 +140,20 @@ async function addForumComment(){
   t.value = "";
   currentPost.comments++;
   document.getElementById("postCommentCount").textContent = currentPost.comments;
+  showToast("Antwort erfolgreich veröffentlicht!");
   await loadForumComments(currentPost.id);
   await loadForum();
 }
 
 async function voteComment(commentId, diff, el){
-  if(!db) return;
-  if(diff > 0){
-    await db.rpc ? db.rpc('increment_upvote', { comment_id: commentId }) : null;
+  if(!db || !commentId) {
+    if(el) el.textContent = "Danke!";
+    return;
+  }
+  if(!checkRateLimit(`vote_comment_${commentId}`, 2000)) return;
+
+  if(diff > 0 && db.rpc){
+    await db.rpc('increment_upvote', { comment_id: commentId });
   }
   el.textContent = "Danke!";
 }

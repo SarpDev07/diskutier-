@@ -43,10 +43,10 @@ async function loadPolls(){
     
     return {
       id: p.id,
-      category: p.category,
-      title: p.title,
+      category: p.category || "Alltag",
+      title: p.title || "",
       description: p.description || "",
-      options: p.options || ["JA", "NEIN"],
+      options: Array.isArray(p.options) && p.options.length ? p.options : ["JA", "NEIN"],
       is_featured: p.is_featured,
       time: formatTimeAgo(p.created_at),
       totalVotes: totalVotes,
@@ -63,7 +63,7 @@ function renderPollsUI(){
   const featured = currentPolls.find(p => p.is_featured) || currentPolls[0];
   const feed = currentPolls.filter(p => p.id !== featured.id);
 
-  // Featured Render
+  // Featured Render (Sicher mit textContent & escaped HTML)
   document.getElementById("featCat").textContent = featured.category;
   document.getElementById("featTime").textContent = featured.time;
   document.getElementById("featTitle").textContent = featured.title;
@@ -81,29 +81,41 @@ function renderPollsUI(){
   } else {
     featVotesContainer.style.display = "grid";
     featResultsContainer.style.display = "none";
-    featVotesContainer.innerHTML = featured.options.map((opt, idx) => `<button class="vote" onclick="submitPollVote('${featured.id}', ${idx}, true)">${opt}</button>`).join("");
+    featVotesContainer.innerHTML = featured.options.map((opt, idx) => {
+      const safeOpt = escapeHTML(opt);
+      const safeId = escapeHTML(featured.id);
+      return `<button class="vote" onclick="submitPollVote('${safeId}', ${idx}, true)">${safeOpt}</button>`;
+    }).join("");
   }
 
-  // Feed Render
-  document.getElementById("feed").innerHTML = feed.map((q, i) => `
-    <article class="feedItem">
-      <div class="meta"><span class="category">${q.category}</span><span>·</span><span>${q.time}</span></div>
-      <h2 onclick="openPollDetail('${q.id}')">${q.title}</h2>
-      <div class="feedStats">${q.totalVotes.toLocaleString('de-CH')} Stimmen</div>
-      <div class="quickVotes" id="qv-${q.id}">
-        ${q.options.map((opt, idx) => `
-          <button class="qv ${q.userVotedIndex === idx ? 'active' : ''}" onclick="submitPollVote('${q.id}', ${idx}, false)">${opt}</button>
-        `).join("")}
-      </div>
-    </article>
-    ${i === 1 ? '<div class="ad">Werbung</div>' : ''}
-  `).join("");
+  // Feed Render mit XSS-Schutz
+  document.getElementById("feed").innerHTML = feed.map((q, i) => {
+    const safeCat = escapeHTML(q.category);
+    const safeTime = escapeHTML(q.time);
+    const safeTitle = escapeHTML(q.title);
+    const safeId = escapeHTML(q.id);
+    const safeCount = q.totalVotes.toLocaleString('de-CH');
+
+    return `
+      <article class="feedItem">
+        <div class="meta"><span class="category">${safeCat}</span><span>·</span><span>${safeTime}</span></div>
+        <h2 onclick="openPollDetail('${safeId}')">${safeTitle}</h2>
+        <div class="feedStats">${safeCount} Stimmen</div>
+        <div class="quickVotes" id="qv-${safeId}">
+          ${q.options.map((opt, idx) => `
+            <button class="qv ${q.userVotedIndex === idx ? 'active' : ''}" onclick="submitPollVote('${safeId}', ${idx}, false)">${escapeHTML(opt)}</button>
+          `).join("")}
+        </div>
+      </article>
+      ${i === 1 ? '<div class="ad">Werbung</div>' : ''}
+    `;
+  }).join("");
 
   // Trending Sidebar
   document.getElementById("trending").innerHTML = currentPolls.slice(0, 5).map(q => `
-    <div class="trend" onclick="openPollDetail('${q.id}')">
-      <strong>${q.title}</strong>
-      <small>${q.totalVotes.toLocaleString('de-CH')} Stimmen · ${q.category}</small>
+    <div class="trend" onclick="openPollDetail('${escapeHTML(q.id)}')">
+      <strong>${escapeHTML(q.title)}</strong>
+      <small>${q.totalVotes.toLocaleString('de-CH')} Stimmen · ${escapeHTML(q.category)}</small>
     </div>
   `).join("");
 }
@@ -116,7 +128,7 @@ function renderResultsHTML(container, poll){
     const isSel = poll.userVotedIndex === idx;
     return `
       <div class="result ${isSel ? 'selected' : ''}">
-        <div class="resulttop"><span>${opt}</span><span>${pct} %</span></div>
+        <div class="resulttop"><span>${escapeHTML(opt)}</span><span>${pct} %</span></div>
         <div class="track"><div class="bar" style="width:${pct}%"></div></div>
       </div>
     `;
@@ -132,6 +144,9 @@ function renderResultsHTML(container, poll){
 
 async function submitPollVote(pollId, optionIndex, isFeatured){
   if(!db) return;
+  // Anti-Spam Rate Limit
+  if(!checkRateLimit(`vote_${pollId}`, 1000)) return;
+
   const guestSession = getGuestSession();
   const payload = {
     poll_id: pollId,
@@ -174,7 +189,8 @@ async function openPollDetail(pollId){
   } else {
     votesContainer.style.display = "grid";
     resultsContainer.style.display = "none";
-    votesContainer.innerHTML = currentPoll.options.map((opt, idx) => `<button class="vote" onclick="submitPollVote('${currentPoll.id}', ${idx}, false)">${opt}</button>`).join("");
+    const safeId = escapeHTML(currentPoll.id);
+    votesContainer.innerHTML = currentPoll.options.map((opt, idx) => `<button class="vote" onclick="submitPollVote('${safeId}', ${idx}, false)">${escapeHTML(opt)}</button>`).join("");
   }
 
   const otherPoll = currentPolls.find(p => p.id !== currentPoll.id);
@@ -212,11 +228,11 @@ async function loadPollComments(pollId){
   countSpan.textContent = allComments.length;
   container.innerHTML = allComments.map(c => `
     <div class="comment">
-      <div class="user">${c.username} · ${c.canton} · <span style="font-weight:400;color:#777">${c.time}</span></div>
-      <p>${c.content}</p>
+      <div class="user">${escapeHTML(c.username)} · ${escapeHTML(c.canton)} · <span style="font-weight:400;color:#777">${escapeHTML(c.time)}</span></div>
+      <p>${escapeHTML(c.content)}</p>
       <div class="score">
-        <span onclick="voteComment('${c.id||''}', 1, this)" style="cursor:pointer">+ ${c.upvotes}</span>&nbsp;&nbsp;&nbsp;
-        <span onclick="voteComment('${c.id||''}', -1, this)" style="cursor:pointer">− ${c.downvotes}</span>
+        <span onclick="voteComment('${escapeHTML(c.id||'')}', 1, this)" style="cursor:pointer">+ ${c.upvotes}</span>&nbsp;&nbsp;&nbsp;
+        <span onclick="voteComment('${escapeHTML(c.id||'')}', -1, this)" style="cursor:pointer">− ${c.downvotes}</span>
       </div>
     </div>
   `).join("");
@@ -224,8 +240,11 @@ async function loadPollComments(pollId){
 
 async function addPollComment(){
   const textarea = document.getElementById("newPollComment");
-  const content = textarea.value.trim();
+  const content = sanitizeText(textarea.value, 1500);
   if(!content || !currentPoll) return;
+
+  // Rate Limiting anti-spam
+  if(!checkRateLimit("add_poll_comment", 3000)) return;
   
   const payload = {
     poll_id: currentPoll.id,
@@ -234,5 +253,6 @@ async function addPollComment(){
   };
   await db.from("comments").insert([payload]);
   textarea.value = "";
+  showToast("Kommentar veröffentlicht!");
   await loadPollComments(currentPoll.id);
 }

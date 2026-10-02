@@ -12,32 +12,40 @@ function setCreateType(type){
 }
 
 function updateCreatePreview(){
-  const title = document.getElementById("createTitle").value.trim() || "Deine Frage erscheint hier.";
+  const title = sanitizeText(document.getElementById("createTitle").value, 150) || "Deine Frage erscheint hier.";
   document.getElementById("previewText").textContent = title;
   if(activeCreateType === "poll"){
-    const opts = document.getElementById("createOptions").value.split(",").map(s => s.trim()).filter(Boolean);
-    document.getElementById("previewVotes").innerHTML = opts.map(o => `<button class="qv">${o}</button>`).join("");
+    const rawOpts = document.getElementById("createOptions").value;
+    const opts = rawOpts.split(",").map(s => sanitizeText(s, 50)).filter(Boolean);
+    document.getElementById("previewVotes").innerHTML = (opts.length ? opts : ["JA", "NEIN"]).map(o => `<button class="qv">${escapeHTML(o)}</button>`).join("");
   }
 }
 
 async function submitCreate(){
-  const title = document.getElementById("createTitle").value.trim();
-  const body = document.getElementById("createBody").value.trim();
-  const category = document.getElementById("createCategory").value;
+  const title = sanitizeText(document.getElementById("createTitle").value, 150);
+  const body = sanitizeText(document.getElementById("createBody").value, 4000);
+  const category = sanitizeText(document.getElementById("createCategory").value, 40);
   const errDiv = document.getElementById("createError");
   errDiv.textContent = "";
+
+  if(!checkRateLimit("submit_create", 4000)) return;
 
   if(!title){
     errDiv.textContent = "Bitte einen Titel / Frage angeben.";
     return;
   }
 
+  if(title.length < 5){
+    errDiv.textContent = "Der Titel muss mindestens 5 Zeichen lang sein.";
+    return;
+  }
+
   if(activeCreateType === "post"){
-    const paragraphs = body ? body.split("\n\n").filter(Boolean) : [title];
+    const paragraphs = body ? body.split("\n\n").map(p => sanitizeText(p, 2000)).filter(Boolean) : [title];
     const { error } = await db.from("posts").insert([{
       title,
       category,
-      excerpt: paragraphs[0],
+      excerpt: paragraphs[0] ? paragraphs[0].substring(0, 180) : title,
       body: paragraphs,
       user_id: currentUser ? currentUser.id : null
     }]);
@@ -51,7 +59,8 @@ async function submitCreate(){
     await loadForum();
     showPage("forum");
   } else {
-    const opts = document.getElementById("createOptions").value.split(",").map(s => s.trim()).filter(Boolean);
+    const rawOpts = document.getElementById("createOptions").value;
+    const opts = rawOpts.split(",").map(s => sanitizeText(s, 50)).filter(Boolean);
     const options = opts.length > 1 ? opts : ["JA", "NEIN"];
     const { error } = await db.from("polls").insert([{
       title,
@@ -75,28 +84,28 @@ async function submitCreate(){
 
 // SUCHE
 function doSearch(){
-  const s = document.getElementById("searchInput").value.toLowerCase().trim();
+  const s = sanitizeText(document.getElementById("searchInput").value, 100).toLowerCase();
   if(!s){
     document.getElementById("searchResults").innerHTML = "";
     return;
   }
-  const pollMatches = currentPolls.filter(q => q.title.toLowerCase().includes(s) || q.category.toLowerCase().includes(s));
-  const postMatches = currentPosts.filter(p => p.title.toLowerCase().includes(s) || p.cat.toLowerCase().includes(s));
+  const pollMatches = currentPolls.filter(q => (q.title && q.title.toLowerCase().includes(s)) || (q.category && q.category.toLowerCase().includes(s)));
+  const postMatches = currentPosts.filter(p => (p.title && p.title.toLowerCase().includes(s)) || (p.cat && p.cat.toLowerCase().includes(s)));
 
   let html = "";
   if(pollMatches.length > 0){
-    html += `<div class="eyebrow" style="margin-top:20px">Abstimmungen</div>` + pollMatches.slice(0, 5).map(q => `
-      <div class="searchResult" onclick="openPollDetail('${q.id}')">
-        <div class="meta"><span class="category">${q.category}</span> · ${q.totalVotes.toLocaleString('de-CH')} Stimmen</div>
-        <b>${q.title}</b>
+    html += `<div class="eyebrow" style="margin-top:20px">Abstimmungen</div>` + pollMatches.slice(0, 6).map(q => `
+      <div class="searchResult" onclick="openPollDetail('${escapeHTML(q.id)}')">
+        <div class="meta"><span class="category">${escapeHTML(q.category)}</span> · ${q.totalVotes.toLocaleString('de-CH')} Stimmen</div>
+        <b>${escapeHTML(q.title)}</b>
       </div>
     `).join("");
   }
   if(postMatches.length > 0){
-    html += `<div class="eyebrow" style="margin-top:20px">Beiträge</div>` + postMatches.slice(0, 5).map(p => `
-      <div class="searchResult" onclick="openPost('${p.id}')">
-        <div class="meta"><span class="category">${p.cat}</span> · ${p.comments} Antworten</div>
-        <b>${p.title}</b>
+    html += `<div class="eyebrow" style="margin-top:20px">Beiträge</div>` + postMatches.slice(0, 6).map(p => `
+      <div class="searchResult" onclick="openPost('${escapeHTML(p.id)}')">
+        <div class="meta"><span class="category">${escapeHTML(p.cat)}</span> · ${p.comments} Antworten</div>
+        <b>${escapeHTML(p.title)}</b>
       </div>
     `).join("");
   }
@@ -117,8 +126,8 @@ const categoriesList = [
 const catGridEl = document.getElementById("categoryGrid");
 if(catGridEl){
   catGridEl.innerHTML = categoriesList.map(c => `
-    <div class="catrow" onclick="filterByCat('${c[0]}')">
-      <h3>${c[0]}</h3>
+    <div class="catrow" onclick="filterByCat('${escapeHTML(c[0])}')">
+      <h3>${escapeHTML(c[0])}</h3>
       <p>${c[1]} aktive Themen · Fragen & Beiträge ansehen</p>
     </div>
   `).join("");
@@ -126,20 +135,22 @@ if(catGridEl){
 
 function filterByCat(catName){
   showPage('forum');
-  const filtered = currentPosts.filter(p => p.cat.toLowerCase() === catName.toLowerCase());
+  const safeCatName = sanitizeText(catName, 50);
+  const filtered = currentPosts.filter(p => p.cat && p.cat.toLowerCase() === safeCatName.toLowerCase());
+  const forumListEl = document.getElementById("forumList");
   if(filtered.length > 0){
-    document.getElementById("forumList").innerHTML = filtered.map(p => `
-      <article class="postRow" onclick="openPost('${p.id}')">
+    forumListEl.innerHTML = filtered.map(p => `
+      <article class="postRow" onclick="openPost('${escapeHTML(p.id)}')">
         <div class="replyCount"><b>${p.comments}</b>Antworten</div>
         <div>
-          <div class="postTitle">${p.title}</div>
-          <div class="postExcerpt">${p.excerpt}</div>
-          <div class="postMeta"><b>${p.cat}</b> · ${p.user} (${p.canton}) · ${p.time} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
+          <div class="postTitle">${escapeHTML(p.title)}</div>
+          <div class="postExcerpt">${escapeHTML(p.excerpt)}</div>
+          <div class="postMeta"><b>${escapeHTML(p.cat)}</b> · ${escapeHTML(p.user)} (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
         </div>
       </article>
     `).join("");
   } else {
-    document.getElementById("forumList").innerHTML = `<p style="color:#777;padding:20px 0">Keine Beiträge in "${catName}" gefunden. <a href="#" onclick="showPage('create');return false;" style="color:var(--red);font-weight:900">Erstelle den ersten Beitrag!</a></p>`;
+    forumListEl.innerHTML = `<p style="color:#777;padding:20px 0">Keine Beiträge in "${escapeHTML(safeCatName)}" gefunden. <a href="#" onclick="showPage('create');return false;" style="color:var(--red);font-weight:900">Erstelle den ersten Beitrag!</a></p>`;
   }
 }
 
@@ -159,7 +170,8 @@ function showPage(id){
 }
 
 function scrollFeed(){
-  document.getElementById("feedStart").scrollIntoView({ behavior: "smooth" });
+  const el = document.getElementById("feedStart");
+  if(el) el.scrollIntoView({ behavior: "smooth" });
 }
 
 function shareCurrent(){
@@ -182,7 +194,7 @@ function showToast(msg, dur = 3200){
   }
   const el = document.createElement("div");
   el.className = "toast";
-  el.textContent = msg;
+  el.textContent = sanitizeText(msg, 200);
   container.appendChild(el);
   setTimeout(() => el.classList.add("show"), 20);
   setTimeout(() => {

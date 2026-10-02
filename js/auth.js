@@ -19,7 +19,7 @@ async function initAuth(){
       currentProfile = null;
     }
     updateNavAuth();
-    if(document.getElementById("profile").classList.contains("active")){
+    if(document.getElementById("profile") && document.getElementById("profile").classList.contains("active")){
       renderProfilePage();
     }
   });
@@ -29,22 +29,31 @@ async function fetchProfile(){
   if(!currentUser || !db) return;
   const { data } = await db.from("profiles").select("*").eq("id", currentUser.id).single();
   if(data){
-    currentProfile = data;
-  } else {
     currentProfile = {
-      username: currentUser.user_metadata?.username || currentUser.email.split("@")[0],
-      canton: currentUser.user_metadata?.canton || "CH",
-      avatar_initials: (currentUser.user_metadata?.username || currentUser.email).substring(0,2).toUpperCase()
+      username: sanitizeText(data.username, 30),
+      canton: sanitizeText(data.canton, 10),
+      avatar_initials: sanitizeText(data.avatar_initials, 4)
+    };
+  } else {
+    const rawUsername = currentUser.user_metadata?.username || currentUser.email.split("@")[0];
+    currentProfile = {
+      username: sanitizeText(rawUsername, 30),
+      canton: sanitizeText(currentUser.user_metadata?.canton || "CH", 10),
+      avatar_initials: sanitizeText(rawUsername.substring(0,2).toUpperCase(), 2)
     };
   }
 }
 
 function updateNavAuth(){
   const navAuth = document.getElementById("navAuth");
+  if(!navAuth) return;
+
   if(currentUser && currentProfile){
+    const safeUser = escapeHTML(currentProfile.username);
+    const safeCanton = escapeHTML(currentProfile.canton || 'CH');
     navAuth.innerHTML = `
       <button class="searchBtn" onclick="showPage('search')" aria-label="Suche">Suche</button>
-      <span onclick="showPage('profile')" style="color:var(--ink);font-weight:900">${currentProfile.username} (${currentProfile.canton||'CH'})</span>
+      <span onclick="showPage('profile')" style="color:var(--ink);font-weight:900">${safeUser} (${safeCanton})</span>
       <span onclick="handleLogout()" style="color:var(--muted)">Abmelden</span>
     `;
   } else {
@@ -57,10 +66,13 @@ function updateNavAuth(){
 }
 
 async function handleLogin(){
-  const email = document.getElementById("loginEmail").value.trim();
+  const email = sanitizeText(document.getElementById("loginEmail").value, 100);
   const password = document.getElementById("loginPassword").value;
   const errDiv = document.getElementById("loginError");
   errDiv.textContent = "";
+
+  if(!checkRateLimit("auth_login", 2000)) return;
+
   if(!email || !password){
     errDiv.textContent = "Bitte E-Mail und Passwort eingeben.";
     return;
@@ -84,14 +96,25 @@ async function handleLogin(){
 }
 
 async function handleRegister(){
-  const username = document.getElementById("regUsername").value.trim();
-  const canton = document.getElementById("regCanton").value;
-  const email = document.getElementById("regEmail").value.trim();
+  const username = sanitizeText(document.getElementById("regUsername").value, 30);
+  const canton = sanitizeText(document.getElementById("regCanton").value, 10);
+  const email = sanitizeText(document.getElementById("regEmail").value, 100);
   const password = document.getElementById("regPassword").value;
   const errDiv = document.getElementById("regError");
   errDiv.textContent = "";
+
+  if(!checkRateLimit("auth_register", 3000)) return;
+
   if(!username || !email || !password){
     errDiv.textContent = "Bitte alle Pflichtfelder ausfüllen.";
+    return;
+  }
+  if(username.length < 3 || username.length > 25){
+    errDiv.textContent = "Der Benutzername muss zwischen 3 und 25 Zeichen lang sein.";
+    return;
+  }
+  if(!/^[a-zA-Z0-9_\-\. öäüÖÄÜéèà]+$/.test(username)){
+    errDiv.textContent = "Ungültige Sonderzeichen im Benutzernamen.";
     return;
   }
   if(password.length < 6){
@@ -108,19 +131,11 @@ async function handleRegister(){
   if(error){
     errDiv.textContent = "Registrierung fehlgeschlagen: " + error.message;
   } else {
-    if(data.session){
-      currentUser = data.user;
-      await fetchProfile();
-      updateNavAuth();
-      showToast("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
-      showPage("home");
-    } else {
-      currentUser = data.user;
-      await fetchProfile();
-      updateNavAuth();
-      showToast("Konto erstellt! Du bist jetzt eingeloggt.");
-      showPage("home");
-    }
+    currentUser = data.user;
+    await fetchProfile();
+    updateNavAuth();
+    showToast("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
+    showPage("home");
   }
 }
 
@@ -129,52 +144,61 @@ async function handleLogout(){
   currentUser = null;
   currentProfile = null;
   updateNavAuth();
+  showToast("Erfolgreich abgemeldet.");
   showPage("home");
 }
 
 async function renderProfilePage(){
+  const profAvatar = document.getElementById("profAvatar");
+  const profUsername = document.getElementById("profUsername");
+  const profMeta = document.getElementById("profMeta");
+  const profPollsCount = document.getElementById("profPollsCount");
+  const profPostsCount = document.getElementById("profPostsCount");
+  const profCommentsCount = document.getElementById("profCommentsCount");
+  const profActivity = document.getElementById("profileActivity");
+
   if(currentUser && currentProfile){
-    document.getElementById("profAvatar").textContent = currentProfile.avatar_initials || currentProfile.username.substring(0,2).toUpperCase();
-    document.getElementById("profUsername").textContent = currentProfile.username;
-    document.getElementById("profMeta").textContent = `${currentProfile.canton || 'Schweiz'} · Mitglied`;
+    profAvatar.textContent = currentProfile.avatar_initials || currentProfile.username.substring(0,2).toUpperCase();
+    profUsername.textContent = currentProfile.username;
+    profMeta.textContent = `${currentProfile.canton || 'Schweiz'} · Mitglied`;
 
     const { data: userPolls } = await db.from("polls").select("id, title, category, created_at").eq("user_id", currentUser.id);
     const { data: userPosts } = await db.from("posts").select("id, title, category, created_at").eq("user_id", currentUser.id);
     const { data: userComments } = await db.from("comments").select("id, content, created_at").eq("user_id", currentUser.id);
 
-    document.getElementById("profPollsCount").textContent = userPolls ? userPolls.length : 0;
-    document.getElementById("profPostsCount").textContent = userPosts ? userPosts.length : 0;
-    document.getElementById("profCommentsCount").textContent = userComments ? userComments.length : 0;
+    profPollsCount.textContent = userPolls ? userPolls.length : 0;
+    profPostsCount.textContent = userPosts ? userPosts.length : 0;
+    profCommentsCount.textContent = userComments ? userComments.length : 0;
 
     let activityHTML = "";
     if(userPosts && userPosts.length > 0){
       activityHTML += userPosts.map(p => `
-        <div class="feedItem" onclick="openPost('${p.id}')">
-          <div class="meta">${formatTimeAgo(p.created_at)} · Beitrag</div>
-          <h2>${p.title}</h2>
+        <div class="feedItem" onclick="openPost('${escapeHTML(p.id)}')">
+          <div class="meta">${escapeHTML(formatTimeAgo(p.created_at))} · Beitrag</div>
+          <h2>${escapeHTML(p.title)}</h2>
         </div>
       `).join("");
     }
     if(userPolls && userPolls.length > 0){
       activityHTML += userPolls.map(p => `
-        <div class="feedItem" onclick="openPollDetail('${p.id}')">
-          <div class="meta">${formatTimeAgo(p.created_at)} · Abstimmung</div>
-          <h2>${p.title}</h2>
+        <div class="feedItem" onclick="openPollDetail('${escapeHTML(p.id)}')">
+          <div class="meta">${escapeHTML(formatTimeAgo(p.created_at))} · Abstimmung</div>
+          <h2>${escapeHTML(p.title)}</h2>
         </div>
       `).join("");
     }
     if(!activityHTML){
       activityHTML = '<p style="color:#777;padding:20px 0">Noch keine Aktivitäten. Erstelle deinen ersten Beitrag oder stimme ab!</p>';
     }
-    document.getElementById("profileActivity").innerHTML = activityHTML;
+    profActivity.innerHTML = activityHTML;
   } else {
-    document.getElementById("profAvatar").textContent = "?";
-    document.getElementById("profUsername").textContent = "Gast";
-    document.getElementById("profMeta").textContent = "Nicht angemeldet";
-    document.getElementById("profPollsCount").textContent = "0";
-    document.getElementById("profPostsCount").textContent = "0";
-    document.getElementById("profCommentsCount").textContent = "0";
-    document.getElementById("profileActivity").innerHTML = `
+    profAvatar.textContent = "?";
+    profUsername.textContent = "Gast";
+    profMeta.textContent = "Nicht angemeldet";
+    profPollsCount.textContent = "0";
+    profPostsCount.textContent = "0";
+    profCommentsCount.textContent = "0";
+    profActivity.innerHTML = `
       <p style="color:#777;padding:20px 0">Du bist als Gast unterwegs. <span class="category" onclick="showPage('login')" style="cursor:pointer;font-weight:900">Jetzt anmelden</span> oder <span class="category" onclick="showPage('register')" style="cursor:pointer;font-weight:900">Registrieren</span> um ein Profil zu erstellen.</p>
     `;
   }

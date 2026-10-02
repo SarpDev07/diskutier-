@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>diskutier.ch — Die Schweiz stimmt ab</title>
   
   <!-- Stylesheets -->
@@ -73,7 +75,7 @@
  
   <div class="commentComposer" style="margin-top:25px;border-top:1px solid #dedede">
     <b>Deine Meinung zu dieser Abstimmung</b>
-    <textarea id="newPollComment" placeholder="Schreib deinen Kommentar…"></textarea>
+    <textarea id="newPollComment" maxlength="1500" placeholder="Schreib deinen Kommentar…"></textarea>
     <button onclick="addPollComment()">Kommentar veröffentlichen</button>
   </div>
 
@@ -104,7 +106,7 @@
   </div>
   <div class="commentComposer">
     <b>Deine Antwort</b>
-    <textarea id="newComment" placeholder="Schreib deine Antwort …"></textarea>
+    <textarea id="newComment" maxlength="2000" placeholder="Schreib deine Antwort …"></textarea>
     <button onclick="addForumComment()">Antwort veröffentlichen</button>
   </div>
   <div class="commentsHead"><b><span id="postCommentCount">0</span> Antworten</b><div class="sort"><button>Hilfreich</button><button>Neu</button></div></div>
@@ -130,7 +132,7 @@
     <input id="createTitle" maxlength="140" placeholder="Deine Frage oder Beitragstitel…" oninput="updateCreatePreview()">
     
     <label>Beschreibung / Text <span style="font-weight:400;color:#888">(optional bei Abstimmung)</span></label>
-    <textarea id="createBody" placeholder="Etwas Kontext für die Community…"></textarea>
+    <textarea id="createBody" maxlength="4000" placeholder="Etwas Kontext für die Community…"></textarea>
     
     <label>Kategorie</label>
     <select id="createCategory">
@@ -147,7 +149,7 @@
     
     <div id="pollFields" style="display:none">
       <label>Optionen (durch Komma getrennt)</label>
-      <input id="createOptions" placeholder="z. B. JA, NEIN, KOMMT DARAUF AN" value="JA, NEIN, KOMMT DARAUF AN" oninput="updateCreatePreview()">
+      <input id="createOptions" maxlength="200" placeholder="z. B. JA, NEIN, KOMMT DARAUF AN" value="JA, NEIN, KOMMT DARAUF AN" oninput="updateCreatePreview()">
     </div>
     
     <div class="preview">
@@ -164,7 +166,7 @@
 <!-- SEITE 7: SUCHE -->
 <section id="search" class="page searchPage">
   <div class="eyebrow">Suche</div>
-  <input id="searchInput" placeholder="Wonach möchtest du suchen?" oninput="doSearch()">
+  <input id="searchInput" maxlength="100" placeholder="Wonach möchtest du suchen?" oninput="doSearch()">
   <div id="searchResults"></div>
 </section>
 
@@ -190,8 +192,8 @@
 <section id="login" class="page">
   <div class="authbox">
     <h1>Anmelden</h1>
-    <input id="loginEmail" type="email" placeholder="E-Mail">
-    <input id="loginPassword" type="password" placeholder="Passwort">
+    <input id="loginEmail" type="email" maxlength="100" placeholder="E-Mail">
+    <input id="loginPassword" type="password" maxlength="100" placeholder="Passwort">
     <div id="loginError" class="authMsg"></div>
     <button onclick="handleLogin()">Anmelden</button>
     <p class="meta">Noch kein Konto? <span class="category" onclick="showPage('register')" style="cursor:pointer">Registrieren</span></p>
@@ -202,7 +204,7 @@
 <section id="register" class="page">
   <div class="authbox">
     <h1>Mitdiskutieren.</h1>
-    <input id="regUsername" placeholder="Benutzername (z.B. AlpenFuchs)">
+    <input id="regUsername" maxlength="25" placeholder="Benutzername (z.B. AlpenFuchs)">
     <select id="regCanton" style="width:100%;padding:13px;margin:6px 0;border:1px solid #aaa;background:white">
       <option value="ZH">Zürich (ZH)</option>
       <option value="BE">Bern (BE)</option>
@@ -232,8 +234,8 @@
       <option value="JU">Jura (JU)</option>
       <option value="CH" selected>Ganze Schweiz (CH)</option>
     </select>
-    <input id="regEmail" type="email" placeholder="E-Mail">
-    <input id="regPassword" type="password" placeholder="Passwort (mind. 6 Zeichen)">
+    <input id="regEmail" type="email" maxlength="100" placeholder="E-Mail">
+    <input id="regPassword" type="password" maxlength="100" placeholder="Passwort (mind. 6 Zeichen)">
     <div id="regError" class="authMsg"></div>
     <button onclick="handleRegister()">Konto erstellen</button>
     <p class="meta">Du kannst auch ohne Konto abstimmen.</p>

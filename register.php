@@ -6,6 +6,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Registrieren — diskutier.ch</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,7 +24,7 @@
     </nav>
     <button class="ask" onclick="location.href='index.html#create'">Beitrag erstellen</button>
     <div class="auth">
-      <span onclick="location.href='login.html'">Anmelden</span>
+      <span onclick="location.href='login.php'">Anmelden</span>
     </div>
   </div>
 </header>
@@ -34,7 +36,7 @@
       <h1>Mitdiskutieren.</h1>
       
       <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Benutzername</label>
-      <input id="regUsername" placeholder="z. B. AlpenFuchs" autofocus>
+      <input id="regUsername" maxlength="25" placeholder="z. B. AlpenFuchs" autofocus>
       
       <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Dein Kanton</label>
       <select id="regCanton" style="width:100%;padding:13px;margin:6px 0;border:1px solid #aaa;background:white">
@@ -68,16 +70,16 @@
       </select>
       
       <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">E-Mail</label>
-      <input id="regEmail" type="email" placeholder="deine.email@beispiel.ch">
+      <input id="regEmail" type="email" maxlength="100" placeholder="deine.email@beispiel.ch">
       
       <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Passwort (mind. 6 Zeichen)</label>
-      <input id="regPassword" type="password" placeholder="••••••••">
+      <input id="regPassword" type="password" maxlength="100" placeholder="••••••••">
       
       <div id="regError" class="authMsg"></div>
       <button onclick="handleStandaloneRegister()">Konto erstellen</button>
       
       <p class="meta" style="margin-top:20px">
-        Bereits registriert? <a href="login.html" class="category" style="cursor:pointer;font-weight:900;text-decoration:none">Hier anmelden</a>
+        Bereits registriert? <a href="login.php" class="category" style="cursor:pointer;font-weight:900;text-decoration:none">Hier anmelden</a>
       </p>
     </div>
   </main>
@@ -88,21 +90,32 @@
   <button onclick="location.href='index.html#forum'">Beiträge</button>
   <button onclick="location.href='index.html#create'">Erstellen</button>
   <button onclick="location.href='index.html#search'">Suche</button>
-  <button class="active" onclick="location.href='register.html'">Registrieren</button>
+  <button class="active" onclick="location.href='register.php'">Registrieren</button>
 </nav>
 
 <script src="js/supabase-config.js"></script>
 <script src="js/auth.js"></script>
 <script>
 async function handleStandaloneRegister(){
-  const username = document.getElementById("regUsername").value.trim();
-  const canton = document.getElementById("regCanton").value;
-  const email = document.getElementById("regEmail").value.trim();
+  const username = sanitizeText(document.getElementById("regUsername").value, 25);
+  const canton = sanitizeText(document.getElementById("regCanton").value, 10);
+  const email = sanitizeText(document.getElementById("regEmail").value, 100);
   const password = document.getElementById("regPassword").value;
   const errDiv = document.getElementById("regError");
   errDiv.textContent = "";
+
+  if(!checkRateLimit("standalone_register", 3000)) return;
+
   if(!username || !email || !password){
     errDiv.textContent = "Bitte alle Pflichtfelder ausfüllen.";
+    return;
+  }
+  if(username.length < 3 || username.length > 25){
+    errDiv.textContent = "Der Benutzername muss zwischen 3 und 25 Zeichen lang sein.";
+    return;
+  }
+  if(!/^[a-zA-Z0-9_\-\. öäüÖÄÜéèà]+$/.test(username)){
+    errDiv.textContent = "Ungültige Sonderzeichen im Benutzernamen.";
     return;
   }
   if(password.length < 6){
