@@ -83,6 +83,9 @@ async function handleStandaloneLogin(){
       errDiv.textContent = "Anmeldung fehlgeschlagen: " + error.message;
     }
   } else {
+    if(data.user){
+      await ensureProfileRecord(data.user);
+    }
     location.href = "index.html";
   }
 }
