@@ -289,15 +289,30 @@
     <h1>Impressum</h1>
     <p><strong>Angaben gemäss Schweizer Recht:</strong></p>
     <p><strong>diskutier.ch</strong><br>
-    Sarp Kaman<br>
+    Verantwortlich: Sarp Kaman<br>
     Bahnhofstrasse 31<br>
-    4106 Therwil<br>
+    4106 Therwil (Kanton Basel-Landschaft)<br>
     Schweiz</p>
     <h2>Kontakt</h2>
     <p>E-Mail: <a href="mailto:info@diskutier.ch" style="color:var(--red);font-weight:900">info@diskutier.ch</a><br>
     Webseite: <a href="https://diskutier.ch">https://diskutier.ch</a></p>
-    <h2>Haftungsausschluss</h2>
-    <p>Die Inhalte unserer Seiten wurden mit grösster Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte von Nutzerbeiträgen in den Foren und Kommentaren übernimmt der Betreiber keine Gewähr.</p>
+    <h2>Haftung für Inhalte und Links</h2>
+    <p>Als Betreiber dieser Plattform sind wir für eigene Inhalte nach den allgemeinen Gesetzen verantwortlich. Für von Nutzern erstellte Fragen, Forenbeiträge und Kommentare übernimmt der Betreiber keine Haftung. Rechtswidrige Inhalte werden bei Kenntnisnahme unverzüglich entfernt.</p>
+  </div>
+</section>
+
+<!-- SEITE 15: NUTZUNGSBEDINGUNGEN & RICHTLINIEN -->
+<section id="terms" class="page">
+  <div class="legalContent">
+    <div class="eyebrow">Richtlinien</div>
+    <h1>Nutzungsbedingungen & Community-Regeln</h1>
+    <p>diskutier.ch ist ein offenes Forum für die Schweizer Bevölkerung. Um eine respektvolle Diskussionskultur zu gewährleisten, gelten folgende Regeln:</p>
+    <h2>1. Respektvoller Umgang</h2>
+    <p>Beleidigungen, Diskriminierung, Hassrede (Hate Speech), rassistische oder pornografische Inhalte sind streng untersagt und führen zur sofortigen Sperre.</p>
+    <h2>2. Keine Manipulation</h2>
+    <p>Das automatisierte Abstimmen durch Bots, Skripte oder Mehrfach-Votings ist nicht gestattet und wird technisch unterbunden.</p>
+    <h2>3. Meldung von Verstössen</h2>
+    <p>Solltest du unangemessene Beiträge oder Kommentare entdecken, melde diese bitte per E-Mail an <a href="mailto:info@diskutier.ch">info@diskutier.ch</a>.</p>
   </div>
 </section>
 
@@ -319,18 +334,52 @@
 </aside>
 </div>
 
-<!-- Footer -->
+<!-- 4-Spaltiger Professioneller Schweizer Footer -->
 <footer class="siteFooter">
-  <div class="footerInner">
-    <div><b>diskutier.ch</b> — Die Schweizer Abstimmungs- und Meinungsplattform © 2026</div>
-    <div class="footerLinks">
-      <span onclick="showPage('about')">Über uns</span>
-      <span onclick="showPage('contact')">Kontakt</span>
-      <span onclick="showPage('privacy')">Datenschutz</span>
-      <span onclick="showPage('imprint')">Impressum</span>
+  <div class="footerGrid">
+    <div class="footerCol">
+      <h4>diskutier<b>.ch</b></h4>
+      <p>Die unabhängige Schweizer Plattform für tägliche Abstimmungen, Meinungen und Foren-Diskussionen. 100 % unabhängig & werbefinanziert.</p>
+      <p style="font-size:11px;color:#888">🇨🇭 Made in Switzerland</p>
+    </div>
+    <div class="footerCol">
+      <h4>Bereiche</h4>
+      <ul>
+        <li><span onclick="showPage('home')">Abstimmungen</span></li>
+        <li><span onclick="showPage('forum')">Beiträge & Forum</span></li>
+        <li><span onclick="showPage('categories')">Alle Themen</span></li>
+        <li><span onclick="showPage('create')">Frage stellen</span></li>
+      </ul>
+    </div>
+    <div class="footerCol">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><span onclick="showPage('privacy')">Datenschutz & Cookies</span></li>
+        <li><span onclick="showPage('imprint')">Impressum</span></li>
+        <li><span onclick="showPage('terms')">Nutzungsbedingungen</span></li>
+        <li><span onclick="showPage('about')">Über uns</span></li>
+      </ul>
+    </div>
+    <div class="footerCol">
+      <h4>Kontakt & Standort</h4>
+      <p><strong>Diskutier.ch</strong><br>
+      Sarp Kaman<br>
+      Bahnhofstrasse 31<br>
+      4106 Therwil, Schweiz</p>
+      <p>E-Mail: <a href="mailto:info@diskutier.ch" style="color:var(--red);font-weight:900">info@diskutier.ch</a></p>
     </div>
   </div>
+  <div class="footerBottom">
+    <div>© 2026 diskutier.ch — Alle Rechte vorbehalten.</div>
+    <div>Plattform für offene Meinungsbildung in der Schweiz</div>
+  </div>
 </footer>
+
+<!-- Cookie Consent Banner -->
+<div id="cookieBanner" class="cookieBanner">
+  <p>Wir verwenden Cookies und Google AdSense, um Inhalte und Anzeigen zu personalisieren sowie die Website-Nutzung zu analysieren. Weitere Informationen findest du in unserer <a href="#" onclick="showPage('privacy');return false;">Datenschutzerklärung</a>.</p>
+  <button onclick="acceptCookies()">Einverstanden</button>
+</div>
 
 <!-- Mobile Feste Navigation -->
 <nav class="mobileNav">
@@ -347,6 +396,21 @@
 <script src="js/polls.js"></script>
 <script src="js/forum.js"></script>
 <script src="js/app.js"></script>
+<script>
+// Cookie Consent Management
+function checkCookiesConsent(){
+  if(!localStorage.getItem("diskutier_cookies_accepted")){
+    const banner = document.getElementById("cookieBanner");
+    if(banner) banner.style.display = "flex";
+  }
+}
+function acceptCookies(){
+  localStorage.setItem("diskutier_cookies_accepted", "true");
+  const banner = document.getElementById("cookieBanner");
+  if(banner) banner.style.display = "none";
+}
+setTimeout(checkCookiesConsent, 800);
+</script>
 
 </body>
 </html>
