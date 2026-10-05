@@ -13,7 +13,9 @@ const POLL_BASELINES = {
   "Sind 30 Franken für eine Pizza in der Schweiz zu viel?": { baseVotes: 382, optionCounts: [267, 46, 69] },
   "iPhone oder Samsung?": { baseVotes: 612, optionCounts: [336, 227, 49] },
   "Homeoffice oder Büro?": { baseVotes: 467, optionCounts: [280, 65, 122] },
-  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 279, optionCounts: [187, 39, 53] }
+  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 279, optionCounts: [187, 39, 53] },
+  "10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?": { baseVotes: 1420, optionCounts: [738, 682, 0] },
+  "poll_10m_schweiz": { baseVotes: 1420, optionCounts: [738, 682, 0] }
 };
 
 // INITIALE SCHWEIZER COMMUNITY-KOMMENTARE FÜR BESTEHENDE FRAGEN
@@ -97,7 +99,7 @@ async function loadPolls(){
 
   currentPolls = polls.map((p, pIdx) => {
     const votes = p.poll_votes || [];
-    const base = POLL_BASELINES[p.title] || { baseVotes: 0, optionCounts: (p.options || []).map(()=>0) };
+    const base = POLL_BASELINES[p.title] || (p.id && POLL_BASELINES[p.id]) || { baseVotes: 0, optionCounts: (p.options || []).map(()=>0) };
     
     // Kombiniere Basis-Stimmen mit echten DB-Stimmen
     const optionCounts = (p.options || []).map((_, idx) => {
