@@ -24,7 +24,7 @@
   <meta name="twitter:description" content="Täglich neue Schweizer Abstimmungen und Foren-Diskussionen.">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 
   <!-- Externe SDKs -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -633,11 +633,26 @@
 
 <!-- Mobile Feste Navigation -->
 <nav class="mobileNav">
-  <button data-tab="home" class="active" onclick="Router.navigate('/')">Abstimmen</button>
-  <button data-tab="forum" onclick="Router.navigate('/beitraege')">Beiträge</button>
-  <button data-tab="create" onclick="Router.navigate('/erstellen')">Erstellen</button>
-  <button data-tab="search" onclick="Router.navigate('/suche')">Suche</button>
-  <button data-tab="profile" onclick="Router.navigate(currentUser && currentProfile ? '/profil/' + encodeURIComponent(currentProfile.username) : '/anmelden')">Profil</button>
+  <button data-tab="home" class="active" onclick="Router.navigate('/')" aria-label="Abstimmungen">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+    <span>Abstimmen</span>
+  </button>
+  <button data-tab="forum" onclick="Router.navigate('/beitraege')" aria-label="Beiträge">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    <span>Beiträge</span>
+  </button>
+  <button data-tab="create" class="createNavBtn" onclick="Router.navigate('/erstellen')" aria-label="Erstellen">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <span>Erstellen</span>
+  </button>
+  <button data-tab="search" onclick="Router.navigate('/suche')" aria-label="Suche">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <span>Suche</span>
+  </button>
+  <button data-tab="profile" onclick="Router.navigate(currentUser && currentProfile ? '/profil/' + encodeURIComponent(currentProfile.username) : '/anmelden')" aria-label="Profil">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    <span>Profil</span>
+  </button>
 </nav>
 
 <!-- Modulare Anwendungs-Skripte -->
