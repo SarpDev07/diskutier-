@@ -232,6 +232,84 @@ h1 {
   transform: scale(0.98);
 }
 
+/* VOTE CONFIRMATION & 5S UNDO */
+.voteConfirmationBox {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--red);
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  margin: 10px 0;
+  animation: fadeIn 0.15s ease;
+}
+.voteConfirmTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.voteConfirmCheck {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.undoTimerBadge {
+  background: var(--soft);
+  color: var(--ink-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+.undoProgressTrack {
+  height: 4px;
+  background: var(--soft);
+  overflow: hidden;
+  border-radius: 2px;
+  margin-bottom: 12px;
+}
+.undoProgressBar {
+  height: 100%;
+  width: 100%;
+  background: var(--red);
+  transition: width 0.2s linear;
+}
+.voteConfirmActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.undoVoteBtn {
+  border: 1px solid var(--red);
+  color: var(--red);
+  background: transparent;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: var(--radius);
+  transition: all 0.15s ease;
+}
+.undoVoteBtn:hover {
+  background: var(--red);
+  color: #ffffff;
+}
+.confirmVoteBtn {
+  border: 0;
+  background: var(--ink);
+  color: #ffffff;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: var(--radius);
+  transition: opacity 0.15s;
+}
+.confirmVoteBtn:hover {
+  opacity: 0.9;
+}
+
 .results {
   display: none;
   margin-top: 18px;

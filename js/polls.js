@@ -280,30 +280,156 @@ function renderResultsHTML(container, poll){
   container.innerHTML = html + youText;
 }
 
-async function submitPollVote(pollId, optionIndex, isFeatured){
-  if(!db) return;
-  if(!checkRateLimit(`vote_${pollId}`, 1000)) return;
+const pendingVotes = {}; // pollId -> { timeoutId, intervalId, optionIndex, isFeatured }
 
-  const guestSession = getGuestSession();
-  const payload = {
-    poll_id: pollId,
-    option_index: optionIndex,
-    user_id: currentUser ? currentUser.id : null,
-    session_token: currentUser ? null : guestSession
-  };
+function submitPollVote(pollId, optionIndex, isFeatured){
+  const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
+  if(!poll) return;
 
-  const { error } = await db.from("poll_votes").upsert(payload, { onConflict: currentUser ? 'poll_id,user_id' : 'poll_id,session_token' });
-  if(error){
-    console.error("Vote error:", error);
-  } else {
-    if(typeof trackEvent === 'function'){
-      const targetPoll = currentPolls.find(p => p.id === pollId) || currentPoll;
-      trackEvent('poll_vote', { poll_id: pollId, option: optionIndex, title: targetPoll ? targetPoll.title : pollId });
-    }
+  // Bestehenden Timer für dieselbe Frage abbrechen
+  if(pendingVotes[pollId]){
+    clearInterval(pendingVotes[pollId].intervalId);
+    clearTimeout(pendingVotes[pollId].timeoutId);
+    delete pendingVotes[pollId];
   }
-  await loadPolls();
-  if(currentPoll && currentPoll.id === pollId){
+
+  // Ziel-Container finden
+  let container = null;
+  if(isFeatured){
+    container = document.getElementById("featuredVotes");
+  } else if(currentPoll && currentPoll.id === pollId && document.getElementById("detail") && document.getElementById("detail").classList.contains("active")){
+    container = document.getElementById("detailVotes");
+  } else {
+    container = document.getElementById(`qv-${pollId}`);
+  }
+
+  const selectedOpt = poll.options[optionIndex] || "Deine Wahl";
+  let secondsLeft = 5;
+
+  if(container){
+    container.innerHTML = `
+      <div class="voteConfirmationBox" id="voteConfirmBox-${escapeHTML(pollId)}" style="grid-column: 1 / -1; width: 100%;">
+        <div class="voteConfirmTop">
+          <div class="voteConfirmCheck">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red)"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <strong>Stimme für «${escapeHTML(selectedOpt)}» gewählt</strong>
+          </div>
+          <span class="undoTimerBadge" id="undoTimerBadge-${escapeHTML(pollId)}">${secondsLeft}s</span>
+        </div>
+        <div class="undoProgressTrack">
+          <div class="undoProgressBar" id="undoProgressBar-${escapeHTML(pollId)}" style="width: 100%;"></div>
+        </div>
+        <div class="voteConfirmActions">
+          <button class="undoVoteBtn" onclick="cancelPendingVote('${escapeHTML(pollId)}', ${isFeatured})">Rückgängig machen</button>
+          <button class="confirmVoteBtn" onclick="finalizeVoteEarly('${escapeHTML(pollId)}', ${optionIndex}, ${isFeatured})">Ergebnis anzeigen &rarr;</button>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      const bar = document.getElementById(`undoProgressBar-${pollId}`);
+      if(bar) {
+        bar.style.transition = "width 5s linear";
+        bar.style.width = "0%";
+      }
+    }, 40);
+  }
+
+  const intervalId = setInterval(() => {
+    secondsLeft--;
+    const badge = document.getElementById(`undoTimerBadge-${pollId}`);
+    if(badge && secondsLeft >= 0) {
+      badge.textContent = `${secondsLeft}s`;
+    }
+    if(secondsLeft <= 0){
+      clearInterval(intervalId);
+    }
+  }, 1000);
+
+  const timeoutId = setTimeout(() => {
+    finalizeVote(pollId, optionIndex, isFeatured);
+  }, 5000);
+
+  pendingVotes[pollId] = {
+    timeoutId,
+    intervalId,
+    optionIndex,
+    isFeatured
+  };
+}
+
+function cancelPendingVote(pollId, isFeatured){
+  if(pendingVotes[pollId]){
+    clearInterval(pendingVotes[pollId].intervalId);
+    clearTimeout(pendingVotes[pollId].timeoutId);
+    delete pendingVotes[pollId];
+  }
+
+  const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
+  if(poll){
+    poll.userVotedIndex = null;
+  }
+
+  showToast("Stimme rückgängig gemacht.");
+
+  if(isFeatured){
+    renderPollsUI();
+  } else if(currentPoll && currentPoll.id === pollId && document.getElementById("detail") && document.getElementById("detail").classList.contains("active")){
     openPollDetail(pollId, false);
+  } else {
+    renderPollsUI();
+  }
+}
+
+function finalizeVoteEarly(pollId, optionIndex, isFeatured){
+  if(pendingVotes[pollId]){
+    clearInterval(pendingVotes[pollId].intervalId);
+    clearTimeout(pendingVotes[pollId].timeoutId);
+    delete pendingVotes[pollId];
+  }
+  finalizeVote(pollId, optionIndex, isFeatured);
+}
+
+async function finalizeVote(pollId, optionIndex, isFeatured){
+  if(pendingVotes[pollId]){
+    clearInterval(pendingVotes[pollId].intervalId);
+    clearTimeout(pendingVotes[pollId].timeoutId);
+    delete pendingVotes[pollId];
+  }
+
+  const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
+  if(!poll) return;
+
+  // Lokalen Zähler erhöhen
+  poll.userVotedIndex = optionIndex;
+  if(!poll.optionCounts) poll.optionCounts = poll.options.map(() => 0);
+  poll.optionCounts[optionIndex] = (poll.optionCounts[optionIndex] || 0) + 1;
+  poll.totalVotes = (poll.totalVotes || 0) + 1;
+
+  // Supabase Sync im Hintergrund
+  if(db){
+    const guestSession = getGuestSession();
+    const payload = {
+      poll_id: pollId,
+      option_index: optionIndex,
+      user_id: currentUser ? currentUser.id : null,
+      session_token: currentUser ? null : guestSession
+    };
+    db.from("poll_votes").upsert(payload, { onConflict: currentUser ? 'poll_id,user_id' : 'poll_id,session_token' }).then();
+  }
+
+  if(typeof trackEvent === 'function'){
+    trackEvent('poll_vote', { poll_id: pollId, option: optionIndex, title: poll.title });
+  }
+
+  showToast("Stimme erfolgreich gezählt!");
+
+  if(isFeatured){
+    renderPollsUI();
+  } else if(currentPoll && currentPoll.id === pollId && document.getElementById("detail") && document.getElementById("detail").classList.contains("active")){
+    openPollDetail(pollId, false);
+  } else {
+    renderPollsUI();
   }
 }
 
@@ -466,7 +592,11 @@ async function addPollComment(){
 }
 
 // Global verfügbar
+window.submitPollVote = submitPollVote;
+window.cancelPendingVote = cancelPendingVote;
+window.finalizeVoteEarly = finalizeVoteEarly;
 window.nextFeaturedPoll = nextFeaturedPoll;
 window.restartFeaturedPolls = restartFeaturedPolls;
 window.createMyOwnPoll = createMyOwnPoll;
 window.openFeaturedDetailByIndex = openFeaturedDetailByIndex;
+
