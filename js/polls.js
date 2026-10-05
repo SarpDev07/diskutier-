@@ -158,6 +158,11 @@ async function submitPollVote(pollId, optionIndex, isFeatured){
   const { error } = await db.from("poll_votes").upsert(payload, { onConflict: currentUser ? 'poll_id,user_id' : 'poll_id,session_token' });
   if(error){
     console.error("Vote error:", error);
+  } else {
+    if(typeof trackEvent === 'function'){
+      const targetPoll = currentPolls.find(p => p.id === pollId) || currentPoll;
+      trackEvent('poll_vote', { poll_id: pollId, option: optionIndex, title: targetPoll ? targetPoll.title : pollId });
+    }
   }
   await loadPolls();
   if(currentPoll && currentPoll.id === pollId){

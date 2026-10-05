@@ -312,6 +312,15 @@
     <p>Das automatisierte Abstimmen durch Bots, Skripte oder Mehrfach-Votings ist nicht gestattet und wird technisch unterbunden.</p>
     <h2>3. Meldung von Verstössen</h2>
     <p>Solltest du unangemessene Beiträge oder Kommentare entdecken, melde diese bitte per E-Mail an <a href="mailto:info@diskutier.ch">info@diskutier.ch</a>.</p>
+<!-- SEITE 16: LIVE ANALYTICS & TRAFFIC DASHBOARD -->
+<section id="analytics" class="page">
+  <div class="legalContent" style="max-width:850px">
+    <div class="eyebrow">Echtzeit-Statistiken</div>
+    <h1>Live Traffic & Performance Dashboard</h1>
+    <p>Hier siehst du in Echtzeit, wie viele Besucher auf diskutier.ch kommen, woher sie kommen (TikTok, Instagram, etc.) und wie viele tatsächlich abstimmen.</p>
+    <div id="analyticsDashboardContent">
+      <p style="color:#888;padding:20px 0">Lade Live-Statistiken…</p>
+    </div>
   </div>
 </section>
 
@@ -365,6 +374,7 @@
       Sarp Kaman<br>
       4000 Basel, Schweiz</p>
       <p>E-Mail: <a href="mailto:info@diskutier.ch" style="color:var(--red);font-weight:900">info@diskutier.ch</a></p>
+      <p style="margin-top:10px"><span onclick="showPage('analytics')" style="color:#999;font-size:11px;cursor:pointer">Live-Statistiken</span></p>
     </div>
   </div>
   <div class="footerBottom">
@@ -390,6 +400,7 @@
 
 <!-- Modulare Anwendungs-Skripte -->
 <script src="js/supabase-config.js"></script>
+<script src="js/analytics.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/polls.js"></script>
 <script src="js/forum.js"></script>

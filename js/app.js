@@ -160,7 +160,13 @@ function showPage(id){
   const target = document.getElementById(id);
   if(target) target.classList.add("active");
   if(id === "profile") renderProfilePage();
+  if(id === "analytics" && typeof renderAnalyticsDashboard === 'function') renderAnalyticsDashboard();
   
+  // Event tracking
+  if(typeof trackEvent === 'function') {
+    trackEvent('pageview', { page: id });
+  }
+
   // Mobile Nav Active State
   document.querySelectorAll(".mobileNav button").forEach(b => {
     b.classList.toggle("active", b.dataset.tab === id);

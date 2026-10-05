@@ -79,6 +79,9 @@ async function openPost(postId){
   if(db){
     db.from("posts").update({ views: (currentPost.views || 0) + 1 }).eq("id", postId).then();
   }
+  if(typeof trackEvent === 'function'){
+    trackEvent('post_view', { post_id: postId, title: currentPost.title, category: currentPost.cat });
+  }
 
   document.getElementById("postCategory").textContent = currentPost.cat;
   document.getElementById("postTime").textContent = `${currentPost.time} · ${currentPost.user} (${currentPost.canton})`;
