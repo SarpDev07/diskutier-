@@ -12,9 +12,9 @@ const POST_BASELINES = {
 };
 
 const SEED_FORUM_REPLIES = [
-  { username: "Rheinknie", canton: "BS", time: "vor 2 Tagen", content: "Ich würde zuerst ganz normal das Gespräch suchen. Viele merken gar nicht, dass es andere stört. Wenn danach nichts passiert, kannst du immer noch der Verwaltung schreiben.", upvotes: 12 },
-  { username: "sina90", canton: "AG", time: "vor 3 Tagen", content: "Direkt ansprechen, freundlich und ohne Vorwurf. Schriftlich über die Verwaltung eskaliert so etwas meiner Erfahrung nach nur unnötig schnell.", upvotes: 8 },
-  { username: "JuraNord", canton: "SO", time: "vor 3 Tagen", content: "Kommt vor allem auch darauf an, ob der Fluchtweg betroffen ist. Wenn es wirklich eng wird bei einem Notfall, würde ich nicht ewig warten.", upvotes: 5 }
+  { username: "Rheinknie", canton: "BS", created_at: "2026-10-03T10:14:00.000Z", content: "Ich würde zuerst ganz normal das Gespräch suchen. Viele merken gar nicht, dass es andere stört. Wenn danach nichts passiert, kannst du immer noch der Verwaltung schreiben.", upvotes: 12 },
+  { username: "sina90", canton: "AG", created_at: "2026-10-02T16:22:00.000Z", content: "Direkt ansprechen, freundlich und ohne Vorwurf. Schriftlich über die Verwaltung eskaliert so etwas meiner Erfahrung nach nur unnötig schnell.", upvotes: 8 },
+  { username: "JuraNord", canton: "SO", created_at: "2026-10-02T11:05:00.000Z", content: "Kommt vor allem auch darauf an, ob der Fluchtweg betroffen ist. Wenn es wirklich eng wird bei einem Notfall, würde ich nicht ewig warten.", upvotes: 5 }
 ];
 
 async function loadForum(){
@@ -112,7 +112,14 @@ async function loadForumComments(postId){
   }
   
   const allReplies = [
-    ...SEED_FORUM_REPLIES.map(r => ({ ...r, isSeed: true })),
+    ...SEED_FORUM_REPLIES.map(r => ({
+      username: r.username,
+      canton: r.canton,
+      time: formatTimeAgo(r.created_at),
+      content: r.content,
+      upvotes: r.upvotes,
+      id: r.id
+    })),
     ...dbReplies.map(r => ({
       username: r.profiles?.username || 'Anonym',
       canton: r.profiles?.canton || 'CH',

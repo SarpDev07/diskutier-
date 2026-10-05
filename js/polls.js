@@ -15,11 +15,11 @@ const POLL_BASELINES = {
   "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 279, optionCounts: [187, 39, 53] }
 };
 
-// INITIALE SCHWEIZER COMMUNITY-KOMMENTARE
+// INITIALE SCHWEIZER COMMUNITY-KOMMENTARE MIT ECHTEN ZEITSTEMPELN (Wird täglich live berechnet)
 const SEED_COMMENTS = [
-  { username: "AlpenFuchs", canton: "BE", time: "vor 2 Tagen", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 24, downvotes: 3 },
-  { username: "NinaZH", canton: "ZH", time: "vor 2 Tagen", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 18, downvotes: 2 },
-  { username: "romand92", canton: "VD", time: "vor 3 Tagen", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 11, downvotes: 4 }
+  { username: "AlpenFuchs", canton: "BE", created_at: "2026-10-03T11:20:00.000Z", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 24, downvotes: 3 },
+  { username: "NinaZH", canton: "ZH", created_at: "2026-10-03T15:45:00.000Z", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 18, downvotes: 2 },
+  { username: "romand92", canton: "VD", created_at: "2026-10-02T09:10:00.000Z", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 11, downvotes: 4 }
 ];
 
 async function loadPolls(){
@@ -227,7 +227,15 @@ async function loadPollComments(pollId){
       downvotes: c.downvotes || 0,
       id: c.id
     })),
-    ...SEED_COMMENTS
+    ...SEED_COMMENTS.map(c => ({
+      username: c.username,
+      canton: c.canton,
+      time: formatTimeAgo(c.created_at),
+      content: c.content,
+      upvotes: c.upvotes || 0,
+      downvotes: c.downvotes || 0,
+      id: c.id
+    }))
   ];
 
   countSpan.textContent = allComments.length;
