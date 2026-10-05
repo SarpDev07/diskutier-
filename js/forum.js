@@ -23,7 +23,8 @@ async function loadForum(){
   if(error || !posts) return;
 
   currentPosts = posts.map(p => {
-    const base = POST_BASELINES[p.title] || { comments: 0, views: 1 };
+    const hasBaseline = POST_BASELINES[p.title];
+    const base = hasBaseline || { comments: 0, views: 0 };
     const dbCommentsCount = p.comments ? p.comments.length : 0;
     return {
       id: p.id,
@@ -35,8 +36,8 @@ async function loadForum(){
       user: p.profiles?.username || (p.user_id ? "Mitglied" : "Community"),
       canton: p.profiles?.canton || "CH",
       user_id: p.user_id,
-      comments: base.comments + dbCommentsCount,
-      views: Math.max(base.views, p.views || 1),
+      comments: hasBaseline ? (base.comments + dbCommentsCount) : dbCommentsCount,
+      views: hasBaseline ? Math.max(base.views, p.views || 1) : Math.max(1, p.views || 1),
       created_at: p.created_at
     };
   });
@@ -96,14 +97,122 @@ async function openPost(postId){
   const authorName = document.getElementById("postAuthorName");
   const authorCanton = document.getElementById("postAuthorCanton");
   const authorSub = document.getElementById("postAuthorSub");
+  const authorRole = document.getElementById("postAuthorRole");
+  const ownerControls = document.getElementById("postOwnerControls");
+  const editForm = document.getElementById("postEditForm");
+  const postBody = document.getElementById("postBody");
+
+  if(editForm) editForm.style.display = "none";
+  if(postBody) postBody.style.display = "block";
   
   if(authorAvatar) authorAvatar.textContent = (currentPost.user || "U").substring(0, 2).toUpperCase();
   if(authorName) authorName.textContent = currentPost.user;
   if(authorCanton) authorCanton.textContent = currentPost.canton || 'CH';
   if(authorSub) authorSub.textContent = currentPost.user_id ? 'Registriertes Mitglied' : 'Community-Beitrag';
 
+  // Ist es der eigene Beitrag des angemeldeten Nutzers?
+  const isOwner = currentUser && currentPost.user_id && currentPost.user_id === currentUser.id;
+  if(isOwner){
+    if(ownerControls) ownerControls.style.display = "block";
+    if(authorRole) {
+      authorRole.textContent = "Dein Beitrag";
+      authorRole.style.color = "var(--red)";
+      authorRole.style.fontWeight = "900";
+    }
+  } else {
+    if(ownerControls) ownerControls.style.display = "none";
+    if(authorRole) {
+      authorRole.textContent = "Verfasser";
+      authorRole.style.color = "#888";
+      authorRole.style.fontWeight = "700";
+    }
+  }
+
   await loadForumComments(currentPost.id);
   showPage("postdetail");
+}
+
+function startEditPost(){
+  if(!currentPost) return;
+  const editForm = document.getElementById("postEditForm");
+  const postBody = document.getElementById("postBody");
+  const ownerControls = document.getElementById("postOwnerControls");
+  
+  document.getElementById("editPostTitle").value = currentPost.title || "";
+  document.getElementById("editPostCategory").value = currentPost.cat || "Alltag";
+  document.getElementById("editPostBody").value = Array.isArray(currentPost.body) ? currentPost.body.join("\n\n") : (currentPost.body || "");
+
+  if(editForm) editForm.style.display = "block";
+  if(postBody) postBody.style.display = "none";
+  if(ownerControls) ownerControls.style.display = "none";
+}
+
+function cancelEditPost(){
+  const editForm = document.getElementById("postEditForm");
+  const postBody = document.getElementById("postBody");
+  const ownerControls = document.getElementById("postOwnerControls");
+
+  if(editForm) editForm.style.display = "none";
+  if(postBody) postBody.style.display = "block";
+  if(ownerControls) ownerControls.style.display = "block";
+}
+
+async function savePostEdit(){
+  if(!currentPost || !db) return;
+  const title = sanitizeText(document.getElementById("editPostTitle").value, 150);
+  const cat = sanitizeText(document.getElementById("editPostCategory").value, 40);
+  const bodyText = sanitizeText(document.getElementById("editPostBody").value, 4000);
+
+  if(!title || title.length < 5){
+    showToast("Titel muss mindestens 5 Zeichen lang sein.");
+    return;
+  }
+
+  const paragraphs = bodyText ? bodyText.split("\n\n").map(p => sanitizeText(p, 2000)).filter(Boolean) : [title];
+  const excerpt = paragraphs[0] ? paragraphs[0].substring(0, 180) : title;
+
+  const { error } = await db.from("posts").update({
+    title: title,
+    category: cat,
+    body: paragraphs,
+    excerpt: excerpt
+  }).eq("id", currentPost.id);
+
+  if(error){
+    showToast("Fehler beim Speichern: " + error.message);
+    return;
+  }
+
+  currentPost.title = title;
+  currentPost.cat = cat;
+  currentPost.body = paragraphs;
+  currentPost.excerpt = excerpt;
+
+  document.getElementById("postTitle").textContent = title;
+  document.getElementById("postCategory").textContent = cat;
+  document.getElementById("postBody").innerHTML = paragraphs.map(x => `<p>${escapeHTML(x)}</p>`).join("");
+
+  cancelEditPost();
+  showToast("Beitrag erfolgreich geändert!");
+  await loadForum();
+}
+
+async function deleteCurrentPost(){
+  if(!currentPost || !db) return;
+  const confirmDelete = confirm(`Möchtest du deinen Beitrag "${currentPost.title}" wirklich unwiderruflich löschen?`);
+  if(!confirmDelete) return;
+
+  try {
+    await db.from("comments").delete().eq("post_id", currentPost.id);
+    await db.from("posts").delete().eq("id", currentPost.id);
+    showToast("Dein Beitrag wurde gelöscht.");
+    currentPosts = currentPosts.filter(p => p.id !== currentPost.id);
+    currentPost = null;
+    await loadForum();
+    showPage("forum");
+  } catch(e) {
+    showToast("Fehler beim Löschen: " + (e.message || "Unbekannter Fehler"));
+  }
 }
 
 async function loadForumComments(postId){

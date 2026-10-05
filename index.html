@@ -124,14 +124,46 @@
         <div class="authorNameLine">
           <strong id="postAuthorName">Community</strong>
           <span class="authorCantonBadge" id="postAuthorCanton">BS</span>
-          <span class="authorRole">Verfasser</span>
+          <span class="authorRole" id="postAuthorRole">Verfasser</span>
         </div>
         <div class="authorSubLine" id="postAuthorSub">Registriertes Mitglied</div>
       </div>
     </div>
   </div>
+
+  <!-- EIGENER BEITRAG VERWALTUNG (Bearbeiten / Löschen) -->
+  <div id="postOwnerControls" class="postOwnerControls" style="display:none">
+    <div class="ownerNotice">Dies ist dein Beitrag. Du hast volle Kontrolle darüber:</div>
+    <div class="ownerButtons">
+      <button class="smallbtn" style="color:var(--ink);font-weight:900" onclick="startEditPost()">Beitrag bearbeiten</button>
+      <button class="smallbtn" style="color:var(--red);font-weight:900" onclick="deleteCurrentPost()">Beitrag löschen</button>
+    </div>
+  </div>
+
+  <!-- INLINE FORMULAR ZUM BEARBEITEN -->
+  <div id="postEditForm" class="formbox" style="display:none;margin:20px 0;background:#fff;padding:20px;border:1px solid #deddd8;border-top:3px solid var(--red)">
+    <div class="eyebrow">Beitrag bearbeiten</div>
+    <label>Titel</label>
+    <input id="editPostTitle" maxlength="150" placeholder="Titel deines Beitrags">
+    <label>Kategorie</label>
+    <select id="editPostCategory">
+      <option value="Alltag">Alltag</option>
+      <option value="Geld & Beruf">Geld & Beruf</option>
+      <option value="Wohnen">Wohnen</option>
+      <option value="Beziehungen">Beziehungen</option>
+      <option value="Schweiz & Politik">Schweiz & Politik</option>
+      <option value="Technik & Konsum">Technik & Konsum</option>
+    </select>
+    <label>Inhalt</label>
+    <textarea id="editPostBody" maxlength="4000" style="min-height:130px"></textarea>
+    <div style="display:flex;gap:12px;margin-top:16px;align-items:center">
+      <button class="publish" style="margin-top:0" onclick="savePostEdit()">Änderungen speichern</button>
+      <button class="smallbtn" style="font-weight:900;padding:10px 14px" onclick="cancelEditPost()">Abbrechen</button>
+    </div>
+  </div>
+
   <div class="postBody" id="postBody"></div>
-  <div class="actions">
+  <div class="actions" id="postNormalActions">
     <button class="smallbtn" onclick="showToast('Beitrag gespeichert.')">Speichern</button>
     <button class="smallbtn" onclick="shareCurrent()">Teilen</button>
     <button class="smallbtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button>
