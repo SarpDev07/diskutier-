@@ -24,6 +24,80 @@ async function loadForum(){
     if(!error && data) posts = data;
   }
 
+  // 4 NEUE SCHWEIZER DEBATTEN-BEITRÄGE (FRISCH & OHNE INITIAL-KOMMENTARE)
+  const newPostsToAdd = [
+    {
+      id: "post_tempo30",
+      category: "Auto & Mobilität",
+      title: "Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?",
+      excerpt: "Immer mehr Städte reduzieren Parkplätze und führen flächendeckend Tempo 30 ein. Mehr Lebensqualität oder reine Schikane für Pendler und Gewerbe?",
+      body: [
+        "In Schweizer Städten wie Zürich, Basel, Bern oder Lausanne werden seit Monaten massiv Parkplätze aufgehoben und selbst auf vierspurigen Hauptachsen Tempo 30 eingeführt.",
+        "Befürworter betonen: Weniger Lärm, deutlich mehr Sicherheit für Fussgänger und Velofahrende sowie bessere Luft. Autofahrer, Handwerker und Pendler aus den Agglos klagen dagegen: Künstlich erzeugter Stau, verlängerte Fahrzeiten und unbezahlbare Parkgebühren machen das Arbeiten in der Stadt fast unmöglich.",
+        "Wie nehmt ihr die Situation in eurem Wohnort oder beim täglichen Pendeln wahr: Ist die autofreie Stadt die Zukunft oder übertreiben es die Stadtregierungen?"
+      ],
+      user_id: null,
+      profiles: { username: "ZuriDrive", canton: "ZH" },
+      created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+      views: 1,
+      comments: []
+    },
+    {
+      id: "post_srg_gebuehren",
+      category: "Schweiz & Politik",
+      title: "Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?",
+      excerpt: "Über 330 Franken Serafe-Gebühren pro Jahr spalten die Schweiz. Sollte die Gebühr halbiert werden oder gefährdet das den Service public?",
+      body: [
+        "Die Debatte um die Halbierungsinitiative («200 Franken sind genug») kocht wieder hoch. Jeder Schweizer Haushalt zahlt heute über 330 Franken pro Jahr für Radio und Fernsehen – unabhängig davon, ob man die Programme überhaupt konsumiert.",
+        "Die Initianten fordern eine Deckelung auf 200 Franken und die Befreiung von Unternehmen. Auf der Gegenseite warnen SRG, Kulturschaffende und Politiker: Eine Halbierung würde Hunderte Stellen kosten, das Informationsangebot drastisch schwächen und vor allem den sprachlichen Zusammenhalt der Romandie, des Tessins und der Deutschschweiz gefährden.",
+        "Zahlt ihr die Gebühren gerne für einen starken Schweizer Service public oder findet ihr das System im Streaming-Zeitalter veraltet?"
+      ],
+      user_id: null,
+      profiles: { username: "Lukas_SG", canton: "SG" },
+      created_at: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
+      views: 1,
+      comments: []
+    },
+    {
+      id: "post_wohnungsnot_mieten",
+      category: "Wohnen",
+      title: "Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?",
+      excerpt: "Wohnungsnot und explodierende Mieten in Schweizer Grossstädten: Wo liegen die wahren Ursachen der Krise?",
+      body: [
+        "Wer aktuell in Zürich, Genf, Lausanne oder Basel eine bezahlbare Wohnung sucht, erlebt puren Frust: Hunderte Bewerber für eine einzige Besichtigung und Mietzinse, die locker einen Drittel des Einkommens verschlingen.",
+        "Auf der einen Seite stehen Vorwürfe gegen renditegetriebene Immobilienfonds, Pensionskassen und Luxussanierungen, die alteingesessene Mieter verdrängen. Auf der anderen Seite betonen Bauherren und Experten: Es wird schlicht zu wenig gebaut, weil jedes Neubauprojekt durch Einsprachen, Lärmschutzauflagen und bürokratische Hürden um Jahre blockiert wird.",
+        "Wo seht ihr die Hauptursache für die Wohnungsnot und was wäre eurer Meinung nach die wirksamste Lösung?"
+      ],
+      user_id: null,
+      profiles: { username: "Nathalie_VD", canton: "VD" },
+      created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+      views: 1,
+      comments: []
+    },
+    {
+      id: "post_wehrpflicht_miliz",
+      category: "Schweiz & Politik",
+      title: "Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?",
+      excerpt: "Zivildienst-Boom und Debatten um Chancengleichheit: Braucht die Schweiz weiterhin die allgemeine Wehrpflicht oder eine moderne Berufsarmee?",
+      body: [
+        "Das Milizsystem und die allgemeine Wehrpflicht für Schweizer Männer gehören zu den traditionsreichsten Institutionen unseres Landes. Doch die Kritik wächst stetig.",
+        "Immer mehr Rekruten entscheiden sich für den Zivildienst, Arbeitgeber klagen über die monatelangen Absenzen von Schlüsselkräften und die ungleiche Belastung – da Frauen vom Dienst befreit sind – sorgt für permanente Diskussionen. Einige fordern eine allgemeine Dienstpflicht für alle Schweizerinnen und Schweizer, andere plädieren für den Übergang zu einer schlagkräftigen, freiwilligen Profi-Armee nach europäischem Vorbild.",
+        "Sollte die Schweiz am traditionellen Milizprinzip festhalten oder ist es Zeit für eine grundlegende Armeereform?"
+      ],
+      user_id: null,
+      profiles: { username: "Marc_LU", canton: "LU" },
+      created_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+      views: 1,
+      comments: []
+    }
+  ];
+
+  newPostsToAdd.forEach(np => {
+    if(!posts.some(p => p.id === np.id || (p.title && p.title.includes(np.title.substring(0, 30))))){
+      posts.unshift(np);
+    }
+  });
+
   // 10-Millionen Debatte (GANZ NEU & FRISCH GESTARTET)
   const has10MPost = posts.some(p => p.title && p.title.includes("10-Millionen"));
   if(!has10MPost){

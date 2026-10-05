@@ -81,6 +81,26 @@
 
   <!-- Öffentliche Abstimmungen (Fragen) -->
   <url>
+    <loc>https://diskutier.ch/frage/flaechendeckend-tempo-30-in-staedten-und-immer-weniger-parkplaetze-sinnvoller-umweltschutz-oder-reiner-krieg-gegen-autofahrer</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/ueber-330-franken-im-jahr-fuer-die-srg-ob-man-will-oder-nicht-zeit-fuer-die-halbierungs-initiative-oder-ruinieren-wir-damit-den-schweizer-journalismus</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/wohnungsnot-in-zuerich-und-genf-sind-die-steigenden-mieten-das-resultat-von-gier-investoren-oder-von-zu-strengen-baugesetzen-und-einsprachen</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/milizsystem-am-anschlag-sollten-wir-die-allgemeine-wehrpflicht-endlich-abschaffen-und-auf-eine-profi-armee-umstellen</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://diskutier.ch/frage/10-millionen-schweiz-rettung-vor-wohnungsnot-oder-wirtschaftlicher-selbstmord</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -132,6 +152,26 @@
   </url>
 
   <!-- Öffentliche Forenbeiträge -->
+  <url>
+    <loc>https://diskutier.ch/beitrag/flaechendeckend-tempo-30-in-staedten-und-immer-weniger-parkplaetze-sinnvoller-umweltschutz-oder-reiner-krieg-gegen-autofahrer</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/beitrag/ueber-330-franken-im-jahr-fuer-die-srg-ob-man-will-oder-nicht-zeit-fuer-die-halbierungs-initiative-oder-ruinieren-wir-damit-den-schweizer-journalismus</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/beitrag/wohnungsnot-in-zuerich-und-genf-sind-die-steigenden-mieten-das-resultat-von-gier-investoren-oder-von-zu-strengen-baugesetzen-und-einsprachen</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/beitrag/milizsystem-am-anschlag-sollten-wir-die-allgemeine-wehrpflicht-endlich-abschaffen-und-auf-eine-profi-armee-umstellen</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
   <url>
     <loc>https://diskutier.ch/beitrag/10-millionen-schweiz-rettung-vor-dem-kollaps-oder-wirtschaftlicher-selbstmord</loc>
     <changefreq>daily</changefreq>

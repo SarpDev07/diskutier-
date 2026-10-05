@@ -30,6 +30,56 @@ async function loadPolls(){
     if(!error && data) polls = data;
   }
 
+  // 4 NEUE SCHWEIZER DEBATTEN-THEMEN (FRISCH & OHNE INITIAL-STIMMEN)
+  const newPollsToAdd = [
+    {
+      id: "poll_tempo30",
+      category: "Auto & Mobilität",
+      title: "Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?",
+      description: "Immer mehr Schweizer Städte bauen Parkplätze ab und senken das Tempolimit auch auf Hauptverkehrsachsen auf 30 km/h. Schützt das die Quartiere oder schadet es Pendlern und Gewerbe?",
+      options: ["Sinnvoll (Mehr Ruhe & Sicherheit)", "Krieg gegen Autofahrer (Schikane)", "Kommt auf die Strasse an"],
+      is_featured: false,
+      created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+      poll_votes: []
+    },
+    {
+      id: "poll_srg_gebuehren",
+      category: "Schweiz & Politik",
+      title: "Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?",
+      description: "Sollen die Serafe-Gebühren auf 200 Franken gesenkt werden oder gefährdet ein gekürzter Service public die Information und den Zusammenhalt unserer Sprachregionen?",
+      options: ["JA (Gebühren auf CHF 200 halbieren)", "NEIN (Gefahr für Journalismus)", "SRG reformieren, nicht halbieren"],
+      is_featured: false,
+      created_at: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
+      poll_votes: []
+    },
+    {
+      id: "poll_wohnungsnot_mieten",
+      category: "Wohnen",
+      title: "Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?",
+      description: "Massenbesichtigungen und explodierende Mietpreise in den grossen Schweizer Städten: Liegt die Hauptschuld bei renditeorientierten Investoren oder an jahrelangen Bau-Einsprachen und Regulierungen?",
+      options: ["Renditedruck & Investoren", "Zu strenge Gesetze & Einsprachen", "Beides gleichermassen schuld"],
+      is_featured: false,
+      created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+      poll_votes: []
+    },
+    {
+      id: "poll_wehrpflicht_miliz",
+      category: "Schweiz & Politik",
+      title: "Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?",
+      description: "Zivildienst-Boom, Fachkräfte-Ausfall in der Wirtschaft und veränderte Sicherheitslagen in Europa: Braucht die Schweiz weiterhin die allgemeine Wehrpflicht für Männer oder eine freiwillige Profi-Armee?",
+      options: ["Wehrpflicht beibehalten (Tradition)", "Auf Profi-/Berufsarmee umstellen", "Dienstpflicht für alle (auch Frauen)"],
+      is_featured: false,
+      created_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+      poll_votes: []
+    }
+  ];
+
+  newPollsToAdd.forEach(np => {
+    if(!polls.some(p => p.id === np.id || (p.title && p.title.includes(np.title.substring(0, 30))))){
+      polls.unshift(np);
+    }
+  });
+
   // 10-Millionen Haupt-Abstimmung (GANZ NEU & FRISCH GESTARTET)
   const has10MPoll = polls.some(p => p.title && p.title.includes("10-Millionen"));
   if(!has10MPoll){
