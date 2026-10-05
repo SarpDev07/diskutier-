@@ -170,7 +170,7 @@ VALUES
   '10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?',
   'Volle Züge, steigende Mieten und dichtere Agglos vs. akuter Fachkräftemangel in Spitälern und Betrieben. Braucht die Schweiz bis 2050 eine gesetzliche Obergrenze von 10 Millionen Einwohnern?',
   'Schweiz & Politik',
-  '["JA (Limit nötig)", "NEIN (Schadet Wirtschaft)", "KOMMT DARAUF AN"]'::jsonb,
+  ARRAY['JA (Limit nötig)', 'NEIN (Schadet Wirtschaft)', 'KOMMT DARAUF AN']::text[],
   true,
   NOW() - INTERVAL '15 minutes'
 ),
@@ -179,7 +179,7 @@ VALUES
   'Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?',
   'Immer mehr Schweizer Städte bauen Parkplätze ab und senken das Tempolimit auch auf Hauptverkehrsachsen auf 30 km/h. Schützt das die Quartiere oder schadet es Pendlern und Gewerbe?',
   'Auto & Mobilität',
-  '["Sinnvoll (Mehr Ruhe & Sicherheit)", "Krieg gegen Autofahrer (Schikane)", "Kommt auf die Strasse an"]'::jsonb,
+  ARRAY['Sinnvoll (Mehr Ruhe & Sicherheit)', 'Krieg gegen Autofahrer (Schikane)', 'Kommt auf die Strasse an']::text[],
   false,
   NOW() - INTERVAL '30 minutes'
 ),
@@ -188,7 +188,7 @@ VALUES
   'Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?',
   'Sollen die Serafe-Gebühren auf 200 Franken gesenkt werden oder gefährdet ein gekürzter Service public die Information und den Zusammenhalt unserer Sprachregionen?',
   'Schweiz & Politik',
-  '["JA (Gebühren auf CHF 200 halbieren)", "NEIN (Gefahr für Journalismus)", "SRG reformieren, nicht halbieren"]'::jsonb,
+  ARRAY['JA (Gebühren auf CHF 200 halbieren)', 'NEIN (Gefahr für Journalismus)', 'SRG reformieren, nicht halbieren']::text[],
   false,
   NOW() - INTERVAL '45 minutes'
 ),
@@ -197,7 +197,7 @@ VALUES
   'Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?',
   'Massenbesichtigungen und explodierende Mietpreise in den grossen Schweizer Städten: Liegt die Hauptschuld bei renditeorientierten Investoren oder an jahrelangen Bau-Einsprachen und Regulierungen?',
   'Wohnen',
-  '["Renditedruck & Investoren", "Zu strenge Gesetze & Einsprachen", "Beides gleichermassen schuld"]'::jsonb,
+  ARRAY['Renditedruck & Investoren', 'Zu strenge Gesetze & Einsprachen', 'Beides gleichermassen schuld']::text[],
   false,
   NOW() - INTERVAL '60 minutes'
 ),
@@ -206,7 +206,7 @@ VALUES
   'Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?',
   'Zivildienst-Boom, Fachkräfte-Ausfall in der Wirtschaft und veränderte Sicherheitslagen in Europa: Braucht die Schweiz weiterhin die allgemeine Wehrpflicht für Männer oder eine freiwillige Profi-Armee?',
   'Schweiz & Politik',
-  '["Wehrpflicht beibehalten (Tradition)", "Auf Profi-/Berufsarmee umstellen", "Dienstpflicht für alle (auch Frauen)"]'::jsonb,
+  ARRAY['Wehrpflicht beibehalten (Tradition)', 'Auf Profi-/Berufsarmee umstellen', 'Dienstpflicht für alle (auch Frauen)']::text[],
   false,
   NOW() - INTERVAL '90 minutes'
 ),
@@ -215,7 +215,7 @@ VALUES
   'Sind CHF 6''000 Monatslohn heute noch ein guter Lohn in der Schweiz?',
   'Reichen 6''000 Franken Monatslohn heute noch für ein gutes Leben in der Schweiz oder fressen Mieten und Krankenkassen alles auf?',
   'Geld & Beruf',
-  '["Ja, reicht gut", "Nein, zu wenig", "Kommt auf den Wohnort an"]'::jsonb,
+  ARRAY['Ja, reicht gut', 'Nein, zu wenig', 'Kommt auf den Wohnort an']::text[],
   false,
   NOW() - INTERVAL '2 days'
 ),
@@ -224,7 +224,7 @@ VALUES
   'Ist es komisch, mit 25 noch bei den Eltern zu wohnen?',
   'Hotel Mama oder finanzielle Vernunft: Was denkt ihr über das Wohnen bei den Eltern mit 25 in der Schweiz?',
   'Beziehungen',
-  '["Völlig normal & schlau", "Zeit auszuziehen", "Kommt auf die Situation an"]'::jsonb,
+  ARRAY['Völlig normal & schlau', 'Zeit auszuziehen', 'Kommt auf die Situation an']::text[],
   false,
   NOW() - INTERVAL '3 days'
 ),
@@ -233,7 +233,7 @@ VALUES
   'Coop oder Migros?',
   'Die ewige Schweizer Glaubensfrage: Wo kauft ihr lieber für den täglichen Bedarf ein?',
   'Alltag',
-  '["Coop", "Migros", "Beides gleich gerne"]'::jsonb,
+  ARRAY['Coop', 'Migros', 'Beides gleich gerne']::text[],
   false,
   NOW() - INTERVAL '4 days'
 ),
@@ -242,7 +242,7 @@ VALUES
   'Würdest du für CHF 1''000 mehr Lohn täglich eine Stunde länger pendeln?',
   'Mehr Geld auf dem Konto gegen verlorene Lebenszeit im Zug oder Stau: Würdest du den Deal eingehen?',
   'Geld & Beruf',
-  '["Ja, lohnt sich", "Nein, Freizeit ist wichtiger"]'::jsonb,
+  ARRAY['Ja, lohnt sich', 'Nein, Freizeit ist wichtiger']::text[],
   false,
   NOW() - INTERVAL '5 days'
 ),
@@ -251,7 +251,7 @@ VALUES
   'Sind 30 Franken für eine Pizza in der Schweiz zu viel?',
   'Restaurantpreise in Schweizer Städten steigen stetig. Ab wann ist für euch die Schmerzgrenze bei Pizza & Pasta erreicht?',
   'Alltag',
-  '["Ja, masslos überteuert", "Nein, normale Schweizer Preise", "Kommt auf Qualität & Restaurant an"]'::jsonb,
+  ARRAY['Ja, masslos überteuert', 'Nein, normale Schweizer Preise', 'Kommt auf Qualität & Restaurant an']::text[],
   false,
   NOW() - INTERVAL '6 days'
 )
@@ -271,11 +271,11 @@ VALUES
   '10-Millionen-Schweiz: Rettung vor dem Kollaps oder wirtschaftlicher Selbstmord?',
   'Schweiz & Politik',
   'Wohnungsnot und überfüllte Pendlerzüge vs. akuter Fachkräftemangel in Spitälern und Betrieben. Wo steht ihr bei der 10-Millionen-Debatte?',
-  '[
-    "Die Debatte um eine 10-Millionen-Schweiz bis 2050 sorgt im ganzen Land für hitzige Diskussionen. Auf der einen Seite spüren viele im Alltag den Druck: kaum bezahlbare Wohnungen, steigende Mieten und überfüllte Pendlerzüge zu den Stosszeiten.",
-    "Auf der anderen Seite warnen Spitäler, Gewerbe und Wirtschaftsverbände: Ohne Zuwanderung fehlen uns schon heute Pflegekräfte, Handwerker und IT-Spezialisten. Ein harter Deckel könnte Wohlstand und Altersvorsorge gefährden.",
-    "Wie seht ihr das: Braucht es eine klare gesetzliche Grenze beim Bevölkerungswachstum oder schaden wir uns damit am Ende nur selbst? Schreibt eure Erfahrungen und Meinungen aus eurem Kanton!"
-  ]'::jsonb,
+  ARRAY[
+    'Die Debatte um eine 10-Millionen-Schweiz bis 2050 sorgt im ganzen Land für hitzige Diskussionen. Auf der einen Seite spüren viele im Alltag den Druck: kaum bezahlbare Wohnungen, steigende Mieten und überfüllte Pendlerzüge zu den Stosszeiten.',
+    'Auf der anderen Seite warnen Spitäler, Gewerbe und Wirtschaftsverbände: Ohne Zuwanderung fehlen uns schon heute Pflegekräfte, Handwerker und IT-Spezialisten. Ein harter Deckel könnte Wohlstand und Altersvorsorge gefährden.',
+    'Wie seht ihr das: Braucht es eine klare gesetzliche Grenze beim Bevölkerungswachstum oder schaden wir uns damit am Ende nur selbst? Schreibt eure Erfahrungen und Meinungen aus eurem Kanton!'
+  ]::text[],
   184,
   NOW() - INTERVAL '20 minutes'
 ),
@@ -284,11 +284,11 @@ VALUES
   'Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?',
   'Auto & Mobilität',
   'Immer mehr Städte reduzieren Parkplätze und führen flächendeckend Tempo 30 ein. Mehr Lebensqualität oder reine Schikane für Pendler und Gewerbe?',
-  '[
-    "In Schweizer Städten wie Zürich, Basel, Bern oder Lausanne werden seit Monaten massiv Parkplätze aufgehoben und selbst auf vierspurigen Hauptachsen Tempo 30 eingeführt.",
-    "Befürworter betonen: Weniger Lärm, deutlich mehr Sicherheit für Fussgänger und Velofahrende sowie bessere Luft. Autofahrer, Handwerker und Pendler aus den Agglos klagen dagegen: Künstlich erzeugter Stau, verlängerte Fahrzeiten und unbezahlbare Parkgebühren machen das Arbeiten in der Stadt fast unmöglich.",
-    "Wie nehmt ihr die Situation in eurem Wohnort oder beim täglichen Pendeln wahr: Ist die autofreie Stadt die Zukunft oder übertreiben es die Stadtregierungen?"
-  ]'::jsonb,
+  ARRAY[
+    'In Schweizer Städten wie Zürich, Basel, Bern oder Lausanne werden seit Monaten massiv Parkplätze aufgehoben und selbst auf vierspurigen Hauptachsen Tempo 30 eingeführt.',
+    'Befürworter betonen: Weniger Lärm, deutlich mehr Sicherheit für Fussgänger und Velofahrende sowie bessere Luft. Autofahrer, Handwerker und Pendler aus den Agglos klagen dagegen: Künstlich erzeugter Stau, verlängerte Fahrzeiten und unbezahlbare Parkgebühren machen das Arbeiten in der Stadt fast unmöglich.',
+    'Wie nehmt ihr die Situation in eurem Wohnort oder beim täglichen Pendeln wahr: Ist die autofreie Stadt die Zukunft oder übertreiben es die Stadtregierungen?'
+  ]::text[],
   142,
   NOW() - INTERVAL '40 minutes'
 ),
@@ -297,11 +297,11 @@ VALUES
   'Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?',
   'Schweiz & Politik',
   'Über 330 Franken Serafe-Gebühren pro Jahr spalten die Schweiz. Sollte die Gebühr halbiert werden oder gefährdet das den Service public?',
-  '[
-    "Die Debatte um die Halbierungsinitiative («200 Franken sind genug») kocht wieder hoch. Jeder Schweizer Haushalt zahlt heute über 330 Franken pro Jahr für Radio und Fernsehen – unabhängig davon, ob man die Programme überhaupt konsumiert.",
-    "Die Initianten fordern eine Deckelung auf 200 Franken und die Befreiung von Unternehmen. Auf der Gegenseite warnen SRG, Kulturschaffende und Politiker: Eine Halbierung würde Hunderte Stellen kosten, das Informationsangebot drastisch schwächen und vor allem den sprachlichen Zusammenhalt der Romandie, des Tessins und der Deutschschweiz gefährden.",
-    "Zahlt ihr die Gebühren gerne für einen starken Schweizer Service public oder findet ihr das System im Streaming-Zeitalter veraltet?"
-  ]'::jsonb,
+  ARRAY[
+    'Die Debatte um die Halbierungsinitiative («200 Franken sind genug») kocht wieder hoch. Jeder Schweizer Haushalt zahlt heute über 330 Franken pro Jahr für Radio und Fernsehen – unabhängig davon, ob man die Programme überhaupt konsumiert.',
+    'Die Initianten fordern eine Deckelung auf 200 Franken und die Befreiung von Unternehmen. Auf der Gegenseite warnen SRG, Kulturschaffende und Politiker: Eine Halbierung würde Hunderte Stellen kosten, das Informationsangebot drastisch schwächen und vor allem den sprachlichen Zusammenhalt der Romandie, des Tessins und der Deutschschweiz gefährden.',
+    'Zahlt ihr die Gebühren gerne für einen starken Schweizer Service public oder findet ihr das System im Streaming-Zeitalter veraltet?'
+  ]::text[],
   98,
   NOW() - INTERVAL '55 minutes'
 ),
@@ -310,11 +310,11 @@ VALUES
   'Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?',
   'Wohnen',
   'Wohnungsnot und explodierende Mieten in Schweizer Grossstädten: Wo liegen die wahren Ursachen der Krise?',
-  '[
-    "Wer aktuell in Zürich, Genf, Lausanne oder Basel eine bezahlbare Wohnung sucht, erlebt puren Frust: Hunderte Bewerber für eine einzige Besichtigung und Mietzinse, die locker einen Drittel des Einkommens verschlingen.",
-    "Auf der einen Seite stehen Vorwürfe gegen renditegetriebene Immobilienfonds, Pensionskassen und Luxussanierungen, die alteingesessene Mieter verdrängen. Auf der anderen Seite betonen Bauherren und Experten: Es wird schlicht zu wenig gebaut, weil jedes Neubauprojekt durch Einsprachen, Lärmschutzauflagen und bürokratische Hürden um Jahre blockiert wird.",
-    "Wo seht ihr die Hauptursache für die Wohnungsnot und was wäre eurer Meinung nach die wirksamste Lösung?"
-  ]'::jsonb,
+  ARRAY[
+    'Wer aktuell in Zürich, Genf, Lausanne oder Basel eine bezahlbare Wohnung sucht, erlebt puren Frust: Hunderte Bewerber für eine einzige Besichtigung und Mietzinse, die locker einen Drittel des Einkommens verschlingen.',
+    'Auf der einen Seite stehen Vorwürfe gegen renditegetriebene Immobilienfonds, Pensionskassen und Luxussanierungen, die alteingesessene Mieter verdrängen. Auf der anderen Seite betonen Bauherren und Experten: Es wird schlicht zu wenig gebaut, weil jedes Neubauprojekt durch Einsprachen, Lärmschutzauflagen und bürokratische Hürden um Jahre blockiert wird.',
+    'Wo seht ihr die Hauptursache für die Wohnungsnot und was wäre eurer Meinung nach die wirksamste Lösung?'
+  ]::text[],
   115,
   NOW() - INTERVAL '70 minutes'
 ),
@@ -323,11 +323,11 @@ VALUES
   'Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?',
   'Schweiz & Politik',
   'Zivildienst-Boom und Debatten um Chancengleichheit: Braucht die Schweiz weiterhin die allgemeine Wehrpflicht oder eine moderne Berufsarmee?',
-  '[
-    "Das Milizsystem und die allgemeine Wehrpflicht für Schweizer Männer gehören zu den traditionsreichsten Institutionen unseres Landes. Doch die Kritik wächst stetig.",
-    "Immer mehr Rekruten entscheiden sich für den Zivildienst, Arbeitgeber klagen über die monatelangen Absenzen von Schlüsselkräften und die ungleiche Belastung – da Frauen vom Dienst befreit sind – sorgt für permanente Diskussionen. Einige fordern eine allgemeine Dienstpflicht für alle Schweizerinnen und Schweizer, andere plädieren für den Übergang zu einer schlagkräftigen, freiwilligen Profi-Armee nach europäischem Vorbild.",
-    "Sollte die Schweiz am traditionellen Milizprinzip festhalten oder ist es Zeit für eine grundlegende Armeereform?"
-  ]'::jsonb,
+  ARRAY[
+    'Das Milizsystem und die allgemeine Wehrpflicht für Schweizer Männer gehören zu den traditionsreichsten Institutionen unseres Landes. Doch die Kritik wächst stetig.',
+    'Immer mehr Rekruten entscheiden sich für den Zivildienst, Arbeitgeber klagen über die monatelangen Absenzen von Schlüsselkräften und die ungleiche Belastung – da Frauen vom Dienst befreit sind – sorgt für permanente Diskussionen. Einige fordern eine allgemeine Dienstpflicht für alle Schweizerinnen und Schweizer, andere plädieren für den Übergang zu einer schlagkräftigen, freiwilligen Profi-Armee nach europäischem Vorbild.',
+    'Sollte die Schweiz am traditionellen Milizprinzip festhalten oder ist es Zeit für eine grundlegende Armeereform?'
+  ]::text[],
   64,
   NOW() - INTERVAL '100 minutes'
 ),
@@ -336,10 +336,10 @@ VALUES
   'Nachbar stellt ständig Sachen ins Treppenhaus – was würdet ihr machen?',
   'Wohnen',
   'Schuhe, Kisten und alte Möbel im Treppenhaus: Erst reden oder direkt an die Verwaltung melden?',
-  '[
-    "Unser Nachbar im 2. Stock nutzt den Hausgang gefühlt als erweiterten Keller. Schuhe, Pakete und Kinderwagen versperren regelmässig den Durchgang.",
-    "Bisher haben wir nichts gesagt, aber bei einem Brand wäre das ein echtes Sicherheitsrisiko. Wie regelt ihr solche Situationen in eurer Liegenschaft?"
-  ]'::jsonb,
+  ARRAY[
+    'Unser Nachbar im 2. Stock nutzt den Hausgang gefühlt als erweiterten Keller. Schuhe, Pakete und Kinderwagen versperren regelmässig den Durchgang.',
+    'Bisher haben wir nichts gesagt, aber bei einem Brand wäre das ein echtes Sicherheitsrisiko. Wie regelt ihr solche Situationen in eurer Liegenschaft?'
+  ]::text[],
   342,
   NOW() - INTERVAL '1 day'
 ),
@@ -348,10 +348,10 @@ VALUES
   'Chef erwartet, dass ich nach Feierabend auf WhatsApp antworte',
   'Geld & Beruf',
   'Ständige Erreichbarkeit im Job: Wo zieht ihr die Grenze zwischen Loyalität und Freizeit?',
-  '[
-    "Mein Chef schreibt mir regelmässig um 20:30 Uhr oder am Wochenende auf WhatsApp wegen dringenden Kleinigkeiten.",
-    "Im Arbeitsvertrag steht davon kein Wort. Wenn ich nicht antworte, ist am Montagmorgen die Stimmung im Team eisig. Was ratet ihr mir?"
-  ]'::jsonb,
+  ARRAY[
+    'Mein Chef schreibt mir regelmässig um 20:30 Uhr oder am Wochenende auf WhatsApp wegen dringenden Kleinigkeiten.',
+    'Im Arbeitsvertrag steht davon kein Wort. Wenn ich nicht antworte, ist am Montagmorgen die Stimmung im Team eisig. Was ratet ihr mir?'
+  ]::text[],
   618,
   NOW() - INTERVAL '2 days'
 ),
@@ -360,10 +360,10 @@ VALUES
   'Wie viel zahlt ihr aktuell für eine 2.5-Zimmer-Wohnung?',
   'Wohnen',
   'Mietpreis-Vergleich Schweiz: Was zahlt ihr monatlich warm in eurem Kanton?',
-  '[
-    "Die Mietzinse driften regional extrem auseinander. Zahlt ihr noch unter 1''500 Franken oder seid ihr längst bei über 2''200 Franken?",
-    "Schreibt bitte euren Kanton, Ort und die ungefähre Quadratmeterzahl dazu!"
-  ]'::jsonb,
+  ARRAY[
+    'Die Mietzinse driften regional extrem auseinander. Zahlt ihr noch unter 1''500 Franken oder seid ihr längst bei über 2''200 Franken?',
+    'Schreibt bitte euren Kanton, Ort und die ungefähre Quadratmeterzahl dazu!'
+  ]::text[],
   694,
   NOW() - INTERVAL '3 days'
 )
@@ -388,7 +388,7 @@ VALUES
 (
   '30000000-0000-0000-0000-000000000002'::uuid,
   '20000000-0000-0000-0000-000000000001'::uuid,
-  'Ich arbeite im Spital. Ohne Kolleginnen und Kollegen aus dem Ausland könnten wir nächste Woche die halbe Bettenstation dichtmachen. Man kann nicht gleichzeitig Zuwanderungsstopp fordern und sich dann beschweren, wenn man 8 Stunden auf der Notfallstation wartet.',
+  'Ich arbeite im Spital. Ohne Kolleginnen und Kollegen aus dem Ausland könnten wir nächste Woche die half Bettenstation dichtmachen. Man kann nicht gleichzeitig Zuwanderungsstopp fordern und sich dann beschweren, wenn man 8 Stunden auf der Notfallstation wartet.',
   16,
   NOW() - INTERVAL '42 minutes'
 ),
