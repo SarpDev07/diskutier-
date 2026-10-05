@@ -166,7 +166,9 @@
   <div class="actions" id="postNormalActions">
     <button class="smallbtn" onclick="showToast('Beitrag gespeichert.')">Speichern</button>
     <button class="smallbtn" onclick="shareCurrent()">Teilen</button>
-    <button class="smallbtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button>
+    <button class="smallbtn" id="postReportBtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button>
+    <button class="smallbtn" id="btnOwnerEditDirect" style="display:none;color:var(--ink);font-weight:900" onclick="startEditPost()">Beitrag bearbeiten</button>
+    <button class="smallbtn" id="btnOwnerDeleteDirect" style="display:none;color:var(--red);font-weight:900;margin-left:auto" onclick="deleteCurrentPost()">Beitrag löschen</button>
   </div>
   <div class="commentComposer">
     <b>Deine Antwort</b>

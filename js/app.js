@@ -42,16 +42,19 @@ async function submitCreate(){
 
   if(activeCreateType === "post"){
     const paragraphs = body ? body.split("\n\n").map(p => sanitizeText(p, 2000)).filter(Boolean) : [title];
-    const { error } = await db.from("posts").insert([{
+    const { data, error } = await db.from("posts").insert([{
       title,
       category,
       excerpt: paragraphs[0] ? paragraphs[0].substring(0, 180) : title,
       body: paragraphs,
       user_id: currentUser ? currentUser.id : null
-    }]);
+    }]).select();
     if(error){
       errDiv.textContent = "Fehler beim Erstellen: " + error.message;
       return;
+    }
+    if(data && data[0] && data[0].id && typeof saveMyPostId === 'function'){
+      saveMyPostId(data[0].id);
     }
     showToast("Beitrag erfolgreich veröffentlicht!");
     document.getElementById("createTitle").value = "";

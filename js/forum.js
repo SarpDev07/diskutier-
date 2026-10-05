@@ -70,20 +70,53 @@ async function loadForum(){
   renderForum();
 }
 
+// POST-EIGENTÜMERSCHAFT (Erkennung & Speicherung)
+function saveMyPostId(id){
+  if(!id) return;
+  try {
+    const myPosts = JSON.parse(localStorage.getItem("diskutier_my_posts") || "[]");
+    if(!myPosts.includes(id)) myPosts.push(id);
+    localStorage.setItem("diskutier_my_posts", JSON.stringify(myPosts));
+  } catch(e){}
+}
+
+function isMyPost(post){
+  if(!post) return false;
+  if(currentUser && post.user_id && post.user_id === currentUser.id) return true;
+  if(currentProfile && currentProfile.username && post.user && currentProfile.username.trim().toLowerCase() === post.user.trim().toLowerCase()) return true;
+  if(currentUser && post.user && (currentUser.email || "").toLowerCase().startsWith(post.user.toLowerCase())) return true;
+  try {
+    const myPosts = JSON.parse(localStorage.getItem("diskutier_my_posts") || "[]");
+    if(myPosts.includes(post.id)) return true;
+  } catch(e){}
+  return false;
+}
+
 function renderForum(){
   const container = document.getElementById("forumList");
   if(!container) return;
   
-  container.innerHTML = currentPosts.map(p => `
-    <article class="postRow" onclick="openPost('${escapeHTML(p.id)}')">
-      <div class="replyCount"><b>${p.comments}</b>Antworten</div>
-      <div>
-        <div class="postTitle">${escapeHTML(p.title)}</div>
-        <div class="postExcerpt">${escapeHTML(p.excerpt)}</div>
-        <div class="postMeta"><b>${escapeHTML(p.cat)}</b> · Von <strong>${escapeHTML(p.user)}</strong> (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
-      </div>
-    </article>
-  `).join("");
+  container.innerHTML = currentPosts.map(p => {
+    const isOwner = isMyPost(p);
+    return `
+      <article class="postRow" onclick="openPost('${escapeHTML(p.id)}')">
+        <div class="replyCount"><b>${p.comments}</b>Antworten</div>
+        <div>
+          <div class="postTitle">${escapeHTML(p.title)}</div>
+          <div class="postExcerpt">${escapeHTML(p.excerpt)}</div>
+          <div class="postMeta">
+            <b>${escapeHTML(p.cat)}</b> · Von <strong>${escapeHTML(p.user)}</strong> (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe
+            ${isOwner ? `<span style="color:var(--red);font-weight:900;margin-left:8px">· Eigener Beitrag</span>` : ''}
+          </div>
+          ${isOwner ? `
+            <div style="margin-top:6px">
+              <button class="smallbtn" style="color:var(--red);font-weight:900;font-size:11px;padding:2px 0" onclick="event.stopPropagation(); deletePostById('${escapeHTML(p.id)}')">Löschen</button>
+            </div>
+          ` : ''}
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
 function filterForum(type){
@@ -126,6 +159,9 @@ async function openPost(postId){
   const ownerControls = document.getElementById("postOwnerControls");
   const editForm = document.getElementById("postEditForm");
   const postBody = document.getElementById("postBody");
+  const btnOwnerDeleteDirect = document.getElementById("btnOwnerDeleteDirect");
+  const btnOwnerEditDirect = document.getElementById("btnOwnerEditDirect");
+  const postReportBtn = document.getElementById("postReportBtn");
 
   if(editForm) editForm.style.display = "none";
   if(postBody) postBody.style.display = "block";
@@ -135,10 +171,13 @@ async function openPost(postId){
   if(authorCanton) authorCanton.textContent = currentPost.canton || 'CH';
   if(authorSub) authorSub.textContent = currentPost.user_id ? 'Registriertes Mitglied' : 'Community-Beitrag';
 
-  // Ist es der eigene Beitrag des angemeldeten Nutzers?
-  const isOwner = currentUser && currentPost.user_id && currentPost.user_id === currentUser.id;
+  // Ist es der eigene Beitrag des Nutzers?
+  const isOwner = isMyPost(currentPost);
   if(isOwner){
     if(ownerControls) ownerControls.style.display = "block";
+    if(btnOwnerDeleteDirect) btnOwnerDeleteDirect.style.display = "inline-block";
+    if(btnOwnerEditDirect) btnOwnerEditDirect.style.display = "inline-block";
+    if(postReportBtn) postReportBtn.style.display = "none";
     if(authorRole) {
       authorRole.textContent = "Dein Beitrag";
       authorRole.style.color = "var(--red)";
@@ -146,6 +185,9 @@ async function openPost(postId){
     }
   } else {
     if(ownerControls) ownerControls.style.display = "none";
+    if(btnOwnerDeleteDirect) btnOwnerDeleteDirect.style.display = "none";
+    if(btnOwnerEditDirect) btnOwnerEditDirect.style.display = "none";
+    if(postReportBtn) postReportBtn.style.display = "inline-block";
     if(authorRole) {
       authorRole.textContent = "Verfasser";
       authorRole.style.color = "#888";
@@ -222,22 +264,38 @@ async function savePostEdit(){
   await loadForum();
 }
 
-async function deleteCurrentPost(){
-  if(!currentPost || !db) return;
-  const confirmDelete = confirm(`Möchtest du deinen Beitrag "${currentPost.title}" wirklich unwiderruflich löschen?`);
+async function deletePostById(postId){
+  const target = currentPosts.find(p => p.id === postId) || currentPost;
+  const title = target ? target.title : "diesen Beitrag";
+  const confirmDelete = confirm(`Möchtest du "${title}" wirklich löschen?`);
   if(!confirmDelete) return;
 
-  try {
-    await db.from("comments").delete().eq("post_id", currentPost.id);
-    await db.from("posts").delete().eq("id", currentPost.id);
-    showToast("Dein Beitrag wurde gelöscht.");
-    currentPosts = currentPosts.filter(p => p.id !== currentPost.id);
-    currentPost = null;
-    await loadForum();
-    showPage("forum");
-  } catch(e) {
-    showToast("Fehler beim Löschen: " + (e.message || "Unbekannter Fehler"));
+  if(db && postId){
+    try {
+      await db.from("comments").delete().eq("post_id", postId);
+      await db.from("posts").delete().eq("id", postId);
+    } catch(e) {
+      console.warn("Delete error:", e);
+    }
   }
+
+  currentPosts = currentPosts.filter(p => p.id !== postId);
+  try {
+    const myPosts = JSON.parse(localStorage.getItem("diskutier_my_posts") || "[]");
+    localStorage.setItem("diskutier_my_posts", JSON.stringify(myPosts.filter(id => id !== postId)));
+  } catch(e){}
+
+  if(currentPost && currentPost.id === postId){
+    currentPost = null;
+    showPage("forum");
+  }
+  showToast("Beitrag wurde gelöscht.");
+  await loadForum();
+}
+
+async function deleteCurrentPost(){
+  if(!currentPost) return;
+  await deletePostById(currentPost.id);
 }
 
 async function loadForumComments(postId){
