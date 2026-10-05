@@ -357,9 +357,57 @@ function renderFeedAndSidebar(){
       const pollSlug = slugify(q.title);
       const safeId = escapeHTML(q.id);
       const safeCount = q.totalVotes.toLocaleString('de-CH');
+      const isVoted = q.userVotedIndex !== null && q.userVotedIndex !== undefined;
+
+      let pollInteractiveSection = "";
+      if (isVoted) {
+        const total = q.totalVotes || 1;
+        const resultsHtml = q.options.map((opt, idx) => {
+          const count = (q.optionCounts && q.optionCounts[idx] !== undefined) ? q.optionCounts[idx] : 0;
+          const pct = Math.round((count / total) * 100);
+          const isSel = q.userVotedIndex === idx;
+          return `
+            <div class="result ${isSel ? 'selected' : ''}" style="margin:10px 0">
+              <div class="resulttop" style="font-size:13px;font-weight:800;margin-bottom:5px">
+                <span>${escapeHTML(opt)}${isSel ? ' <span style="color:var(--red);font-size:11px;font-weight:900">(Deine Wahl)</span>' : ''}</span>
+                <span>${pct} %</span>
+              </div>
+              <div class="track" style="height:9px;background:var(--soft);border-radius:2px;overflow:hidden">
+                <div class="bar" style="width:${pct}%;${isSel ? 'background:var(--red);' : 'background:#222;'}"></div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        const userPct = Math.round((((q.optionCounts && q.optionCounts[q.userVotedIndex]) || 0) / total) * 100);
+
+        pollInteractiveSection = `
+          <div class="results" style="display:block;margin-top:10px">
+            ${resultsHtml}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:10px;border-top:1px solid var(--line-light);flex-wrap:wrap;gap:8px">
+              <span class="you" style="margin-top:0;font-size:12px;font-weight:800;color:var(--ink)">Du hast wie ${userPct} % abgestimmt.</span>
+              <div style="display:flex;gap:14px;align-items:center">
+                <a href="/frage/${pollSlug}" class="smallbtn" style="margin:0;font-size:12px;font-weight:800;color:var(--ink);text-decoration:none">Kommentare ansehen &rarr;</a>
+                <button class="smallbtn" style="margin:0;font-size:12px;font-weight:700;color:var(--muted);border:0;background:none;cursor:pointer;padding:0" onclick="cancelPendingVote('${safeId}', false)">Stimme ändern</button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        pollInteractiveSection = `
+          <div class="quickVotes" id="qv-${safeId}">
+            ${q.options.map((opt, idx) => `
+              <button class="qv" onclick="submitPollVote('${safeId}', ${idx}, false)">${escapeHTML(opt)}</button>
+            `).join("")}
+          </div>
+          <div class="actions" style="margin-top:12px;padding-top:8px;border-top:0">
+            <a href="/frage/${pollSlug}" class="smallbtn" style="color:var(--muted);text-decoration:none;font-size:12px;font-weight:700">Diskussion & Kommentare &rarr;</a>
+          </div>
+        `;
+      }
 
       return `
-        <article class="feedItem">
+        <article class="feedItem" id="poll-card-${safeId}">
           <div class="meta">
             <span class="category"><a href="/kategorie/${catSlug}" style="color:var(--red);text-decoration:none">${safeCat}</a></span>
             <span>·</span>
@@ -367,11 +415,7 @@ function renderFeedAndSidebar(){
           </div>
           <h2><a href="/frage/${pollSlug}" style="color:inherit;text-decoration:none">${safeTitle}</a></h2>
           <div class="feedStats">${safeCount} Stimmen</div>
-          <div class="quickVotes" id="qv-${safeId}">
-            ${q.options.map((opt, idx) => `
-              <button class="qv ${q.userVotedIndex === idx ? 'active' : ''}" onclick="submitPollVote('${safeId}', ${idx}, false)">${escapeHTML(opt)}</button>
-            `).join("")}
-          </div>
+          ${pollInteractiveSection}
         </article>
         ${i === 1 ? '<div class="ad">Werbung</div>' : ''}
       `;
