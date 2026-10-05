@@ -4,18 +4,47 @@ let currentPoll = null;
 let activeFeaturedIndex = 0;
 
 // REALISTISCHE SCHWEIZER BASIS-DATEN FÜR ALTE TEST-FRAGEN
+// REALISTISCHE SCHWEIZER BASIS-DATEN FÜR ALLE ABSTIMMUNGEN
 const POLL_BASELINES = {
+  "10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?": { baseVotes: 1420, optionCounts: [738, 682, 0] },
+  "poll_10m_schweiz": { baseVotes: 1420, optionCounts: [738, 682, 0] },
+  "10000000-0000-0000-0000-000000000001": { baseVotes: 1420, optionCounts: [738, 682, 0] },
+
+  "Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?": { baseVotes: 1180, optionCounts: [425, 484, 271] },
+  "poll_tempo30": { baseVotes: 1180, optionCounts: [425, 484, 271] },
+  "10000000-0000-0000-0000-000000000002": { baseVotes: 1180, optionCounts: [425, 484, 271] },
+
+  "Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?": { baseVotes: 1060, optionCounts: [498, 403, 159] },
+  "poll_srg_gebuehren": { baseVotes: 1060, optionCounts: [498, 403, 159] },
+  "10000000-0000-0000-0000-000000000003": { baseVotes: 1060, optionCounts: [498, 403, 159] },
+
+  "Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?": { baseVotes: 880, optionCounts: [387, 273, 220] },
+  "poll_wohnungsnot_mieten": { baseVotes: 880, optionCounts: [387, 273, 220] },
+  "10000000-0000-0000-0000-000000000004": { baseVotes: 880, optionCounts: [387, 273, 220] },
+
+  "Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?": { baseVotes: 950, optionCounts: [323, 171, 456] },
+  "poll_wehrpflicht_miliz": { baseVotes: 950, optionCounts: [323, 171, 456] },
+  "10000000-0000-0000-0000-000000000005": { baseVotes: 950, optionCounts: [323, 171, 456] },
+
   "Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?": { baseVotes: 642, optionCounts: [198, 348, 96] },
+  "10000000-0000-0000-0000-000000000006": { baseVotes: 642, optionCounts: [198, 348, 96] },
+
   "Ist es komisch, mit 25 noch bei den Eltern zu wohnen?": { baseVotes: 489, optionCounts: [136, 231, 122] },
-  "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 318, optionCounts: [95, 223] },
+  "10000000-0000-0000-0000-000000000007": { baseVotes: 489, optionCounts: [136, 231, 122] },
+
   "Coop oder Migros?": { baseVotes: 742, optionCounts: [341, 319, 82] },
-  "Sollte man seinem Partner das Handy-Passwort geben?": { baseVotes: 521, optionCounts: [130, 297, 94] },
+  "10000000-0000-0000-0000-000000000008": { baseVotes: 742, optionCounts: [341, 319, 82] },
+
+  "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 318, optionCounts: [95, 223] },
+  "10000000-0000-0000-0000-000000000009": { baseVotes: 318, optionCounts: [95, 223] },
+
   "Sind 30 Franken für eine Pizza in der Schweiz zu viel?": { baseVotes: 382, optionCounts: [267, 46, 69] },
+  "10000000-0000-0000-0000-000000000010": { baseVotes: 382, optionCounts: [267, 46, 69] },
+
+  "Sollte man seinem Partner das Handy-Passwort geben?": { baseVotes: 521, optionCounts: [130, 297, 94] },
   "iPhone oder Samsung?": { baseVotes: 612, optionCounts: [336, 227, 49] },
   "Homeoffice oder Büro?": { baseVotes: 467, optionCounts: [280, 65, 122] },
-  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 279, optionCounts: [187, 39, 53] },
-  "10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?": { baseVotes: 1420, optionCounts: [738, 682, 0] },
-  "poll_10m_schweiz": { baseVotes: 1420, optionCounts: [738, 682, 0] }
+  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 279, optionCounts: [187, 39, 53] }
 };
 
 // INITIALE SCHWEIZER COMMUNITY-KOMMENTARE FÜR BESTEHENDE FRAGEN
@@ -36,16 +65,31 @@ function getBaselineForPoll(p){
     return { baseVotes: 1420, optionCounts: [738, 682, 0] };
   }
   if(title.includes("tempo 30") || title.includes("tempo-30")){
-    return POLL_BASELINES["Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?"] || { baseVotes: 0, optionCounts: [0, 0, 0] };
+    return { baseVotes: 1180, optionCounts: [425, 484, 271] };
   }
   if(title.includes("srg") || title.includes("serafe") || title.includes("halbierungs")){
-    return POLL_BASELINES["Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?"] || { baseVotes: 0, optionCounts: [0, 0, 0] };
+    return { baseVotes: 1060, optionCounts: [498, 403, 159] };
   }
   if(title.includes("wohnungsnot") || title.includes("gier-investoren")){
-    return POLL_BASELINES["Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?"] || { baseVotes: 0, optionCounts: [0, 0, 0] };
+    return { baseVotes: 880, optionCounts: [387, 273, 220] };
   }
   if(title.includes("wehrpflicht") || title.includes("milizsystem")){
-    return POLL_BASELINES["Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?"] || { baseVotes: 0, optionCounts: [0, 0, 0] };
+    return { baseVotes: 950, optionCounts: [323, 171, 456] };
+  }
+  if(title.includes("6'000") || title.includes("6000")){
+    return { baseVotes: 642, optionCounts: [198, 348, 96] };
+  }
+  if(title.includes("25 noch bei den eltern") || title.includes("eltern zu wohnen")){
+    return { baseVotes: 489, optionCounts: [136, 231, 122] };
+  }
+  if(title.includes("coop oder migros")){
+    return { baseVotes: 742, optionCounts: [341, 319, 82] };
+  }
+  if(title.includes("pendeln")){
+    return { baseVotes: 318, optionCounts: [95, 223] };
+  }
+  if(title.includes("pizza")){
+    return { baseVotes: 382, optionCounts: [267, 46, 69] };
   }
   return { baseVotes: 0, optionCounts: (p.options || []).map(() => 0) };
 }
