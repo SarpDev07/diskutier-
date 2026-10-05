@@ -17,9 +17,9 @@ const POLL_BASELINES = {
 
 // INITIALE SCHWEIZER COMMUNITY-KOMMENTARE
 const SEED_COMMENTS = [
-  { username: "AlpenFuchs", canton: "BE", time: "vor 12 Min.", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 24, downvotes: 3 },
-  { username: "NinaZH", canton: "ZH", time: "vor 9 Min.", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 18, downvotes: 2 },
-  { username: "romand92", canton: "VD", time: "vor 6 Min.", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 11, downvotes: 4 }
+  { username: "AlpenFuchs", canton: "BE", time: "vor 2 Tagen", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 24, downvotes: 3 },
+  { username: "NinaZH", canton: "ZH", time: "vor 2 Tagen", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 18, downvotes: 2 },
+  { username: "romand92", canton: "VD", time: "vor 3 Tagen", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 11, downvotes: 4 }
 ];
 
 async function loadPolls(){

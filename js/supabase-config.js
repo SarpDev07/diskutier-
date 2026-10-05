@@ -48,10 +48,29 @@ function getGuestSession(){
 
 // ZEIT-FORMATIERUNG (Schweizerisch / Deutsch)
 function formatTimeAgo(isoString){
-  if(!isoString) return "vor kurzem";
-  const diff = Math.floor((new Date() - new Date(isoString))/1000);
-  if(diff < 60) return "gerade eben";
-  if(diff < 3600) return `vor ${Math.floor(diff/60)} Min.`;
-  if(diff < 86400) return `vor ${Math.floor(diff/3600)} Std.`;
-  return `vor ${Math.floor(diff/86400)} Tagen`;
+  if(!isoString) return "vor 2 Tagen";
+  const date = new Date(isoString);
+  if(isNaN(date.getTime())) return "vor 2 Tagen";
+  
+  const now = new Date();
+  const diffSec = Math.floor((now - date) / 1000);
+  
+  if(diffSec < 45) return "gerade eben";
+  if(diffSec < 3600) {
+    const min = Math.max(1, Math.floor(diffSec / 60));
+    return `vor ${min} Min.`;
+  }
+  if(diffSec < 86400) {
+    const hours = Math.floor(diffSec / 3600);
+    return hours === 1 ? "vor 1 Std." : `vor ${hours} Std.`;
+  }
+  const days = Math.floor(diffSec / 86400);
+  if(days === 1) return "gestern";
+  if(days < 7) return `vor ${days} Tagen`;
+  const weeks = Math.floor(days / 7);
+  if(weeks === 1) return "vor 1 Woche";
+  if(weeks < 4) return `vor ${weeks} Wochen`;
+  const months = Math.floor(days / 30);
+  if(months === 1) return "vor 1 Monat";
+  return `vor ${months} Monaten`;
 }
