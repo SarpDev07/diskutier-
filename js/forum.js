@@ -3,6 +3,7 @@ let currentPosts = [];
 let currentPost = null;
 
 const POST_BASELINES = {
+  "10-Millionen-Schweiz: Rettung vor dem Kollaps oder wirtschaftlicher Selbstmord?": { comments: 24, views: 642 },
   "Nachbar stellt ständig Sachen ins Treppenhaus – was würdet ihr machen?": { comments: 14, views: 342 },
   "Chef erwartet, dass ich nach Feierabend auf WhatsApp antworte": { comments: 23, views: 618 },
   "Freundeskreis verändert sich komplett seit alle in Beziehungen sind": { comments: 18, views: 429 },
@@ -12,15 +13,39 @@ const POST_BASELINES = {
 };
 
 const SEED_FORUM_REPLIES = [
+  { username: "Marc_ZH", canton: "ZH", created_at: "2026-10-04T10:14:00.000Z", content: "Das Problem ist nicht nur Zuwanderung, sondern dass überall Einsprachen den Wohnungsbau blockieren. Wenn wir dichter und höher bauen würden, hätten wir genug Platz.", upvotes: 21 },
+  { username: "Walliser92", canton: "VS", created_at: "2026-10-04T11:45:00.000Z", content: "Man sieht es ja bei der Zersiedelung der Landschaft und den vollen Zügen. Irgendwann verliert die Schweiz genau das, was sie so lebenswert macht.", upvotes: 17 },
   { username: "Rheinknie", canton: "BS", created_at: "2026-10-03T10:14:00.000Z", content: "Ich würde zuerst ganz normal das Gespräch suchen. Viele merken gar nicht, dass es andere stört. Wenn danach nichts passiert, kannst du immer noch der Verwaltung schreiben.", upvotes: 12 },
   { username: "sina90", canton: "AG", created_at: "2026-10-02T16:22:00.000Z", content: "Direkt ansprechen, freundlich und ohne Vorwurf. Schriftlich über die Verwaltung eskaliert so etwas meiner Erfahrung nach nur unnötig schnell.", upvotes: 8 },
   { username: "JuraNord", canton: "SO", created_at: "2026-10-02T11:05:00.000Z", content: "Kommt vor allem auch darauf an, ob der Fluchtweg betroffen ist. Wenn es wirklich eng wird bei einem Notfall, würde ich nicht ewig warten.", upvotes: 5 }
 ];
 
 async function loadForum(){
-  if(!db) return;
-  const { data: posts, error } = await db.from("posts").select("*, profiles(username, canton), comments(id)").order("created_at", { ascending: false });
-  if(error || !posts) return;
+  let posts = [];
+  if(db){
+    const { data, error } = await db.from("posts").select("*, profiles(username, canton), comments(id)").order("created_at", { ascending: false });
+    if(!error && data) posts = data;
+  }
+
+  // 10-Millionen Debatte an oberster Stelle sicherstellen
+  const has10MPost = posts.some(p => p.title.includes("10-Millionen"));
+  if(!has10MPost){
+    posts.unshift({
+      id: "post_10m_schweiz",
+      category: "Schweiz & Politik",
+      title: "10-Millionen-Schweiz: Rettung vor dem Kollaps oder wirtschaftlicher Selbstmord?",
+      excerpt: "Wohnungsnot und überfüllte Pendlerzüge vs. akuter Fachkräftemangel in Spitälern und Betrieben. Wo steht ihr bei der 10-Millionen-Debatte?",
+      body: [
+        "Die Debatte um eine 10-Millionen-Schweiz bis 2050 sorgt im ganzen Land für hitzige Diskussionen. Auf der einen Seite spüren viele im Alltag den Druck: kaum bezahlbare Wohnungen, steigende Mieten und überfüllte Pendlerzüge zu den Stosszeiten.",
+        "Auf der anderen Seite warnen Spitäler, Gewerbe und Wirtschaftsverbände: Ohne Zuwanderung fehlen uns schon heute Pflegekräfte, Handwerker und IT-Spezialisten. Ein harter Deckel könnte Wohlstand und Altersvorsorge gefährden.",
+        "Wie seht ihr das: Braucht es eine klare gesetzliche Grenze beim Bevölkerungswachstum oder schaden wir uns damit am Ende nur selbst? Schreibt eure Erfahrungen und Meinungen aus eurem Kanton!"
+      ],
+      user_id: null,
+      profiles: { username: "Urs_Bern", canton: "BE" },
+      created_at: "2026-10-04T08:15:00.000Z",
+      comments: []
+    });
+  }
 
   currentPosts = posts.map(p => {
     const hasBaseline = POST_BASELINES[p.title];
@@ -28,7 +53,7 @@ async function loadForum(){
     const dbCommentsCount = p.comments ? p.comments.length : 0;
     return {
       id: p.id,
-      cat: p.category || "Alltag",
+      cat: p.category || "Schweiz & Politik",
       time: formatTimeAgo(p.created_at),
       title: p.title || "",
       excerpt: p.excerpt || (Array.isArray(p.body) ? p.body[0] : p.body) || "",

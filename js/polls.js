@@ -4,6 +4,7 @@ let currentPoll = null;
 
 // REALISTISCHE SCHWEIZER BASIS-DATEN FÜR FRAGEN (Maximal unter 800 Stimmen)
 const POLL_BASELINES = {
+  "10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?": { baseVotes: 712, optionCounts: [348, 286, 78] },
   "Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?": { baseVotes: 642, optionCounts: [198, 348, 96] },
   "Ist es komisch, mit 25 noch bei den Eltern zu wohnen?": { baseVotes: 489, optionCounts: [136, 231, 122] },
   "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 318, optionCounts: [95, 223] },
@@ -17,17 +18,36 @@ const POLL_BASELINES = {
 
 // INITIALE SCHWEIZER COMMUNITY-KOMMENTARE MIT ECHTEN ZEITSTEMPELN (Wird täglich live berechnet)
 const SEED_COMMENTS = [
+  { username: "Beat_Aarau", canton: "AG", created_at: "2026-10-04T14:10:00.000Z", content: "Wer Mieten in Zürich, Bern oder Basel zahlt, weiss, dass die Infrastruktur am Anschlag ist. Ein Limit zwingt die Politik endlich zur Qualität statt endlosem Mengenwachstum.", upvotes: 38, downvotes: 5 },
+  { username: "claudia_vd", canton: "VD", created_at: "2026-10-04T16:40:00.000Z", content: "In unserem Spital könnten wir ohne ausländische Fachkräfte morgen die Notaufnahme schliessen. Ein starrer Deckel gefährdet die Versorgung aller.", upvotes: 29, downvotes: 4 },
   { username: "AlpenFuchs", canton: "BE", created_at: "2026-10-03T11:20:00.000Z", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 24, downvotes: 3 },
   { username: "NinaZH", canton: "ZH", created_at: "2026-10-03T15:45:00.000Z", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 18, downvotes: 2 },
   { username: "romand92", canton: "VD", created_at: "2026-10-02T09:10:00.000Z", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 11, downvotes: 4 }
 ];
 
 async function loadPolls(){
-  if(!db) return;
-  const { data: polls, error } = await db.from("polls").select("*, poll_votes(id, option_index, user_id, session_token)").order("created_at", { ascending: false });
-  if(error || !polls) return;
+  let polls = [];
+  if(db){
+    const { data, error } = await db.from("polls").select("*, poll_votes(id, option_index, user_id, session_token)").order("created_at", { ascending: false });
+    if(!error && data) polls = data;
+  }
 
-  currentPolls = polls.map(p => {
+  // 10-Millionen Haupt-Abstimmung an erster Stelle sicherstellen
+  const has10MPoll = polls.some(p => p.title.includes("10-Millionen"));
+  if(!has10MPoll){
+    polls.unshift({
+      id: "poll_10m_schweiz",
+      category: "Schweiz & Politik",
+      title: "10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?",
+      description: "Volle Züge, steigende Mieten und dichtere Agglos vs. akuter Fachkräftemangel in Spitälern und Betrieben. Braucht die Schweiz bis 2050 eine gesetzliche Obergrenze von 10 Millionen Einwohnern?",
+      options: ["JA (Limit nötig)", "NEIN (Schadet Wirtschaft)", "KOMMT DARAUF AN"],
+      is_featured: true,
+      created_at: "2026-10-04T08:00:00.000Z",
+      poll_votes: []
+    });
+  }
+
+  currentPolls = polls.map((p, pIdx) => {
     const votes = p.poll_votes || [];
     const base = POLL_BASELINES[p.title] || { baseVotes: 0, optionCounts: (p.options || []).map(()=>0) };
     
@@ -43,11 +63,11 @@ async function loadPolls(){
     
     return {
       id: p.id,
-      category: p.category || "Alltag",
+      category: p.category || "Schweiz & Politik",
       title: p.title || "",
       description: p.description || "",
       options: Array.isArray(p.options) && p.options.length ? p.options : ["JA", "NEIN"],
-      is_featured: p.is_featured,
+      is_featured: p.is_featured !== undefined ? p.is_featured : (pIdx === 0),
       time: formatTimeAgo(p.created_at),
       totalVotes: totalVotes,
       optionCounts: optionCounts,
