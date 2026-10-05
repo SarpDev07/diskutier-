@@ -259,5 +259,18 @@ async function addPollComment(){
   await db.from("comments").insert([payload]);
   textarea.value = "";
   showToast("Kommentar veröffentlicht!");
+
+  if (typeof createNotification === 'function') {
+    const authorName = (typeof currentProfile !== 'undefined' && currentProfile && currentProfile.username) ? currentProfile.username : 'Ein Nutzer';
+    const authorCanton = (typeof currentProfile !== 'undefined' && currentProfile && currentProfile.canton) ? currentProfile.canton : 'CH';
+    createNotification({
+      userId: currentPoll.user_id || null,
+      title: "Neuer Kommentar zu deiner Abstimmung",
+      message: `${authorName} (${authorCanton}) hat auf deine Abstimmung "${currentPoll.title}" geantwortet.`,
+      linkPage: "poll",
+      linkId: currentPoll.id
+    });
+  }
+
   await loadPollComments(currentPoll.id);
 }

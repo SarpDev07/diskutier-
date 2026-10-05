@@ -26,6 +26,19 @@
       <span onclick="showPage('categories')">Kategorien</span>
     </nav>
     <button class="ask" onclick="showPage('create')">Beitrag erstellen</button>
+    <div class="notifWrapper">
+      <button id="notifBellBtn" class="notifBell" onclick="toggleNotifications()" aria-label="Benachrichtigungen" title="Benachrichtigungen">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span id="notifBadge" class="notifBadge">0</span>
+      </button>
+      <div id="notifDropdown" class="notifDropdown">
+        <div class="notifHead">
+          <span class="notifHeadTitle">Benachrichtigungen</span>
+          <button class="notifHeadAction" onclick="markAllNotificationsRead()">Alle gelesen</button>
+        </div>
+        <div id="notifList" class="notifList"></div>
+      </div>
+    </div>
     <div class="auth" id="navAuth">
       <button class="searchBtn" onclick="showPage('search')" aria-label="Suche">Suche</button>
       <span onclick="location.href='login.html'">Anmelden</span>
@@ -98,6 +111,13 @@
 <section id="postdetail" class="page">
   <div class="meta"><span class="category" id="postCategory">Alltag</span><span>·</span><span id="postTime">vor 2 Tagen</span></div>
   <h1 class="postDetailTitle" id="postTitle">Titel</h1>
+  <div class="authorBadge" id="postAuthorBadge">
+    <div class="authorAvatar" id="postAuthorAvatar">U</div>
+    <div>
+      <div class="authorName" id="postAuthorName">Community</div>
+      <div class="authorMeta" id="postAuthorMeta">Kanton CH · Verfasser</div>
+    </div>
+  </div>
   <div class="postBody" id="postBody"></div>
   <div class="actions">
     <button class="smallbtn" onclick="showToast('Beitrag gespeichert.')">Speichern</button>
@@ -401,6 +421,7 @@
 <!-- Modulare Anwendungs-Skripte -->
 <script src="js/supabase-config.js"></script>
 <script src="js/analytics.js"></script>
+<script src="js/notifications.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/polls.js"></script>
 <script src="js/forum.js"></script>

@@ -32,8 +32,9 @@ async function loadForum(){
       title: p.title || "",
       excerpt: p.excerpt || (Array.isArray(p.body) ? p.body[0] : p.body) || "",
       body: Array.isArray(p.body) ? p.body : [p.body],
-      user: p.profiles?.username || "Community",
+      user: p.profiles?.username || (p.user_id ? "Mitglied" : "Community"),
       canton: p.profiles?.canton || "CH",
+      user_id: p.user_id,
       comments: base.comments + dbCommentsCount,
       views: Math.max(base.views, p.views || 1),
       created_at: p.created_at
@@ -53,7 +54,7 @@ function renderForum(){
       <div>
         <div class="postTitle">${escapeHTML(p.title)}</div>
         <div class="postExcerpt">${escapeHTML(p.excerpt)}</div>
-        <div class="postMeta"><b>${escapeHTML(p.cat)}</b> · ${escapeHTML(p.user)} (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
+        <div class="postMeta"><b>${escapeHTML(p.cat)}</b> · Von <strong>${escapeHTML(p.user)}</strong> (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
       </div>
     </article>
   `).join("");
@@ -84,10 +85,17 @@ async function openPost(postId){
   }
 
   document.getElementById("postCategory").textContent = currentPost.cat;
-  document.getElementById("postTime").textContent = `${currentPost.time} · ${currentPost.user} (${currentPost.canton})`;
+  document.getElementById("postTime").textContent = `${currentPost.time} · von ${currentPost.user} (${currentPost.canton})`;
   document.getElementById("postTitle").textContent = currentPost.title;
   document.getElementById("postBody").innerHTML = currentPost.body.map(x => `<p>${escapeHTML(x)}</p>`).join("");
   document.getElementById("postCommentCount").textContent = currentPost.comments;
+
+  const authorAvatar = document.getElementById("postAuthorAvatar");
+  const authorName = document.getElementById("postAuthorName");
+  const authorMeta = document.getElementById("postAuthorMeta");
+  if(authorAvatar) authorAvatar.textContent = (currentPost.user || "U").substring(0, 2).toUpperCase();
+  if(authorName) authorName.textContent = currentPost.user;
+  if(authorMeta) authorMeta.textContent = `Kanton ${currentPost.canton || 'CH'} · Verfasser`;
 
   await loadForumComments(currentPost.id);
   showPage("postdetail");
@@ -144,6 +152,20 @@ async function addForumComment(){
   currentPost.comments++;
   document.getElementById("postCommentCount").textContent = currentPost.comments;
   showToast("Antwort erfolgreich veröffentlicht!");
+
+  // Benachrichtigung erstellen
+  if (typeof createNotification === 'function') {
+    const authorName = (currentProfile && currentProfile.username) ? currentProfile.username : 'Ein Nutzer';
+    const authorCanton = (currentProfile && currentProfile.canton) ? currentProfile.canton : 'CH';
+    createNotification({
+      userId: currentPost.user_id || null,
+      title: "Neue Antwort auf deinen Beitrag",
+      message: `${authorName} (${authorCanton}) hat auf "${currentPost.title}" geantwortet.`,
+      linkPage: "post",
+      linkId: currentPost.id
+    });
+  }
+
   await loadForumComments(currentPost.id);
   await loadForum();
 }
