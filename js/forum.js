@@ -146,7 +146,7 @@ async function loadForum(){
   // 10-Millionen Debatte (GANZ NEU & FRISCH GESTARTET)
   const has10MPost = posts.some(p => p.title && p.title.includes("10-Millionen"));
   if(!has10MPost){
-    posts.unshift({
+    const initial10MPost = {
       id: "post_10m_schweiz",
       category: "Schweiz & Politik",
       title: "10-Millionen-Schweiz: Rettung vor dem Kollaps oder wirtschaftlicher Selbstmord?",
@@ -161,7 +161,19 @@ async function loadForum(){
       created_at: new Date().toISOString(),
       views: 1,
       comments: []
-    });
+    };
+    posts.unshift(initial10MPost);
+
+    if(db){
+      try {
+        db.from("posts").insert([{
+          title: initial10MPost.title,
+          category: initial10MPost.category,
+          excerpt: initial10MPost.excerpt,
+          body: initial10MPost.body
+        }]).then();
+      } catch(e){}
+    }
   }
 
   currentPosts = posts.map(p => {

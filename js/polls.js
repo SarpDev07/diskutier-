@@ -137,7 +137,7 @@ async function loadPolls(){
   // 10-Millionen Haupt-Abstimmung (GANZ NEU & FRISCH GESTARTET)
   const has10MPoll = polls.some(p => p.title && p.title.includes("10-Millionen"));
   if(!has10MPoll){
-    polls.unshift({
+    const initial10M = {
       id: "poll_10m_schweiz",
       category: "Schweiz & Politik",
       title: "10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?",
@@ -146,7 +146,21 @@ async function loadPolls(){
       is_featured: true,
       created_at: new Date().toISOString(),
       poll_votes: []
-    });
+    };
+    polls.unshift(initial10M);
+
+    // Automatisch in Supabase abspeichern, falls in Supabase noch nicht vorhanden
+    if(db){
+      try {
+        db.from("polls").insert([{
+          title: initial10M.title,
+          description: initial10M.description,
+          category: initial10M.category,
+          options: initial10M.options,
+          is_featured: true
+        }]).then();
+      } catch(e){}
+    }
   }
 
   const localVotes = getLocalVotes();
