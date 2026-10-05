@@ -25,6 +25,33 @@ const SEED_COMMENTS = [
   { username: "romand92", canton: "VD", created_at: "2026-10-02T09:10:00.000Z", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 11, downvotes: 4 }
 ];
 
+// LOKALE SPEICHERUNG DER ABSTIMMUNGEN (BLEIBT NACH REFRESH / NEUSTART ERHALTEN)
+function getLocalVotes(){
+  try {
+    return JSON.parse(localStorage.getItem("diskutier_poll_votes") || "{}");
+  } catch(e){
+    return {};
+  }
+}
+
+function saveLocalVote(pollId, optionIndex, pollTitle){
+  try {
+    const votes = getLocalVotes();
+    if(pollId) votes[pollId] = optionIndex;
+    if(pollTitle) votes[pollTitle] = optionIndex;
+    localStorage.setItem("diskutier_poll_votes", JSON.stringify(votes));
+  } catch(e){}
+}
+
+function removeLocalVote(pollId, pollTitle){
+  try {
+    const votes = getLocalVotes();
+    if(pollId) delete votes[pollId];
+    if(pollTitle) delete votes[pollTitle];
+    localStorage.setItem("diskutier_poll_votes", JSON.stringify(votes));
+  } catch(e){}
+}
+
 async function loadPolls(){
   let polls = [];
   if(db){
@@ -97,10 +124,29 @@ async function loadPolls(){
     });
   }
 
+  const localVotes = getLocalVotes();
+  const guestSession = getGuestSession();
+
   currentPolls = polls.map((p, pIdx) => {
     const votes = p.poll_votes || [];
     const base = POLL_BASELINES[p.title] || (p.id && POLL_BASELINES[p.id]) || { baseVotes: 0, optionCounts: (p.options || []).map(()=>0) };
     
+    // Prüfe lokale Abstimmung (LocalStorage) & Datenbank
+    let localVoteIndex = null;
+    if (localVotes[p.id] !== undefined) {
+      localVoteIndex = localVotes[p.id];
+    } else if (p.title && localVotes[p.title] !== undefined) {
+      localVoteIndex = localVotes[p.title];
+    }
+
+    const dbUserVote = votes.find(v => (currentUser && v.user_id === currentUser.id) || (v.session_token && v.session_token === guestSession));
+    const effectiveUserVotedIndex = dbUserVote !== undefined ? dbUserVote.option_index : localVoteIndex;
+
+    // Falls aus DB eine Stimme vorhanden ist, synchronisiere lokal
+    if (dbUserVote !== undefined && localVoteIndex === null) {
+      saveLocalVote(p.id, dbUserVote.option_index, p.title);
+    }
+
     // Kombiniere Basis-Stimmen mit echten DB-Stimmen
     const optionCounts = (p.options || []).map((_, idx) => {
       const baseCount = base.optionCounts && base.optionCounts[idx] !== undefined ? base.optionCounts[idx] : 0;
@@ -109,7 +155,6 @@ async function loadPolls(){
     });
 
     const totalVotes = optionCounts.reduce((a, b) => a + b, 0) || votes.length;
-    const userVote = votes.find(v => (currentUser && v.user_id === currentUser.id) || v.session_token === getGuestSession());
     
     return {
       id: p.id,
@@ -121,7 +166,7 @@ async function loadPolls(){
       time: formatTimeAgo(p.created_at),
       totalVotes: totalVotes,
       optionCounts: optionCounts,
-      userVotedIndex: userVote !== undefined ? userVote.option_index : null
+      userVotedIndex: effectiveUserVotedIndex
     };
   });
 
@@ -370,6 +415,7 @@ function cancelPendingVote(pollId, isFeatured){
   const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
   if(poll){
     poll.userVotedIndex = null;
+    removeLocalVote(poll.id, poll.title);
   }
 
   showToast("Stimme rückgängig gemacht.");
@@ -402,17 +448,27 @@ async function finalizeVote(pollId, optionIndex, isFeatured){
   const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
   if(!poll) return;
 
-  // Lokalen Zähler erhöhen
+  const previousVotedIndex = poll.userVotedIndex;
   poll.userVotedIndex = optionIndex;
+
   if(!poll.optionCounts) poll.optionCounts = poll.options.map(() => 0);
-  poll.optionCounts[optionIndex] = (poll.optionCounts[optionIndex] || 0) + 1;
-  poll.totalVotes = (poll.totalVotes || 0) + 1;
+  
+  if(previousVotedIndex === null || previousVotedIndex === undefined){
+    poll.optionCounts[optionIndex] = (poll.optionCounts[optionIndex] || 0) + 1;
+    poll.totalVotes = (poll.totalVotes || 0) + 1;
+  } else if(previousVotedIndex !== optionIndex){
+    poll.optionCounts[previousVotedIndex] = Math.max(0, (poll.optionCounts[previousVotedIndex] || 1) - 1);
+    poll.optionCounts[optionIndex] = (poll.optionCounts[optionIndex] || 0) + 1;
+  }
+
+  // Dauerhaft im LocalStorage sichern
+  saveLocalVote(poll.id, optionIndex, poll.title);
 
   // Supabase Sync im Hintergrund
   if(db){
     const guestSession = getGuestSession();
     const payload = {
-      poll_id: pollId,
+      poll_id: poll.id,
       option_index: optionIndex,
       user_id: currentUser ? currentUser.id : null,
       session_token: currentUser ? null : guestSession
@@ -421,15 +477,15 @@ async function finalizeVote(pollId, optionIndex, isFeatured){
   }
 
   if(typeof trackEvent === 'function'){
-    trackEvent('poll_vote', { poll_id: pollId, option: optionIndex, title: poll.title });
+    trackEvent('poll_vote', { poll_id: poll.id, option: optionIndex, title: poll.title });
   }
 
   showToast("Stimme erfolgreich gezählt!");
 
   if(isFeatured){
     renderPollsUI();
-  } else if(currentPoll && currentPoll.id === pollId && document.getElementById("detail") && document.getElementById("detail").classList.contains("active")){
-    openPollDetail(pollId, false);
+  } else if(currentPoll && currentPoll.id === poll.id && document.getElementById("detail") && document.getElementById("detail").classList.contains("active")){
+    openPollDetail(poll.id, false);
   } else {
     renderPollsUI();
   }

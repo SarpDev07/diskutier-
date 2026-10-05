@@ -35,6 +35,9 @@ async function initAuth(){
     if(document.getElementById("settings") && document.getElementById("settings").classList.contains("active")){
       renderSettingsPage();
     }
+    if(typeof loadPolls === 'function'){
+      loadPolls();
+    }
   });
 }
 
