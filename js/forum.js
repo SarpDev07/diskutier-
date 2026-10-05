@@ -8,7 +8,32 @@ const POST_BASELINES = {
   "Freundeskreis verändert sich komplett seit alle in Beziehungen sind": { comments: 18, views: 429 },
   "Wie viel zahlt ihr aktuell für eine 2.5-Zimmer-Wohnung?": { comments: 29, views: 694 },
   "Lohnt sich ein Handywechsel überhaupt noch alle zwei Jahre?": { comments: 16, views: 395 },
-  "Studium abbrechen nach drei Semestern – Erfahrungen?": { comments: 21, views: 512 }
+  "Studium abbrechen nach drei Semestern – Erfahrungen?": { comments: 21, views: 512 },
+  "10-Millionen-Schweiz: Rettung vor dem Kollaps oder wirtschaftlicher Selbstmord?": { comments: 3, views: 184 },
+  "Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?": { comments: 3, views: 142 },
+  "Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?": { comments: 2, views: 98 },
+  "Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?": { comments: 2, views: 115 }
+};
+
+const SEED_POST_REPLIES = {
+  "post_10m_schweiz": [
+    { id: "c_10m_1", username: "AareFuchs", canton: "BE", created_at: new Date(Date.now() - 1000 * 60 * 18).toISOString(), content: "Einfach Olten zur Megacity ausbauen und 2 Millionen dort einquartieren, Problem gelöst. Dort will eh niemand durchfahren.", upvotes: 21 },
+    { id: "c_10m_2", username: "CareWorker_88", canton: "LU", created_at: new Date(Date.now() - 1000 * 60 * 42).toISOString(), content: "Ich arbeite im Spital. Ohne Kolleginnen und Kollegen aus dem Ausland könnten wir nächste Woche die halbe Bettenstation dichtmachen. Man kann nicht gleichzeitig Zuwanderungsstopp fordern und sich dann beschweren, wenn man 8 Stunden auf der Notfallstation wartet.", upvotes: 16 },
+    { id: "c_10m_3", username: "SchwyzerBueb", canton: "SZ", created_at: new Date(Date.now() - 1000 * 60 * 85).toISOString(), content: "Es geht doch nicht nur um Jobs. Schaut euch die Mieten und Züge an. Irgendwann ist das Land flächenmässig einfach voll betoniert.", upvotes: 8 }
+  ],
+  "post_tempo30": [
+    { id: "c_t30_1", username: "Velogang_ZH", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 12).toISOString(), content: "Endlich kann ich mit meinem E-Bike die SUVs auf der Hardbrücke links überholen. Bitte gleich Tempo 20 einführen, damit ich noch gemütlich meinen Flat White austrinken kann.", upvotes: 9 },
+    { id: "c_t30_2", username: "HandwerkerMarco", canton: "AG", created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), content: "Für alle die im Büro hocken ist das ja super. Aber fahrt mal als Sanitär mit 80kg Werkzeug im Bus durch die Stadt, wenn du 45 Minuten für 3km brauchst und nirgends parkieren darfst. Die Mehrkosten verrechnen wir am Ende halt den Kunden.", upvotes: 14 },
+    { id: "c_t30_3", username: "basler_bebbbi", canton: "BS", created_at: new Date(Date.now() - 1000 * 60 * 55).toISOString(), content: "In Wohnquartieren absolut sinnvoll wegen Lärm und Kindern. Auf Hauptverkehrsachsen wie der Nauenstrasse aber kompletter Unsinn.", upvotes: 6 }
+  ],
+  "post_srg_gebuehren": [
+    { id: "c_srg_1", username: "Bünzli_Prime", canton: "SO", created_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(), content: "Ich zahle 330 Stutz im Jahr eigentlich nur, um am Sonntagabend Tatort zu schauen und mich danach 2 Stunden im Internet darüber aufzuregen wie schlecht er war. Beste Schweizer Tradition.", upvotes: 15 },
+    { id: "c_srg_2", username: "Tessin_Fan", canton: "TI", created_at: new Date(Date.now() - 1000 * 60 * 65).toISOString(), content: "Vergesst bitte die Sprachminderheiten nicht. RTS und RSI produzieren super Sendungen, die sich privat niemals finanzieren würden. Die Schweiz besteht nicht nur aus Zürich.", upvotes: 11 }
+  ],
+  "post_wohnungsnot_mieten": [
+    { id: "c_woh_1", username: "Zügelmeister", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 35).toISOString(), content: "War gestern an einer Besichtigung für eine 1.5-Zimmer im Kreis 4. Musste mich mit 140 Leuten im Treppenhaus anstellen und dem Vormieter noch seine abgeranzte IKEA-Couch für 2'500 CHF abkaufen. Ein Traum.", upvotes: 27 },
+    { id: "c_woh_2", username: "Architect_CH", canton: "BS", created_at: new Date(Date.now() - 1000 * 60 * 70).toISOString(), content: "Wir planen aktuell ein Mehrfamilienhaus. 3 Jahre Verfahren wegen einer einzigen Einsprache wegen Schattenwurf auf einen Geräteschuppen. So baut man halt keine Wohnungen.", upvotes: 19 }
+  ]
 };
 
 const SEED_FORUM_REPLIES = [
@@ -120,7 +145,7 @@ async function loadForum(){
   }
 
   currentPosts = posts.map(p => {
-    const hasBaseline = POST_BASELINES[p.title];
+    const hasBaseline = POST_BASELINES[p.title] || (p.id && POST_BASELINES[p.id]);
     const base = hasBaseline || { comments: 0, views: 0 };
     const dbCommentsCount = p.comments ? p.comments.length : 0;
     return {
@@ -408,16 +433,20 @@ async function loadForumComments(postId){
     if(data) dbReplies = data;
   }
   
-  const attachSeed = postId === "705d0c28-1a0d-4c92-8a0a-9dfa58e14f56";
+  const targetPost = currentPost || currentPosts.find(p => p.id === postId);
+  const seedList = SEED_POST_REPLIES[postId] 
+    || (targetPost && SEED_POST_REPLIES[targetPost.title]) 
+    || (postId === "705d0c28-1a0d-4c92-8a0a-9dfa58e14f56" ? SEED_FORUM_REPLIES : []);
+
   const allReplies = [
-    ...(attachSeed ? SEED_FORUM_REPLIES.map(r => ({
+    ...seedList.map(r => ({
       username: r.username,
       canton: r.canton,
       time: formatTimeAgo(r.created_at),
       content: r.content,
       upvotes: r.upvotes,
       id: r.id
-    })) : []),
+    })),
     ...dbReplies.map(r => ({
       username: r.profiles?.username || 'Anonym',
       canton: r.profiles?.canton || 'CH',
