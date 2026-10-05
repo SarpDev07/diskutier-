@@ -1,6 +1,7 @@
 -- ==============================================================================
 -- VOLLSTÄNDIGER SEED FÜR DISKUTIER.CH (SUPABASE SQL EDITOR)
 -- Führt alle Abstimmungen, Forumsbeiträge und Kommentare direkt in Supabase ein
+-- options = JSONB, body = text[]
 -- ==============================================================================
 
 -- 1. ABSTIMMUNGEN (POLLS)
@@ -11,7 +12,7 @@ VALUES
   '10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?',
   'Volle Züge, steigende Mieten und dichtere Agglos vs. akuter Fachkräftemangel in Spitälern und Betrieben. Braucht die Schweiz bis 2050 eine gesetzliche Obergrenze von 10 Millionen Einwohnern?',
   'Schweiz & Politik',
-  ARRAY['JA (Limit nötig)', 'NEIN (Schadet Wirtschaft)', 'KOMMT DARAUF AN']::text[],
+  '["JA (Limit nötig)", "NEIN (Schadet Wirtschaft)", "KOMMT DARAUF AN"]'::jsonb,
   true,
   NOW() - INTERVAL '15 minutes'
 ),
@@ -20,7 +21,7 @@ VALUES
   'Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?',
   'Immer mehr Schweizer Städte bauen Parkplätze ab und senken das Tempolimit auch auf Hauptverkehrsachsen auf 30 km/h. Schützt das die Quartiere oder schadet es Pendlern und Gewerbe?',
   'Auto & Mobilität',
-  ARRAY['Sinnvoll (Mehr Ruhe & Sicherheit)', 'Krieg gegen Autofahrer (Schikane)', 'Kommt auf die Strasse an']::text[],
+  '["Sinnvoll (Mehr Ruhe & Sicherheit)", "Krieg gegen Autofahrer (Schikane)", "Kommt auf die Strasse an"]'::jsonb,
   false,
   NOW() - INTERVAL '30 minutes'
 ),
@@ -29,7 +30,7 @@ VALUES
   'Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?',
   'Sollen die Serafe-Gebühren auf 200 Franken gesenkt werden oder gefährdet ein gekürzter Service public die Information und den Zusammenhalt unserer Sprachregionen?',
   'Schweiz & Politik',
-  ARRAY['JA (Gebühren auf CHF 200 halbieren)', 'NEIN (Gefahr für Journalismus)', 'SRG reformieren, nicht halbieren']::text[],
+  '["JA (Gebühren auf CHF 200 halbieren)", "NEIN (Gefahr für Journalismus)", "SRG reformieren, nicht halbieren"]'::jsonb,
   false,
   NOW() - INTERVAL '45 minutes'
 ),
@@ -38,7 +39,7 @@ VALUES
   'Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?',
   'Massenbesichtigungen und explodierende Mietpreise in den grossen Schweizer Städten: Liegt die Hauptschuld bei renditeorientierten Investoren oder an jahrelangen Bau-Einsprachen und Regulierungen?',
   'Wohnen',
-  ARRAY['Renditedruck & Investoren', 'Zu strenge Gesetze & Einsprachen', 'Beides gleichermassen schuld']::text[],
+  '["Renditedruck & Investoren", "Zu strenge Gesetze & Einsprachen", "Beides gleichermassen schuld"]'::jsonb,
   false,
   NOW() - INTERVAL '60 minutes'
 ),
@@ -47,7 +48,7 @@ VALUES
   'Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?',
   'Zivildienst-Boom, Fachkräfte-Ausfall in der Wirtschaft und veränderte Sicherheitslagen in Europa: Braucht die Schweiz weiterhin die allgemeine Wehrpflicht für Männer oder eine freiwillige Profi-Armee?',
   'Schweiz & Politik',
-  ARRAY['Wehrpflicht beibehalten (Tradition)', 'Auf Profi-/Berufsarmee umstellen', 'Dienstpflicht für alle (auch Frauen)']::text[],
+  '["Wehrpflicht beibehalten (Tradition)", "Auf Profi-/Berufsarmee umstellen", "Dienstpflicht für alle (auch Frauen)"]'::jsonb,
   false,
   NOW() - INTERVAL '90 minutes'
 ),
@@ -56,7 +57,7 @@ VALUES
   'Sind CHF 6''000 Monatslohn heute noch ein guter Lohn in der Schweiz?',
   'Reichen 6''000 Franken Monatslohn heute noch für ein gutes Leben in der Schweiz oder fressen Mieten und Krankenkassen alles auf?',
   'Geld & Beruf',
-  ARRAY['Ja, reicht gut', 'Nein, zu wenig', 'Kommt auf den Wohnort an']::text[],
+  '["Ja, reicht gut", "Nein, zu wenig", "Kommt auf den Wohnort an"]'::jsonb,
   false,
   NOW() - INTERVAL '2 days'
 ),
@@ -65,7 +66,7 @@ VALUES
   'Ist es komisch, mit 25 noch bei den Eltern zu wohnen?',
   'Hotel Mama oder finanzielle Vernunft: Was denkt ihr über das Wohnen bei den Eltern mit 25 in der Schweiz?',
   'Beziehungen',
-  ARRAY['Völlig normal & schlau', 'Zeit auszuziehen', 'Kommt auf die Situation an']::text[],
+  '["Völlig normal & schlau", "Zeit auszuziehen", "Kommt auf die Situation an"]'::jsonb,
   false,
   NOW() - INTERVAL '3 days'
 ),
@@ -74,7 +75,7 @@ VALUES
   'Coop oder Migros?',
   'Die ewige Schweizer Glaubensfrage: Wo kauft ihr lieber für den täglichen Bedarf ein?',
   'Alltag',
-  ARRAY['Coop', 'Migros', 'Beides gleich gerne']::text[],
+  '["Coop", "Migros", "Beides gleich gerne"]'::jsonb,
   false,
   NOW() - INTERVAL '4 days'
 ),
@@ -83,7 +84,7 @@ VALUES
   'Würdest du für CHF 1''000 mehr Lohn täglich eine Stunde länger pendeln?',
   'Mehr Geld auf dem Konto gegen verlorene Lebenszeit im Zug oder Stau: Würdest du den Deal eingehen?',
   'Geld & Beruf',
-  ARRAY['Ja, lohnt sich', 'Nein, Freizeit ist wichtiger']::text[],
+  '["Ja, lohnt sich", "Nein, Freizeit ist wichtiger"]'::jsonb,
   false,
   NOW() - INTERVAL '5 days'
 ),
@@ -92,7 +93,7 @@ VALUES
   'Sind 30 Franken für eine Pizza in der Schweiz zu viel?',
   'Restaurantpreise in Schweizer Städten steigen stetig. Ab wann ist für euch die Schmerzgrenze bei Pizza & Pasta erreicht?',
   'Alltag',
-  ARRAY['Ja, masslos überteuert', 'Nein, normale Schweizer Preise', 'Kommt auf Qualität & Restaurant an']::text[],
+  '["Ja, masslos überteuert", "Nein, normale Schweizer Preise", "Kommt auf Qualität & Restaurant an"]'::jsonb,
   false,
   NOW() - INTERVAL '6 days'
 )
