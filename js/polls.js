@@ -1,6 +1,7 @@
 // ABSTIMMUNGEN (POLLS) & LIVE-VOTING
 let currentPolls = [];
 let currentPoll = null;
+let activeFeaturedIndex = 0;
 
 // REALISTISCHE SCHWEIZER BASIS-DATEN FÜR ALTE TEST-FRAGEN
 const POLL_BASELINES = {
@@ -75,44 +76,94 @@ async function loadPolls(){
   renderPollsUI();
 }
 
+// NÄCHSTE FRAGE DIREKT AUF DER FLÄCHE WECHSELN
+function nextFeaturedPoll(){
+  if(activeFeaturedIndex < currentPolls.length - 1){
+    activeFeaturedIndex++;
+  } else {
+    activeFeaturedIndex = currentPolls.length; // Abschluss-Karte anzeigen
+  }
+  renderPollsUI();
+}
+
+function restartFeaturedPolls(){
+  activeFeaturedIndex = 0;
+  renderPollsUI();
+}
+
+function createMyOwnPoll(){
+  if(typeof setCreateType === 'function'){
+    setCreateType('poll');
+  }
+  if(window.Router && typeof window.Router.navigate === 'function'){
+    window.Router.navigate('/erstellen');
+  } else {
+    showPage('create');
+  }
+}
+
 function renderPollsUI(){
   if(!currentPolls.length) return;
-  const featured = currentPolls.find(p => p.is_featured) || currentPolls[0];
-  const feed = currentPolls.filter(p => p.id !== featured.id);
+  const featContainer = document.getElementById("featuredContainer");
+  if(!featContainer) return;
 
-  // Featured Render
-  const featCatEl = document.getElementById("featCat");
-  if(featCatEl){
-    featCatEl.innerHTML = `<a href="/kategorie/${getCategorySlug(featured.category)}" style="color:var(--red);text-decoration:none">${escapeHTML(featured.category)}</a>`;
-  }
-  document.getElementById("featTime").textContent = featured.time;
-  
-  const featTitleEl = document.getElementById("featTitle");
-  if(featTitleEl){
-    featTitleEl.innerHTML = `<a href="/frage/${slugify(featured.title)}" style="color:inherit;text-decoration:none">${escapeHTML(featured.title)}</a>`;
-  }
-  
-  const featCountText = featured.totalVotes > 0 ? `${featured.totalVotes.toLocaleString('de-CH')} Personen haben abgestimmt` : "Noch keine Stimmen – sei der Erste!";
-  document.getElementById("featCount").textContent = featCountText;
-
-  const featVotesContainer = document.getElementById("featuredVotes");
-  const featResultsContainer = document.getElementById("featuredResults");
-
-  if(featured.userVotedIndex !== null){
-    featVotesContainer.style.display = "none";
-    featResultsContainer.style.display = "block";
-    renderResultsHTML(featResultsContainer, featured);
-  } else {
-    featVotesContainer.style.display = "grid";
-    featResultsContainer.style.display = "none";
-    featVotesContainer.innerHTML = featured.options.map((opt, idx) => {
-      const safeOpt = escapeHTML(opt);
-      const safeId = escapeHTML(featured.id);
-      return `<button class="vote" onclick="submitPollVote('${safeId}', ${idx}, true)">${safeOpt}</button>`;
-    }).join("");
+  // Prüfe ob alle Abstimmungen durchgesehen wurden
+  if(activeFeaturedIndex >= currentPolls.length){
+    featContainer.innerHTML = `
+      <div class="allDoneBox" style="text-align:left;padding:8px 0">
+        <div class="eyebrow" style="color:var(--red);margin-bottom:8px">Alle Fragen durchgesehen</div>
+        <h2 style="font-size:22px;line-height:1.25;margin:6px 0 10px;font-weight:800">Du bist auf dem neuesten Stand!</h2>
+        <p style="font-size:14px;color:var(--muted);line-height:1.55;margin:0 0 20px">
+          Du hast alle aktuellen Abstimmungen durchgeklickt. Welche Frage brennt dir auf dem Herzen? Starte jetzt deine eigene Abstimmung für die Schweizer Community.
+        </p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <button class="publish" style="margin-top:0;padding:12px 18px" onclick="createMyOwnPoll()">Eigene Abstimmung erstellen</button>
+          <button class="smallbtn" style="border:1px solid var(--line);padding:11px 16px;border-radius:var(--radius);font-weight:800" onclick="restartFeaturedPolls()">Von vorne anfangen</button>
+        </div>
+      </div>
+    `;
+    renderFeedAndSidebar();
+    return;
   }
 
-  // Feed Render mit sauberen SEO-Links
+  const featured = currentPolls[activeFeaturedIndex] || currentPolls[0];
+  const catSlug = getCategorySlug(featured.category);
+  const isVoted = featured.userVotedIndex !== null;
+  const isLast = activeFeaturedIndex >= currentPolls.length - 1;
+  const nextLabel = isLast ? "Abschliessen" : "Nächste Frage";
+
+  featContainer.innerHTML = `
+    <div class="meta">
+      <span class="category"><a href="/kategorie/${catSlug}" style="color:var(--red);text-decoration:none">${escapeHTML(featured.category)}</a></span>
+      <span>·</span>
+      <span>${escapeHTML(featured.time)}</span>
+      <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)">Frage ${activeFeaturedIndex + 1} von ${currentPolls.length}</span>
+    </div>
+    <h1 id="featTitle"><a href="/frage/${slugify(featured.title)}" style="color:inherit;text-decoration:none">${escapeHTML(featured.title)}</a></h1>
+    <div class="count">${featured.totalVotes > 0 ? `${featured.totalVotes.toLocaleString('de-CH')} Personen haben abgestimmt` : "Noch keine Stimmen – sei der Erste!"}</div>
+    <div class="votes" id="featuredVotes" style="display:${isVoted ? 'none' : 'grid'}">
+      ${featured.options.map((opt, idx) => `
+        <button class="vote" onclick="submitPollVote('${escapeHTML(featured.id)}', ${idx}, true)">${escapeHTML(opt)}</button>
+      `).join("")}
+    </div>
+    <div class="results" id="featuredResults" style="display:${isVoted ? 'block' : 'none'}"></div>
+    <div class="actions">
+      <button class="smallbtn" onclick="openFeaturedDetailByIndex(${activeFeaturedIndex})">Kommentare ansehen</button>
+      <button class="smallbtn" onclick="shareCurrent()">Teilen</button>
+      <button class="smallbtn next" onclick="nextFeaturedPoll()">${nextLabel} &rarr;</button>
+    </div>
+  `;
+
+  if(isVoted){
+    const featResultsContainer = document.getElementById("featuredResults");
+    if(featResultsContainer) renderResultsHTML(featResultsContainer, featured);
+  }
+
+  renderFeedAndSidebar();
+}
+
+function renderFeedAndSidebar(){
+  const feed = currentPolls.filter((_, idx) => idx !== activeFeaturedIndex);
   const feedContainer = document.getElementById("feed");
   if(feedContainer){
     feedContainer.innerHTML = feed.map((q, i) => {
@@ -144,7 +195,6 @@ function renderPollsUI(){
     }).join("");
   }
 
-  // Trending Sidebar mit SEO-Links
   const trendingContainer = document.getElementById("trending");
   if(trendingContainer){
     trendingContainer.innerHTML = currentPolls.slice(0, 5).map(q => `
@@ -207,15 +257,19 @@ async function submitPollVote(pollId, optionIndex, isFeatured){
   }
 }
 
-function openFeaturedDetail(){
-  const featured = currentPolls.find(p => p.is_featured) || currentPolls[0];
-  if(featured){
+function openFeaturedDetailByIndex(index){
+  const target = currentPolls[index] || currentPolls[0];
+  if(target){
     if(window.Router && typeof window.Router.navigate === "function"){
-      window.Router.navigate(`/frage/${slugify(featured.title)}`);
+      window.Router.navigate(`/frage/${slugify(target.title)}`);
     } else {
-      openPollDetail(featured.id);
+      openPollDetail(target.id);
     }
   }
+}
+
+function openFeaturedDetail(){
+  openFeaturedDetailByIndex(activeFeaturedIndex);
 }
 
 async function openPollDetail(pollId, updateUrl = true){
@@ -261,9 +315,10 @@ async function openPollDetail(pollId, updateUrl = true){
     });
   }
 
-  const otherPoll = currentPolls.find(p => p.id !== currentPoll.id);
+  const currentPollIndex = currentPolls.findIndex(p => p.id === currentPoll.id);
+  const otherPoll = currentPolls[(currentPollIndex + 1) % currentPolls.length] || currentPolls[0];
   const nextContainer = document.querySelector(".nextBlock");
-  if(otherPoll && nextContainer){
+  if(otherPoll && nextContainer && otherPoll.id !== currentPoll.id){
     document.getElementById("detailNextTitle").textContent = otherPoll.title;
     const nextBtn = nextContainer.querySelector("button");
     if(nextBtn){
@@ -359,3 +414,9 @@ async function addPollComment(){
 
   await loadPollComments(currentPoll.id);
 }
+
+// Global verfügbar
+window.nextFeaturedPoll = nextFeaturedPoll;
+window.restartFeaturedPolls = restartFeaturedPolls;
+window.createMyOwnPoll = createMyOwnPoll;
+window.openFeaturedDetailByIndex = openFeaturedDetailByIndex;
