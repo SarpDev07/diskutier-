@@ -25,7 +25,7 @@ async function loadForum(){
   }
 
   // 10-Millionen Debatte (GANZ NEU & FRISCH GESTARTET)
-  const has10MPost = posts.some(p => p.title.includes("10-Millionen"));
+  const has10MPost = posts.some(p => p.title && p.title.includes("10-Millionen"));
   if(!has10MPost){
     posts.unshift({
       id: "post_10m_schweiz",
@@ -96,19 +96,21 @@ function renderForum(){
   
   container.innerHTML = currentPosts.map(p => {
     const isOwner = isMyPost(p);
+    const postSlug = slugify(p.title);
+    const catSlug = getCategorySlug(p.cat);
     return `
-      <article class="postRow" onclick="openPost('${escapeHTML(p.id)}')">
+      <article class="postRow">
         <div class="replyCount"><b>${p.comments}</b>Antworten</div>
         <div>
-          <div class="postTitle">${escapeHTML(p.title)}</div>
+          <div class="postTitle"><a href="/beitrag/${postSlug}" style="color:inherit;text-decoration:none">${escapeHTML(p.title)}</a></div>
           <div class="postExcerpt">${escapeHTML(p.excerpt)}</div>
           <div class="postMeta">
-            <b>${escapeHTML(p.cat)}</b> · Von <strong>${escapeHTML(p.user)}</strong> (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe
+            <b><a href="/kategorie/${catSlug}" style="color:inherit;text-decoration:none">${escapeHTML(p.cat)}</a></b> · Von <strong><a href="/profil/${encodeURIComponent(p.user)}" style="color:inherit;text-decoration:none">${escapeHTML(p.user)}</a></strong> (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe
             ${isOwner ? `<span style="color:var(--red);font-weight:900;margin-left:8px">· Eigener Beitrag</span>` : ''}
           </div>
           ${isOwner ? `
             <div style="margin-top:6px">
-              <button class="smallbtn" style="color:var(--red);font-weight:900;font-size:11px;padding:2px 0" onclick="event.stopPropagation(); deletePostById('${escapeHTML(p.id)}')">Löschen</button>
+              <button class="smallbtn" style="color:var(--red);font-weight:900;font-size:11px;padding:2px 0" onclick="deletePostById('${escapeHTML(p.id)}')">Löschen</button>
             </div>
           ` : ''}
         </div>
@@ -130,9 +132,14 @@ function filterForum(type){
   renderForum();
 }
 
-async function openPost(postId){
+async function openPost(postId, updateUrl = true){
   currentPost = currentPosts.find(p => p.id === postId);
   if(!currentPost) return;
+
+  if(updateUrl && window.Router && typeof window.Router.navigate === "function"){
+    window.Router.navigate(`/beitrag/${slugify(currentPost.title)}`);
+    return;
+  }
 
   if(db){
     db.from("posts").update({ views: (currentPost.views || 0) + 1 }).eq("id", postId).then();
@@ -141,7 +148,11 @@ async function openPost(postId){
     trackEvent('post_view', { post_id: postId, title: currentPost.title, category: currentPost.cat });
   }
 
-  document.getElementById("postCategory").textContent = currentPost.cat;
+  const postCatEl = document.getElementById("postCategory");
+  if(postCatEl){
+    const catSlug = getCategorySlug(currentPost.cat);
+    postCatEl.innerHTML = `<a href="/kategorie/${catSlug}" style="color:var(--red);text-decoration:none">${escapeHTML(currentPost.cat)}</a>`;
+  }
   document.getElementById("postTime").textContent = currentPost.time;
   const viewsEl = document.getElementById("postViews");
   if(viewsEl) viewsEl.textContent = `${currentPost.views.toLocaleString('de-CH')} Aufrufe`;
@@ -165,9 +176,21 @@ async function openPost(postId){
   if(postBody) postBody.style.display = "block";
   
   if(authorAvatar) authorAvatar.textContent = (currentPost.user || "U").substring(0, 2).toUpperCase();
-  if(authorName) authorName.textContent = currentPost.user;
+  if(authorName){
+    authorName.innerHTML = `<a href="/profil/${encodeURIComponent(currentPost.user)}" style="color:inherit;text-decoration:none">${escapeHTML(currentPost.user)}</a>`;
+  }
   if(authorCanton) authorCanton.textContent = currentPost.canton || 'CH';
   if(authorSub) authorSub.textContent = currentPost.user_id ? 'Registriertes Mitglied' : 'Community-Beitrag';
+
+  // Melde-Button konfigurieren
+  if(postReportBtn){
+    postReportBtn.onclick = () => openReportModal({
+      type: "post",
+      id: currentPost.id,
+      title: currentPost.title,
+      url: `${SITE_URL}/beitrag/${slugify(currentPost.title)}`
+    });
+  }
 
   // Ist es der eigene Beitrag des Nutzers?
   const isOwner = isMyPost(currentPost);
@@ -194,7 +217,7 @@ async function openPost(postId){
   }
 
   await loadForumComments(currentPost.id);
-  showPage("postdetail");
+  showPageElement("postdetail");
 }
 
 function startEditPost(){
@@ -254,7 +277,8 @@ async function savePostEdit(){
   currentPost.excerpt = excerpt;
 
   document.getElementById("postTitle").textContent = title;
-  document.getElementById("postCategory").textContent = cat;
+  const catSlug = getCategorySlug(cat);
+  document.getElementById("postCategory").innerHTML = `<a href="/kategorie/${catSlug}" style="color:var(--red);text-decoration:none">${escapeHTML(cat)}</a>`;
   document.getElementById("postBody").innerHTML = paragraphs.map(x => `<p>${escapeHTML(x)}</p>`).join("");
 
   cancelEditPost();
@@ -285,7 +309,11 @@ async function deletePostById(postId){
 
   if(currentPost && currentPost.id === postId){
     currentPost = null;
-    showPage("forum");
+    if(window.Router && typeof window.Router.navigate === "function"){
+      window.Router.navigate("/beitraege");
+    } else {
+      showPage("forum");
+    }
   }
   showToast("Beitrag wurde gelöscht.");
   await loadForum();
@@ -328,7 +356,10 @@ async function loadForumComments(postId){
 
   container.innerHTML = allReplies.map(r => `
     <div class="forumComment">
-      <div class="forumCommentHead">${escapeHTML(r.username)} · ${escapeHTML(r.canton)} <span>· ${escapeHTML(r.time)}</span></div>
+      <div class="forumCommentHead">
+        <a href="/profil/${encodeURIComponent(r.username)}" style="color:inherit;text-decoration:none">${escapeHTML(r.username)}</a> · ${escapeHTML(r.canton)} <span>· ${escapeHTML(r.time)}</span>
+        <button class="smallbtn" style="float:right;font-size:11px;color:#888;padding:0" onclick="openReportModal({ type: 'comment', id: '${escapeHTML(r.id||'')}', title: '${escapeHTML(r.content.substring(0,60))}' })">Melden</button>
+      </div>
       <p>${escapeHTML(r.content)}</p>
       <div class="forumCommentActions">
         <span onclick="voteComment('${escapeHTML(r.id||'')}', 1, this)" style="cursor:pointer">Hilfreich (+${r.upvotes})</span>
@@ -342,7 +373,6 @@ async function addForumComment(){
   const content = sanitizeText(t.value, 2000);
   if(!content || !currentPost) return;
 
-  // Rate-limiting check
   if(!checkRateLimit("add_forum_comment", 3000)) return;
 
   const payload = {
@@ -356,7 +386,6 @@ async function addForumComment(){
   document.getElementById("postCommentCount").textContent = currentPost.comments;
   showToast("Antwort erfolgreich veröffentlicht!");
 
-  // Benachrichtigung erstellen
   if (typeof createNotification === 'function') {
     const authorName = (currentProfile && currentProfile.username) ? currentProfile.username : 'Ein Nutzer';
     const authorCanton = (currentProfile && currentProfile.canton) ? currentProfile.canton : 'CH';

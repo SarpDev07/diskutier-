@@ -5,10 +5,26 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <title>diskutier.ch — Die Schweiz stimmt ab</title>
+  <title>diskutier.ch — Die Schweiz stimmt ab | Meinungen & Abstimmungen</title>
+  <meta name="description" content="Die unabhängige Schweizer Meinungs- und Abstimmungs-Community. Diskutiere täglich über Politik, Alltag, Finanzen, Wohnen und Beziehungen in der Schweiz.">
+  <link rel="canonical" href="https://diskutier.ch/">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://diskutier.ch/">
+  <meta property="og:title" content="diskutier.ch — Die Schweiz stimmt ab">
+  <meta property="og:description" content="Täglich neue Schweizer Abstimmungen und Foren-Diskussionen. Stimme anonym ab und sieh die Ergebnisse in Echtzeit.">
+  <meta property="og:site_name" content="diskutier.ch">
+  <meta property="og:locale" content="de_CH">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://diskutier.ch/">
+  <meta name="twitter:title" content="diskutier.ch — Die Schweiz stimmt ab">
+  <meta name="twitter:description" content="Täglich neue Schweizer Abstimmungen und Foren-Diskussionen.">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=4">
 
   <!-- Externe SDKs -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,13 +35,13 @@
 <!-- Header & Desktop Navigation -->
 <header>
   <div class="nav">
-    <div class="logo" onclick="showPage('home')">diskutier<b>.ch</b></div>
+    <a href="/" class="logo" style="text-decoration:none;color:inherit">diskutier<b>.ch</b></a>
     <nav class="navlinks">
-      <span onclick="showPage('home')">Abstimmungen</span>
-      <span onclick="showPage('forum')">Beiträge</span>
-      <span onclick="showPage('categories')">Kategorien</span>
+      <a href="/" style="color:inherit;text-decoration:none">Abstimmungen</a>
+      <a href="/beitraege" style="color:inherit;text-decoration:none">Beiträge</a>
+      <a href="/kategorien" style="color:inherit;text-decoration:none">Kategorien</a>
     </nav>
-    <button class="ask" onclick="showPage('create')">Beitrag erstellen</button>
+    <a href="/erstellen" class="ask" style="text-decoration:none">Beitrag erstellen</a>
     <div class="notifWrapper">
       <button id="notifBellBtn" class="notifBell" onclick="toggleNotifications()" aria-label="Benachrichtigungen" title="Benachrichtigungen">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -40,9 +56,9 @@
       </div>
     </div>
     <div class="auth" id="navAuth">
-      <button class="searchBtn" onclick="showPage('search')" aria-label="Suche">Suche</button>
-      <span onclick="location.href='login.html'">Anmelden</span>
-      <span onclick="location.href='register.html'">Registrieren</span>
+      <a href="/suche" class="searchBtn" style="text-decoration:none;color:inherit" aria-label="Suche">Suche</a>
+      <a href="/anmelden" style="text-decoration:none;color:inherit">Anmelden</a>
+      <a href="/registrieren" style="text-decoration:none;color:var(--red);font-weight:900">Registrieren</a>
     </div>
   </div>
 </header>
@@ -83,7 +99,7 @@
   <div class="actions">
     <button class="smallbtn" onclick="shareCurrent()">Ergebnis teilen</button>
     <button class="smallbtn" onclick="showToast('Frage gemerkt.')">Frage speichern</button>
-    <button class="smallbtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button>
+    <button class="smallbtn" id="pollReportBtn">Melden</button>
   </div>
  
   <div class="commentComposer" style="margin-top:25px;border-top:1px solid #dedede">
@@ -94,7 +110,7 @@
 
   <div class="commentsHead"><b><span id="pollCommentsCount">0</span> Meinungen</b><div class="sort"><button>Beliebt</button><button>Neu</button></div></div>
   <div id="comments"></div>
-  <div class="nextBlock"><small>Bereit für die nächste Meinung?</small><h3 id="detailNextTitle">Ist es komisch, mit 25 noch bei den Eltern zu wohnen?</h3><button onclick="showPage('home');setTimeout(scrollFeed,100)">Abstimmen</button></div>
+  <div class="nextBlock"><small>Bereit für die nächste Meinung?</small><h3 id="detailNextTitle">Ist es komisch, mit 25 noch bei den Eltern zu wohnen?</h3><button>Abstimmen</button></div>
 </section>
 
 <!-- SEITE 3: FORUM / BEITRÄGE -->
@@ -152,7 +168,7 @@
       <option value="Wohnen">Wohnen</option>
       <option value="Beziehungen">Beziehungen</option>
       <option value="Schweiz & Politik">Schweiz & Politik</option>
-      <option value="Technik & Konsum">Technik & Konsum</option>
+      <option value="Technologie">Technologie</option>
     </select>
     <label>Inhalt</label>
     <textarea id="editPostBody" maxlength="4000" style="min-height:130px"></textarea>
@@ -166,7 +182,7 @@
   <div class="actions" id="postNormalActions">
     <button class="smallbtn" onclick="showToast('Beitrag gespeichert.')">Speichern</button>
     <button class="smallbtn" onclick="shareCurrent()">Teilen</button>
-    <button class="smallbtn" id="postReportBtn" onclick="showToast('Vielen Dank für den Hinweis.')">Melden</button>
+    <button class="smallbtn" id="postReportBtn">Melden</button>
     <button class="smallbtn" id="btnOwnerEditDirect" style="display:none;color:var(--ink);font-weight:900" onclick="startEditPost()">Beitrag bearbeiten</button>
     <button class="smallbtn" id="btnOwnerDeleteDirect" style="display:none;color:var(--red);font-weight:900;margin-left:auto" onclick="deleteCurrentPost()">Beitrag löschen</button>
   </div>
@@ -181,7 +197,8 @@
 
 <!-- SEITE 5: KATEGORIEN -->
 <section id="categories" class="page">
-  <div class="eyebrow">Themen</div><h1>Worüber möchtest du diskutieren?</h1>
+  <div class="eyebrow">Themen</div>
+  <h1>Worüber möchtest du diskutieren?</h1>
   <div class="gridcats" id="categoryGrid"></div>
 </section>
 
@@ -207,10 +224,13 @@
       <option>Geld & Beruf</option>
       <option>Technologie</option>
       <option>Gaming</option>
-      <option>Schweiz</option>
+      <option>Schweiz & Politik</option>
       <option>Wohnen</option>
       <option>Essen</option>
       <option>Gesellschaft</option>
+      <option>Auto & Mobilität</option>
+      <option>Sport</option>
+      <option>Schule & Ausbildung</option>
     </select>
     
     <div id="pollFields" style="display:none">
@@ -250,27 +270,44 @@
     <div class="stat"><b id="profPostsCount">0</b><small>Beiträge</small></div>
     <div class="stat"><b id="profCommentsCount">0</b><small>Kommentare</small></div>
   </div>
-  <div class="tabs"><span class="active">Aktivitäten</span></div>
+  <div class="tabs">
+    <span class="active">Aktivitäten</span>
+  </div>
   <div id="profileActivity" style="margin-top:20px"></div>
 </section>
 
 <!-- SEITE 9: ANMELDEN -->
 <section id="login" class="page">
   <div class="authbox">
+    <div class="eyebrow">Konto</div>
     <h1>Anmelden</h1>
-    <input id="loginEmail" type="email" maxlength="100" placeholder="E-Mail">
-    <input id="loginPassword" type="password" maxlength="100" placeholder="Passwort">
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">E-Mail oder Benutzername</label>
+    <input id="loginEmail" type="text" maxlength="100" placeholder="deine.email@beispiel.ch oder Benutzername" autofocus>
+    
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Passwort</label>
+    <input id="loginPassword" type="password" maxlength="100" placeholder="••••••••">
+    
     <div id="loginError" class="authMsg"></div>
     <button onclick="handleLogin()">Anmelden</button>
-    <p class="meta">Noch kein Konto? <span class="category" onclick="showPage('register')" style="cursor:pointer">Registrieren</span></p>
+    
+    <p class="meta" style="margin-top:16px">
+      <a href="/passwort-vergessen" style="color:var(--ink);font-weight:700">Passwort vergessen?</a>
+    </p>
+    <p class="meta">
+      Noch kein Konto? <a href="/registrieren" class="category" style="cursor:pointer;font-weight:900">Registrieren</a>
+    </p>
   </div>
 </section>
 
 <!-- SEITE 10: REGISTRIEREN -->
 <section id="register" class="page">
   <div class="authbox">
+    <div class="eyebrow">Community</div>
     <h1>Mitdiskutieren.</h1>
-    <input id="regUsername" maxlength="25" placeholder="Benutzername (z.B. AlpenFuchs)">
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Benutzername</label>
+    <input id="regUsername" maxlength="25" placeholder="z.B. AlpenFuchs">
+    
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Kanton</label>
     <select id="regCanton" style="width:100%;padding:13px;margin:6px 0;border:1px solid #aaa;background:white">
       <option value="ZH">Zürich (ZH)</option>
       <option value="BE">Bern (BE)</option>
@@ -300,11 +337,120 @@
       <option value="JU">Jura (JU)</option>
       <option value="CH" selected>Ganze Schweiz (CH)</option>
     </select>
+    
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">E-Mail</label>
     <input id="regEmail" type="email" maxlength="100" placeholder="E-Mail">
+    
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Passwort</label>
     <input id="regPassword" type="password" maxlength="100" placeholder="Passwort (mind. 6 Zeichen)">
+    
     <div id="regError" class="authMsg"></div>
     <button onclick="handleRegister()">Konto erstellen</button>
+    <p class="meta" style="margin-top:16px">Bereits registriert? <a href="/anmelden" class="category" style="font-weight:900">Hier anmelden</a></p>
     <p class="meta">Du kannst auch ohne Konto abstimmen.</p>
+  </div>
+</section>
+
+<!-- SEITE: PASSWORT VERGESSEN -->
+<section id="forgot-password" class="page">
+  <div class="authbox">
+    <div class="eyebrow">Sicherheit</div>
+    <h1>Passwort zurücksetzen</h1>
+    <p style="font-size:13px;line-height:1.5;color:#555;margin:12px 0 16px">
+      Gib die E-Mail-Adresse deines Kontos ein. Wenn ein Konto mit dieser Adresse existiert, senden wir dir einen Link zum Zurücksetzen deines Passworts.
+    </p>
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">E-Mail</label>
+    <input id="forgotEmail" type="email" maxlength="100" placeholder="deine.email@beispiel.ch" autofocus>
+    <div id="forgotError" class="authMsg"></div>
+    <div id="forgotInfo"></div>
+    <button onclick="handleForgotPassword()">Link senden</button>
+    <p class="meta" style="margin-top:18px">
+      <a href="/anmelden" style="color:var(--ink);font-weight:700">Zurück zum Login</a>
+    </p>
+  </div>
+</section>
+
+<!-- SEITE: PASSWORT ZURÜCKSETZEN (NEUES PASSWORT) -->
+<section id="reset-password" class="page">
+  <div class="authbox">
+    <div class="eyebrow">Sicherheit</div>
+    <h1>Neues Passwort</h1>
+    <p style="font-size:13px;line-height:1.5;color:#555;margin:12px 0 16px">
+      Gib hier dein neues gewünschtes Passwort ein.
+    </p>
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Neues Passwort</label>
+    <input id="newResetPassword" type="password" maxlength="100" placeholder="Mindestens 6 Zeichen">
+    
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Passwort wiederholen</label>
+    <input id="newResetPasswordRepeat" type="password" maxlength="100" placeholder="Passwort wiederholen">
+    
+    <div id="resetError" class="authMsg"></div>
+    <button onclick="handleResetPassword()">Passwort speichern</button>
+  </div>
+</section>
+
+<!-- SEITE: KONTO-EINSTELLUNGEN -->
+<section id="settings" class="page">
+  <div class="legalContent" style="max-width:680px">
+    <div class="eyebrow">Konto-Verwaltung</div>
+    <h1>Einstellungen</h1>
+    
+    <h2 style="margin-top:20px">Profil bearbeiten</h2>
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Benutzername</label>
+    <input id="settingsUsername" maxlength="30" style="width:100%;padding:12px;border:1px solid #aaa;background:#fff">
+    
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:14px 0 4px;display:block">Kanton</label>
+    <select id="settingsCanton" style="width:100%;padding:12px;border:1px solid #aaa;background:#fff">
+      <option value="ZH">Zürich (ZH)</option>
+      <option value="BE">Bern (BE)</option>
+      <option value="LU">Luzern (LU)</option>
+      <option value="UR">Uri (UR)</option>
+      <option value="SZ">Schwyz (SZ)</option>
+      <option value="OW">Obwalden (OW)</option>
+      <option value="NW">Nidwalden (NW)</option>
+      <option value="GL">Glarus (GL)</option>
+      <option value="ZG">Zug (ZG)</option>
+      <option value="FR">Freiburg (FR)</option>
+      <option value="SO">Solothurn (SO)</option>
+      <option value="BS">Basel-Stadt (BS)</option>
+      <option value="BL">Basel-Landschaft (BL)</option>
+      <option value="SH">Schaffhausen (SH)</option>
+      <option value="AR">Appenzell A.Rh. (AR)</option>
+      <option value="AI">Appenzell I.Rh. (AI)</option>
+      <option value="SG">St. Gallen (SG)</option>
+      <option value="GR">Graubünden (GR)</option>
+      <option value="AG">Aargau (AG)</option>
+      <option value="TG">Thurgau (TG)</option>
+      <option value="TI">Tessin (TI)</option>
+      <option value="VD">Waadt (VD)</option>
+      <option value="VS">Wallis (VS)</option>
+      <option value="NE">Neuenburg (NE)</option>
+      <option value="GE">Genf (GE)</option>
+      <option value="JU">Jura (JU)</option>
+      <option value="CH">Ganze Schweiz (CH)</option>
+    </select>
+
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:14px 0 4px;display:block">E-Mail (nicht öffentlich)</label>
+    <input id="settingsEmail" type="email" disabled style="width:100%;padding:12px;border:1px solid #ddd;background:#f5f5f5;color:#666">
+    
+    <div id="settingsError" class="authMsg"></div>
+    <button class="publish" style="margin-top:16px" onclick="saveProfileSettings()">Profil speichern</button>
+
+    <h2 style="margin-top:36px;border-top:1px solid #e0dfdb;padding-top:24px">Passwort ändern</h2>
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Neues Passwort</label>
+    <input id="settingsNewPassword" type="password" maxlength="100" placeholder="Mindestens 6 Zeichen" style="width:100%;padding:12px;border:1px solid #aaa;background:#fff">
+    
+    <label style="font-size:12px;font-weight:900;text-transform:uppercase;margin:12px 0 4px;display:block">Neues Passwort wiederholen</label>
+    <input id="settingsNewPasswordRepeat" type="password" maxlength="100" placeholder="Wiederholen" style="width:100%;padding:12px;border:1px solid #aaa;background:#fff">
+    
+    <div id="settingsPassError" class="authMsg"></div>
+    <button class="publish" style="margin-top:16px;background:var(--ink)" onclick="changeAccountPassword()">Passwort aktualisieren</button>
+
+    <h2 style="margin-top:36px;border-top:1px solid #e0dfdb;padding-top:24px;color:var(--red)">Konto löschen</h2>
+    <p style="font-size:13px;color:#555;line-height:1.5">
+      Wenn du dein Konto löschst, werden deine persönlichen Anmeldedaten dauerhaft entfernt. Deine bisher verfassten Beiträge und Kommentare werden auf «Gelöschtes Mitglied» anonymisiert, damit bestehende Diskussionen nicht unvollständig werden.
+    </p>
+    <button class="smallbtn" style="color:var(--red);font-weight:900;border:1px solid var(--red);padding:10px 16px" onclick="openDeleteAccountModal()">Konto unwiderruflich löschen</button>
   </div>
 </section>
 
@@ -377,7 +523,10 @@
     <h2>2. Keine Manipulation</h2>
     <p>Das automatisierte Abstimmen durch Bots, Skripte oder Mehrfach-Votings ist nicht gestattet und wird technisch unterbunden.</p>
     <h2>3. Meldung von Verstössen</h2>
-    <p>Solltest du unangemessene Beiträge oder Kommentare entdecken, melde diese bitte per E-Mail an <a href="mailto:info@diskutier.ch">info@diskutier.ch</a>.</p>
+    <p>Solltest du unangemessene Beiträge oder Kommentare entdecken, nutze bitte den «Melden»-Button direkt am Inhalt oder schreibe an <a href="mailto:info@diskutier.ch">info@diskutier.ch</a>.</p>
+  </div>
+</section>
+
 <!-- SEITE 16: LIVE ANALYTICS & TRAFFIC DASHBOARD -->
 <section id="analytics" class="page">
   <div class="legalContent" style="max-width:850px">
@@ -398,14 +547,41 @@
   <div id="trending"></div>
   <div class="sideTitle" style="margin-top:34px">Beliebte Kategorien</div>
   <div class="chips" id="sideChips">
-    <span class="chip" onclick="filterByCat('Alltag')">Alltag</span>
-    <span class="chip" onclick="filterByCat('Geld & Beruf')">Geld & Beruf</span>
-    <span class="chip" onclick="filterByCat('Beziehungen')">Beziehungen</span>
-    <span class="chip" onclick="filterByCat('Schweiz')">Schweiz</span>
-    <span class="chip" onclick="filterByCat('Technologie')">Technologie</span>
-    <span class="chip" onclick="filterByCat('Essen')">Essen</span>
+    <a href="/kategorie/schweiz-politik" class="chip">Schweiz & Politik</a>
+    <a href="/kategorie/geld-beruf" class="chip">Geld & Beruf</a>
+    <a href="/kategorie/wohnen" class="chip">Wohnen</a>
+    <a href="/kategorie/beziehungen" class="chip">Beziehungen</a>
+    <a href="/kategorie/alltag" class="chip">Alltag</a>
+    <a href="/kategorie/technologie" class="chip">Technologie</a>
   </div>
 </aside>
+</div>
+
+<!-- MODAL: KONTO LÖSCHEN -->
+<div id="deleteAccountModal" class="deleteModalOverlay">
+  <div class="deleteModalCard">
+    <div class="reportModalHeader">
+      <div>
+        <div class="eyebrow" style="color:var(--red);margin-bottom:4px">Sicherheitsbestätigung</div>
+        <h2 style="font-size:18px;margin:0">Konto wirklich löschen?</h2>
+      </div>
+      <button class="reportCloseBtn" onclick="closeDeleteAccountModal()" aria-label="Schliessen">&times;</button>
+    </div>
+    <div class="reportModalBody">
+      <p style="font-size:13px;color:#555;margin:0 0 16px;line-height:1.5">
+        Diese Aktion kann nicht rückgängig gemacht werden. Deine Profildaten und dein Login werden dauerhaft gelöscht.
+      </p>
+      <p style="font-size:13px;color:#222;font-weight:700;margin:0 0 8px">
+        Tippe zur Bestätigung <code>KONTO LÖSCHEN</code> in das folgende Feld:
+      </p>
+      <input id="deleteConfirmInput" placeholder="KONTO LÖSCHEN" style="width:100%;padding:12px;border:1px solid #aaa;background:#fff">
+      <div id="deleteAccountError" class="authMsg"></div>
+    </div>
+    <div class="reportModalFooter">
+      <button class="smallbtn" style="color:#555;font-weight:800;padding:10px 14px" onclick="closeDeleteAccountModal()">Abbrechen</button>
+      <button class="publish" style="margin-top:0;background:var(--red);padding:11px 20px" onclick="confirmDeleteAccount()">Endgültig löschen</button>
+    </div>
+  </div>
 </div>
 
 <!-- 4-Spaltiger Professioneller Schweizer Footer -->
@@ -414,24 +590,24 @@
     <div class="footerCol">
       <h4>diskutier<b>.ch</b></h4>
       <p>Die unabhängige Schweizer Plattform für tägliche Abstimmungen, Meinungen und Foren-Diskussionen. 100 % unabhängig & werbefinanziert.</p>
-      <p style="font-size:11px;color:#888">🇨🇭 Made in Switzerland</p>
+      <p style="font-size:11px;color:#888">Made in Switzerland</p>
     </div>
     <div class="footerCol">
       <h4>Bereiche</h4>
       <ul>
-        <li><span onclick="showPage('home')">Abstimmungen</span></li>
-        <li><span onclick="showPage('forum')">Beiträge & Forum</span></li>
-        <li><span onclick="showPage('categories')">Alle Themen</span></li>
-        <li><span onclick="showPage('create')">Frage stellen</span></li>
+        <li><a href="/">Abstimmungen</a></li>
+        <li><a href="/beitraege">Beiträge & Forum</a></li>
+        <li><a href="/kategorien">Alle Themen</a></li>
+        <li><a href="/erstellen">Frage stellen</a></li>
       </ul>
     </div>
     <div class="footerCol">
       <h4>Rechtliches</h4>
       <ul>
-        <li><span onclick="showPage('privacy')">Datenschutz & Cookies</span></li>
-        <li><span onclick="showPage('imprint')">Impressum</span></li>
-        <li><span onclick="showPage('terms')">Nutzungsbedingungen</span></li>
-        <li><span onclick="showPage('about')">Über uns</span></li>
+        <li><a href="/datenschutz">Datenschutz & Cookies</a></li>
+        <li><a href="/impressum">Impressum</a></li>
+        <li><a href="/richtlinien">Nutzungsbedingungen</a></li>
+        <li><a href="/ueber-uns">Über uns</a></li>
       </ul>
     </div>
     <div class="footerCol">
@@ -440,7 +616,7 @@
       Sarp Kaman<br>
       4000 Basel, Schweiz</p>
       <p>E-Mail: <a href="mailto:info@diskutier.ch" style="color:var(--red);font-weight:900">info@diskutier.ch</a></p>
-      <p style="margin-top:10px"><span onclick="showPage('analytics')" style="color:#999;font-size:11px;cursor:pointer">Live-Statistiken</span></p>
+      <p style="margin-top:10px"><a href="/analytics" style="color:#999;font-size:11px">Live-Statistiken</a></p>
     </div>
   </div>
   <div class="footerBottom">
@@ -451,21 +627,23 @@
 
 <!-- Cookie Consent Banner -->
 <div id="cookieBanner" class="cookieBanner">
-  <p>Wir verwenden Cookies und Google AdSense, um Inhalte und Anzeigen zu personalisieren sowie die Website-Nutzung zu analysieren. Weitere Informationen findest du in unserer <a href="#" onclick="showPage('privacy');return false;">Datenschutzerklärung</a>.</p>
+  <p>Wir verwenden Cookies und Google AdSense, um Inhalte und Anzeigen zu personalisieren sowie die Website-Nutzung zu analysieren. Weitere Informationen findest du in unserer <a href="/datenschutz">Datenschutzerklärung</a>.</p>
   <button onclick="acceptCookies()">Einverstanden</button>
 </div>
 
 <!-- Mobile Feste Navigation -->
 <nav class="mobileNav">
-  <button data-tab="home" class="active" onclick="showPage('home')">Abstimmen</button>
-  <button data-tab="forum" onclick="showPage('forum')">Beiträge</button>
-  <button data-tab="create" onclick="showPage('create')">Erstellen</button>
-  <button data-tab="search" onclick="showPage('search')">Suche</button>
-  <button data-tab="profile" onclick="showPage('profile')">Profil</button>
+  <button data-tab="home" class="active" onclick="Router.navigate('/')">Abstimmen</button>
+  <button data-tab="forum" onclick="Router.navigate('/beitraege')">Beiträge</button>
+  <button data-tab="create" onclick="Router.navigate('/erstellen')">Erstellen</button>
+  <button data-tab="search" onclick="Router.navigate('/suche')">Suche</button>
+  <button data-tab="profile" onclick="Router.navigate(currentUser && currentProfile ? '/profil/' + encodeURIComponent(currentProfile.username) : '/anmelden')">Profil</button>
 </nav>
 
 <!-- Modulare Anwendungs-Skripte -->
 <script src="js/supabase-config.js"></script>
+<script src="js/router.js"></script>
+<script src="js/report.js"></script>
 <script src="js/analytics.js"></script>
 <script src="js/notifications.js"></script>
 <script src="js/auth.js"></script>

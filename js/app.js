@@ -1,4 +1,4 @@
-// HAUPT-APPLIKATION, ROUTING & HELPER
+// HAUPT-APPLIKATION, INITIALISIERUNG & HELPER
 let activeCreateType = "post";
 
 // BEITRAG ODER ABSTIMMUNG ERSTELLEN
@@ -60,7 +60,11 @@ async function submitCreate(){
     document.getElementById("createTitle").value = "";
     document.getElementById("createBody").value = "";
     await loadForum();
-    showPage("forum");
+    if(window.Router && typeof window.Router.navigate === "function"){
+      window.Router.navigate(`/beitrag/${slugify(title)}`);
+    } else {
+      showPage("forum");
+    }
   } else {
     const rawOpts = document.getElementById("createOptions").value;
     const opts = rawOpts.split(",").map(s => sanitizeText(s, 50)).filter(Boolean);
@@ -81,7 +85,11 @@ async function submitCreate(){
     document.getElementById("createTitle").value = "";
     document.getElementById("createBody").value = "";
     await loadPolls();
-    showPage("home");
+    if(window.Router && typeof window.Router.navigate === "function"){
+      window.Router.navigate(`/frage/${slugify(title)}`);
+    } else {
+      showPage("home");
+    }
   }
 }
 
@@ -98,17 +106,21 @@ function doSearch(){
   let html = "";
   if(pollMatches.length > 0){
     html += `<div class="eyebrow" style="margin-top:20px">Abstimmungen</div>` + pollMatches.slice(0, 6).map(q => `
-      <div class="searchResult" onclick="openPollDetail('${escapeHTML(q.id)}')">
-        <div class="meta"><span class="category">${escapeHTML(q.category)}</span> · ${q.totalVotes.toLocaleString('de-CH')} Stimmen</div>
-        <b>${escapeHTML(q.title)}</b>
+      <div class="searchResult">
+        <a href="/frage/${slugify(q.title)}" style="color:inherit;text-decoration:none;display:block">
+          <div class="meta"><span class="category">${escapeHTML(q.category)}</span> · ${q.totalVotes.toLocaleString('de-CH')} Stimmen</div>
+          <b>${escapeHTML(q.title)}</b>
+        </a>
       </div>
     `).join("");
   }
   if(postMatches.length > 0){
     html += `<div class="eyebrow" style="margin-top:20px">Beiträge</div>` + postMatches.slice(0, 6).map(p => `
-      <div class="searchResult" onclick="openPost('${escapeHTML(p.id)}')">
-        <div class="meta"><span class="category">${escapeHTML(p.cat)}</span> · ${p.comments} Antworten</div>
-        <b>${escapeHTML(p.title)}</b>
+      <div class="searchResult">
+        <a href="/beitrag/${slugify(p.title)}" style="color:inherit;text-decoration:none;display:block">
+          <div class="meta"><span class="category">${escapeHTML(p.cat)}</span> · ${p.comments} Antworten</div>
+          <b>${escapeHTML(p.title)}</b>
+        </a>
       </div>
     `).join("");
   }
@@ -123,59 +135,76 @@ const categoriesList = [
   ["Beziehungen", 48], ["Geld & Beruf", 64], ["Gaming", 29],
   ["Technologie", 52], ["Auto & Mobilität", 23], ["Essen", 41],
   ["Sport", 35], ["Schule & Ausbildung", 21], ["Wohnen", 32],
-  ["Schweiz", 76], ["Gesellschaft", 45], ["Alltag", 58]
+  ["Schweiz & Politik", 76], ["Gesellschaft", 45], ["Alltag", 58]
 ];
 
 const catGridEl = document.getElementById("categoryGrid");
 if(catGridEl){
   catGridEl.innerHTML = categoriesList.map(c => `
-    <div class="catrow" onclick="filterByCat('${escapeHTML(c[0])}')">
-      <h3>${escapeHTML(c[0])}</h3>
-      <p>${c[1]} aktive Themen · Fragen & Beiträge ansehen</p>
+    <div class="catrow">
+      <a href="/kategorie/${getCategorySlug(c[0])}" style="color:inherit;text-decoration:none;display:block">
+        <h3>${escapeHTML(c[0])}</h3>
+        <p>${c[1]} aktive Themen · Fragen & Beiträge ansehen</p>
+      </a>
     </div>
   `).join("");
 }
 
-function filterByCat(catName){
-  showPage('forum');
+function filterByCat(catName, updateUrl = true){
   const safeCatName = sanitizeText(catName, 50);
+  const catSlug = getCategorySlug(safeCatName);
+  
+  if(updateUrl && window.Router && typeof window.Router.navigate === "function"){
+    window.Router.navigate(`/kategorie/${catSlug}`);
+    return;
+  }
+
+  showPageElement('forum');
   const filtered = currentPosts.filter(p => p.cat && p.cat.toLowerCase() === safeCatName.toLowerCase());
   const forumListEl = document.getElementById("forumList");
+  if(!forumListEl) return;
+
   if(filtered.length > 0){
     forumListEl.innerHTML = filtered.map(p => `
-      <article class="postRow" onclick="openPost('${escapeHTML(p.id)}')">
+      <article class="postRow">
         <div class="replyCount"><b>${p.comments}</b>Antworten</div>
         <div>
-          <div class="postTitle">${escapeHTML(p.title)}</div>
+          <div class="postTitle"><a href="/beitrag/${slugify(p.title)}" style="color:inherit;text-decoration:none">${escapeHTML(p.title)}</a></div>
           <div class="postExcerpt">${escapeHTML(p.excerpt)}</div>
-          <div class="postMeta"><b>${escapeHTML(p.cat)}</b> · ${escapeHTML(p.user)} (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
+          <div class="postMeta"><b>${escapeHTML(p.cat)}</b> · <a href="/profil/${encodeURIComponent(p.user)}" style="color:inherit;text-decoration:none">${escapeHTML(p.user)}</a> (${escapeHTML(p.canton)}) · ${escapeHTML(p.time)} · ${p.views.toLocaleString('de-CH')} Aufrufe</div>
         </div>
       </article>
     `).join("");
   } else {
-    forumListEl.innerHTML = `<p style="color:#777;padding:20px 0">Keine Beiträge in "${escapeHTML(safeCatName)}" gefunden. <a href="#" onclick="showPage('create');return false;" style="color:var(--red);font-weight:900">Erstelle den ersten Beitrag!</a></p>`;
+    forumListEl.innerHTML = `<p style="color:#777;padding:20px 0">Keine Beiträge in "${escapeHTML(safeCatName)}" gefunden. <a href="/erstellen" style="color:var(--red);font-weight:900">Erstelle den ersten Beitrag!</a></p>`;
   }
 }
 
-// ROUTING & NAVIGATION
+// ROUTING & NAVIGATION HELPER (KOMPATIBILITÄT)
 function showPage(id){
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  const target = document.getElementById(id);
-  if(target) target.classList.add("active");
-  if(id === "profile") renderProfilePage();
-  if(id === "analytics" && typeof renderAnalyticsDashboard === 'function') renderAnalyticsDashboard();
-  
-  // Event tracking
-  if(typeof trackEvent === 'function') {
-    trackEvent('pageview', { page: id });
-  }
+  const pathToPage = {
+    home: "/",
+    forum: "/beitraege",
+    categories: "/kategorien",
+    create: "/erstellen",
+    search: "/suche",
+    profile: currentUser && currentProfile ? `/profil/${encodeURIComponent(currentProfile.username)}` : "/anmelden",
+    login: "/anmelden",
+    register: "/registrieren",
+    about: "/ueber-uns",
+    contact: "/kontakt",
+    privacy: "/datenschutz",
+    imprint: "/impressum",
+    terms: "/richtlinien",
+    analytics: "/analytics"
+  };
 
-  // Mobile Nav Active State
-  document.querySelectorAll(".mobileNav button").forEach(b => {
-    b.classList.toggle("active", b.dataset.tab === id);
-  });
-  
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const targetPath = pathToPage[id] || `/${id}`;
+  if(window.Router && typeof window.Router.navigate === "function"){
+    window.Router.navigate(targetPath);
+  } else {
+    showPageElement(id);
+  }
 }
 
 function scrollFeed(){
@@ -184,10 +213,12 @@ function scrollFeed(){
 }
 
 function shareCurrent(){
+  const url = window.location.href;
+  const title = document.title;
   if(navigator.share){
-    navigator.share({ title: document.title, url: window.location.href }).catch(()=>{});
+    navigator.share({ title: title, url: url }).catch(()=>{});
   } else {
-    navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(url);
     showToast("Link in die Zwischenablage kopiert!");
   }
 }
@@ -217,4 +248,7 @@ function showToast(msg, dur = 3200){
   await initAuth();
   await loadPolls();
   await loadForum();
+  if(window.Router && typeof window.Router.init === "function"){
+    window.Router.init();
+  }
 })();

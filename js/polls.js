@@ -30,7 +30,7 @@ async function loadPolls(){
   }
 
   // 10-Millionen Haupt-Abstimmung (GANZ NEU & FRISCH GESTARTET)
-  const has10MPoll = polls.some(p => p.title.includes("10-Millionen"));
+  const has10MPoll = polls.some(p => p.title && p.title.includes("10-Millionen"));
   if(!has10MPoll){
     polls.unshift({
       id: "poll_10m_schweiz",
@@ -80,10 +80,17 @@ function renderPollsUI(){
   const featured = currentPolls.find(p => p.is_featured) || currentPolls[0];
   const feed = currentPolls.filter(p => p.id !== featured.id);
 
-  // Featured Render (Sicher mit textContent & escaped HTML)
-  document.getElementById("featCat").textContent = featured.category;
+  // Featured Render
+  const featCatEl = document.getElementById("featCat");
+  if(featCatEl){
+    featCatEl.innerHTML = `<a href="/kategorie/${getCategorySlug(featured.category)}" style="color:var(--red);text-decoration:none">${escapeHTML(featured.category)}</a>`;
+  }
   document.getElementById("featTime").textContent = featured.time;
-  document.getElementById("featTitle").textContent = featured.title;
+  
+  const featTitleEl = document.getElementById("featTitle");
+  if(featTitleEl){
+    featTitleEl.innerHTML = `<a href="/frage/${slugify(featured.title)}" style="color:inherit;text-decoration:none">${escapeHTML(featured.title)}</a>`;
+  }
   
   const featCountText = featured.totalVotes > 0 ? `${featured.totalVotes.toLocaleString('de-CH')} Personen haben abgestimmt` : "Noch keine Stimmen – sei der Erste!";
   document.getElementById("featCount").textContent = featCountText;
@@ -105,36 +112,50 @@ function renderPollsUI(){
     }).join("");
   }
 
-  // Feed Render mit XSS-Schutz
-  document.getElementById("feed").innerHTML = feed.map((q, i) => {
-    const safeCat = escapeHTML(q.category);
-    const safeTime = escapeHTML(q.time);
-    const safeTitle = escapeHTML(q.title);
-    const safeId = escapeHTML(q.id);
-    const safeCount = q.totalVotes.toLocaleString('de-CH');
+  // Feed Render mit sauberen SEO-Links
+  const feedContainer = document.getElementById("feed");
+  if(feedContainer){
+    feedContainer.innerHTML = feed.map((q, i) => {
+      const safeCat = escapeHTML(q.category);
+      const catSlug = getCategorySlug(q.category);
+      const safeTime = escapeHTML(q.time);
+      const safeTitle = escapeHTML(q.title);
+      const pollSlug = slugify(q.title);
+      const safeId = escapeHTML(q.id);
+      const safeCount = q.totalVotes.toLocaleString('de-CH');
 
-    return `
-      <article class="feedItem">
-        <div class="meta"><span class="category">${safeCat}</span><span>·</span><span>${safeTime}</span></div>
-        <h2 onclick="openPollDetail('${safeId}')">${safeTitle}</h2>
-        <div class="feedStats">${safeCount} Stimmen</div>
-        <div class="quickVotes" id="qv-${safeId}">
-          ${q.options.map((opt, idx) => `
-            <button class="qv ${q.userVotedIndex === idx ? 'active' : ''}" onclick="submitPollVote('${safeId}', ${idx}, false)">${escapeHTML(opt)}</button>
-          `).join("")}
-        </div>
-      </article>
-      ${i === 1 ? '<div class="ad">Werbung</div>' : ''}
-    `;
-  }).join("");
+      return `
+        <article class="feedItem">
+          <div class="meta">
+            <span class="category"><a href="/kategorie/${catSlug}" style="color:var(--red);text-decoration:none">${safeCat}</a></span>
+            <span>·</span>
+            <span>${safeTime}</span>
+          </div>
+          <h2><a href="/frage/${pollSlug}" style="color:inherit;text-decoration:none">${safeTitle}</a></h2>
+          <div class="feedStats">${safeCount} Stimmen</div>
+          <div class="quickVotes" id="qv-${safeId}">
+            ${q.options.map((opt, idx) => `
+              <button class="qv ${q.userVotedIndex === idx ? 'active' : ''}" onclick="submitPollVote('${safeId}', ${idx}, false)">${escapeHTML(opt)}</button>
+            `).join("")}
+          </div>
+        </article>
+        ${i === 1 ? '<div class="ad">Werbung</div>' : ''}
+      `;
+    }).join("");
+  }
 
-  // Trending Sidebar
-  document.getElementById("trending").innerHTML = currentPolls.slice(0, 5).map(q => `
-    <div class="trend" onclick="openPollDetail('${escapeHTML(q.id)}')">
-      <strong>${escapeHTML(q.title)}</strong>
-      <small>${q.totalVotes.toLocaleString('de-CH')} Stimmen · ${escapeHTML(q.category)}</small>
-    </div>
-  `).join("");
+  // Trending Sidebar mit SEO-Links
+  const trendingContainer = document.getElementById("trending");
+  if(trendingContainer){
+    trendingContainer.innerHTML = currentPolls.slice(0, 5).map(q => `
+      <div class="trend">
+        <a href="/frage/${slugify(q.title)}" style="color:inherit;text-decoration:none;display:block">
+          <strong>${escapeHTML(q.title)}</strong>
+          <small>${q.totalVotes.toLocaleString('de-CH')} Stimmen · ${escapeHTML(q.category)}</small>
+        </a>
+      </div>
+    `).join("");
+  }
 }
 
 function renderResultsHTML(container, poll){
@@ -161,7 +182,6 @@ function renderResultsHTML(container, poll){
 
 async function submitPollVote(pollId, optionIndex, isFeatured){
   if(!db) return;
-  // Anti-Spam Rate Limit
   if(!checkRateLimit(`vote_${pollId}`, 1000)) return;
 
   const guestSession = getGuestSession();
@@ -183,20 +203,35 @@ async function submitPollVote(pollId, optionIndex, isFeatured){
   }
   await loadPolls();
   if(currentPoll && currentPoll.id === pollId){
-    openPollDetail(pollId);
+    openPollDetail(pollId, false);
   }
 }
 
 function openFeaturedDetail(){
   const featured = currentPolls.find(p => p.is_featured) || currentPolls[0];
-  if(featured) openPollDetail(featured.id);
+  if(featured){
+    if(window.Router && typeof window.Router.navigate === "function"){
+      window.Router.navigate(`/frage/${slugify(featured.title)}`);
+    } else {
+      openPollDetail(featured.id);
+    }
+  }
 }
 
-async function openPollDetail(pollId){
+async function openPollDetail(pollId, updateUrl = true){
   currentPoll = currentPolls.find(p => p.id === pollId) || currentPolls[0];
   if(!currentPoll) return;
 
-  document.getElementById("detailCat").textContent = currentPoll.category;
+  if(updateUrl && window.Router && typeof window.Router.navigate === "function"){
+    window.Router.navigate(`/frage/${slugify(currentPoll.title)}`);
+    return;
+  }
+
+  const catSlug = getCategorySlug(currentPoll.category);
+  const detailCatEl = document.getElementById("detailCat");
+  if(detailCatEl){
+    detailCatEl.innerHTML = `<a href="/kategorie/${catSlug}" style="color:var(--red);text-decoration:none">${escapeHTML(currentPoll.category)}</a>`;
+  }
   document.getElementById("detailTime").textContent = currentPoll.time;
   document.getElementById("detailTitle").textContent = currentPoll.title;
   document.getElementById("detailDesc").textContent = currentPoll.description || "Stimme ab und diskutiere mit der Community über diese Frage.";
@@ -215,13 +250,33 @@ async function openPollDetail(pollId){
     votesContainer.innerHTML = currentPoll.options.map((opt, idx) => `<button class="vote" onclick="submitPollVote('${safeId}', ${idx}, false)">${escapeHTML(opt)}</button>`).join("");
   }
 
+  // Melde-Button konfigurieren
+  const reportBtn = document.getElementById("pollReportBtn");
+  if(reportBtn){
+    reportBtn.onclick = () => openReportModal({
+      type: "poll",
+      id: currentPoll.id,
+      title: currentPoll.title,
+      url: `${SITE_URL}/frage/${slugify(currentPoll.title)}`
+    });
+  }
+
   const otherPoll = currentPolls.find(p => p.id !== currentPoll.id);
-  if(otherPoll){
+  const nextContainer = document.querySelector(".nextBlock");
+  if(otherPoll && nextContainer){
     document.getElementById("detailNextTitle").textContent = otherPoll.title;
+    const nextBtn = nextContainer.querySelector("button");
+    if(nextBtn){
+      nextBtn.onclick = () => {
+        if(window.Router && typeof window.Router.navigate === "function"){
+          window.Router.navigate(`/frage/${slugify(otherPoll.title)}`);
+        }
+      };
+    }
   }
 
   await loadPollComments(currentPoll.id);
-  showPage("detail");
+  showPageElement("detail");
 }
 
 async function loadPollComments(pollId){
@@ -256,17 +311,22 @@ async function loadPollComments(pollId){
     })) : [])
   ];
 
-  countSpan.textContent = allComments.length;
-  container.innerHTML = allComments.map(c => `
-    <div class="comment">
-      <div class="user">${escapeHTML(c.username)} · ${escapeHTML(c.canton)} · <span style="font-weight:400;color:#777">${escapeHTML(c.time)}</span></div>
-      <p>${escapeHTML(c.content)}</p>
-      <div class="score">
-        <span onclick="voteComment('${escapeHTML(c.id||'')}', 1, this)" style="cursor:pointer">+ ${c.upvotes}</span>&nbsp;&nbsp;&nbsp;
-        <span onclick="voteComment('${escapeHTML(c.id||'')}', -1, this)" style="cursor:pointer">− ${c.downvotes}</span>
+  if(countSpan) countSpan.textContent = allComments.length;
+  if(container){
+    container.innerHTML = allComments.map(c => `
+      <div class="comment">
+        <div class="user">
+          <a href="/profil/${encodeURIComponent(c.username)}" style="color:inherit;text-decoration:none">${escapeHTML(c.username)}</a> · ${escapeHTML(c.canton)} · <span style="font-weight:400;color:#777">${escapeHTML(c.time)}</span>
+          <button class="smallbtn" style="float:right;font-size:11px;color:#888;padding:0" onclick="openReportModal({ type: 'comment', id: '${escapeHTML(c.id||'')}', title: '${escapeHTML(c.content.substring(0,60))}' })">Melden</button>
+        </div>
+        <p>${escapeHTML(c.content)}</p>
+        <div class="score">
+          <span onclick="voteComment('${escapeHTML(c.id||'')}', 1, this)" style="cursor:pointer">+ ${c.upvotes}</span>&nbsp;&nbsp;&nbsp;
+          <span onclick="voteComment('${escapeHTML(c.id||'')}', -1, this)" style="cursor:pointer">− ${c.downvotes}</span>
+        </div>
       </div>
-    </div>
-  `).join("");
+    `).join("");
+  }
 }
 
 async function addPollComment(){
@@ -274,7 +334,6 @@ async function addPollComment(){
   const content = sanitizeText(textarea.value, 1500);
   if(!content || !currentPoll) return;
 
-  // Rate Limiting anti-spam
   if(!checkRateLimit("add_poll_comment", 3000)) return;
   
   const payload = {

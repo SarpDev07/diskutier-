@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Seite nicht gefunden (404) — diskutier.ch</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="/css/style.css">
+  <script>
+    // SPA Deep Link Router Fallback für Static Hosting (GitHub Pages / Cloudflare Pages)
+    (function() {
+      var path = window.location.pathname;
+      var search = window.location.search;
+      var hash = window.location.hash;
+      
+      // Falls ein Deep Link aufgerufen wurde (z.B. /frage/..., /beitrag/..., /kategorie/...)
+      if (path && path !== "/404.html" && path !== "/404") {
+        var cleanPath = path + search + hash;
+        window.location.replace("/?p=" + encodeURIComponent(cleanPath));
+      }
+    })();
+  </script>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a href="/" class="logo" style="text-decoration:none;color:inherit">diskutier<b>.ch</b></a>
+    <nav class="navlinks">
+      <a href="/" style="color:inherit;text-decoration:none">Abstimmungen</a>
+      <a href="/beitraege" style="color:inherit;text-decoration:none">Beiträge</a>
+      <a href="/kategorien" style="color:inherit;text-decoration:none">Kategorien</a>
+    </nav>
+  </div>
+</header>
+
+<div class="shell" style="grid-template-columns:1fr;max-width:760px;padding-top:40px">
+  <main>
+    <div class="legalContent">
+      <div class="eyebrow" style="color:var(--red)">404 — Fehler</div>
+      <h1>Seite nicht gefunden</h1>
+      <p style="font-size:16px;margin:16px 0">
+        Die von dir aufgerufene Seite, Abstimmung oder Diskussion existiert leider nicht, wurde gelöscht oder befindet sich in Prüfung.
+      </p>
+      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+        <a href="/" class="publish" style="text-decoration:none;padding:12px 20px;display:inline-block">Zur Startseite</a>
+        <a href="/beitraege" class="smallbtn" style="border:1px solid #aaa;padding:11px 18px;text-decoration:none;font-weight:900">Beiträge durchstöbern</a>
+        <a href="/kategorien" class="smallbtn" style="border:1px solid #aaa;padding:11px 18px;text-decoration:none;font-weight:900">Themen ansehen</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer class="siteFooter" style="margin-top:60px">
+  <div class="footerBottom" style="max-width:760px">
+    <div>© 2026 diskutier.ch — Schweizer Abstimmungs-Plattform</div>
+  </div>
+</footer>
+
+</body>
+</html>

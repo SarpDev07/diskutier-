@@ -1,0 +1,24 @@
+# robots.txt für diskutier.ch
+User-agent: *
+Allow: /
+Allow: /frage/
+Allow: /beitrag/
+Allow: /kategorie/
+Allow: /kategorien
+Allow: /beitraege
+Allow: /ueber-uns
+Allow: /kontakt
+Allow: /datenschutz
+Allow: /impressum
+Allow: /richtlinien
+
+# Private und administrative Bereiche ausschliessen
+Disallow: /passwort-vergessen
+Disallow: /passwort-zuruecksetzen
+Disallow: /einstellungen
+Disallow: /anmelden
+Disallow: /registrieren
+Disallow: /analytics
+
+# Sitemap Verlinkung
+Sitemap: https://diskutier.ch/sitemap.xml
