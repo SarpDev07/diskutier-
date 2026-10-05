@@ -1,29 +1,6 @@
-// BENACHRICHTIGUNGS-SYSTEM (NOTIFICATION BELL & DROPDOWN)
+// BENACHRICHTIGUNGS-SYSTEM (ECHTZEIT & ECHTE NUTZER-BENACHRICHTIGUNGEN)
 
 let currentNotifications = [];
-
-const DEFAULT_SEED_NOTIFICATIONS = [
-  {
-    id: "notif_welcome",
-    title: "Willkommen auf diskutier.ch",
-    message: "Hier wirst du sofort benachrichtigt, wenn jemand auf deine Beiträge oder Kommentare antwortet.",
-    type: "info",
-    link_page: "forum",
-    link_id: null,
-    read: false,
-    created_at: new Date(Date.now() - 3600 * 1000 * 48).toISOString() // vor 2 Tagen
-  },
-  {
-    id: "notif_reply_1",
-    title: "Neue Antwort auf deinen Beitrag",
-    message: "sina90 (AG) hat auf 'Nachbar stellt ständig Sachen ins Treppenhaus' geantwortet.",
-    type: "comment",
-    link_page: "forum",
-    link_id: null,
-    read: false,
-    created_at: new Date(Date.now() - 3600 * 1000 * 24).toISOString() // gestern
-  }
-];
 
 // Initialisierung beim Laden
 async function initNotifications() {
@@ -45,26 +22,30 @@ async function initNotifications() {
   });
 }
 
-// Lokale Benachrichtigungen laden
+// Lokale Benachrichtigungen laden (Nur echte Benachrichtigungen)
 function loadNotificationsFromStorage() {
   const raw = localStorage.getItem("diskutier_notifications");
   if (raw) {
     try {
-      currentNotifications = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      // Entferne veraltete Dummy/Test-Einträge
+      currentNotifications = Array.isArray(parsed) 
+        ? parsed.filter(n => n.id && !n.id.includes("seed") && !n.id.includes("welcome") && !n.id.includes("reply_1"))
+        : [];
     } catch(e) {
-      currentNotifications = [...DEFAULT_SEED_NOTIFICATIONS];
+      currentNotifications = [];
     }
   } else {
-    currentNotifications = [...DEFAULT_SEED_NOTIFICATIONS];
-    saveNotificationsToStorage();
+    currentNotifications = [];
   }
+  saveNotificationsToStorage();
 }
 
 function saveNotificationsToStorage() {
   localStorage.setItem("diskutier_notifications", JSON.stringify(currentNotifications));
 }
 
-// Supabase Benachrichtigungen abrufen (falls angemeldet)
+// Supabase Benachrichtigungen abrufen (Echte Einträge aus DB)
 async function fetchServerNotifications() {
   if (!currentUser || !db) return;
   try {
@@ -75,7 +56,6 @@ async function fetchServerNotifications() {
       .limit(30);
 
     if (!error && data && data.length > 0) {
-      // Zusammenführen mit lokalen Benachrichtigungen
       const existingIds = new Set(currentNotifications.map(n => n.id));
       data.forEach(n => {
         if (!existingIds.has(n.id)) {
@@ -100,7 +80,7 @@ async function fetchServerNotifications() {
   }
 }
 
-// Benachrichtigung erstellen (z.B. bei neuem Kommentar)
+// Echte Benachrichtigung erstellen (wenn jemand kommentiert / antwortet)
 async function createNotification({ userId, title, message, linkPage = "forum", linkId = null }) {
   const newNotif = {
     id: "notif_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
@@ -118,7 +98,7 @@ async function createNotification({ userId, title, message, linkPage = "forum", 
   updateNotificationBadge();
   renderNotificationsList();
 
-  // Supabase Sync
+  // In Supabase speichern (falls DB-Tabelle notifications existiert)
   if (db && userId) {
     try {
       await db.from("notifications").insert([{
@@ -169,7 +149,12 @@ function renderNotificationsList() {
   if (!listContainer) return;
 
   if (!currentNotifications.length) {
-    listContainer.innerHTML = `<div style="padding:24px 16px;text-align:center;color:#888;font-size:13px">Keine Benachrichtigungen vorhanden.</div>`;
+    listContainer.innerHTML = `
+      <div style="padding:28px 18px;text-align:center;color:#777;font-size:13px">
+        <div style="font-weight:900;color:#222;margin-bottom:6px;font-size:14px">Keine Benachrichtigungen</div>
+        Sobald jemand auf deine Beiträge oder Kommentare antwortet, erscheint der Hinweis hier.
+      </div>
+    `;
     return;
   }
 
