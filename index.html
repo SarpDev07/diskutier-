@@ -8,7 +8,7 @@
   <title>diskutier.ch — Die Schweiz stimmt ab</title>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=3">
 
   <!-- Externe SDKs -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -31,7 +31,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
         <span id="notifBadge" class="notifBadge">0</span>
       </button>
-      <div id="notifDropdown" class="notifDropdown">
+      <div id="notifDropdown" class="notifDropdown" style="display:none">
         <div class="notifHead">
           <span class="notifHeadTitle">Benachrichtigungen</span>
           <button class="notifHeadAction" onclick="markAllNotificationsRead()">Alle gelesen</button>
@@ -109,13 +109,25 @@
 
 <!-- SEITE 4: FORUMS-BEITRAG DETAIL -->
 <section id="postdetail" class="page">
-  <div class="meta"><span class="category" id="postCategory">Alltag</span><span>·</span><span id="postTime">vor 2 Tagen</span></div>
-  <h1 class="postDetailTitle" id="postTitle">Titel</h1>
-  <div class="authorBadge" id="postAuthorBadge">
-    <div class="authorAvatar" id="postAuthorAvatar">U</div>
-    <div>
-      <div class="authorName" id="postAuthorName">Community</div>
-      <div class="authorMeta" id="postAuthorMeta">Kanton CH · Verfasser</div>
+  <div class="postDetailHeader">
+    <div class="meta">
+      <span class="category" id="postCategory">Alltag</span>
+      <span>·</span>
+      <span id="postTime">vor 2 Tagen</span>
+      <span>·</span>
+      <span id="postViews">342 Aufrufe</span>
+    </div>
+    <h1 class="postDetailTitle" id="postTitle">Titel</h1>
+    <div class="postAuthorRow">
+      <div class="authorAvatar" id="postAuthorAvatar">U</div>
+      <div class="authorInfo">
+        <div class="authorNameLine">
+          <strong id="postAuthorName">Community</strong>
+          <span class="authorCantonBadge" id="postAuthorCanton">BS</span>
+          <span class="authorRole">Verfasser</span>
+        </div>
+        <div class="authorSubLine" id="postAuthorSub">Registriertes Mitglied</div>
+      </div>
     </div>
   </div>
   <div class="postBody" id="postBody"></div>

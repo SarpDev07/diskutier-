@@ -40,6 +40,7 @@ async function initNotifications() {
     const bellBtn = document.getElementById("notifBellBtn");
     if (dropdown && bellBtn && !dropdown.contains(e.target) && !bellBtn.contains(e.target)) {
       dropdown.classList.remove("open");
+      dropdown.style.display = "none";
     }
   });
 }
@@ -151,9 +152,14 @@ function updateNotificationBadge() {
 function toggleNotifications() {
   const dropdown = document.getElementById("notifDropdown");
   if (!dropdown) return;
-  dropdown.classList.toggle("open");
-  if (dropdown.classList.contains("open")) {
+  const isHidden = dropdown.style.display === "none" || !dropdown.classList.contains("open");
+  if (isHidden) {
+    dropdown.style.display = "flex";
+    dropdown.classList.add("open");
     renderNotificationsList();
+  } else {
+    dropdown.style.display = "none";
+    dropdown.classList.remove("open");
   }
 }
 
@@ -188,7 +194,10 @@ function handleNotificationClick(notifId) {
     renderNotificationsList();
 
     const dropdown = document.getElementById("notifDropdown");
-    if (dropdown) dropdown.classList.remove("open");
+    if (dropdown) {
+      dropdown.classList.remove("open");
+      dropdown.style.display = "none";
+    }
 
     if (notif.link_id && notif.link_page === "post" && typeof openPost === "function") {
       openPost(notif.link_id);

@@ -85,17 +85,22 @@ async function openPost(postId){
   }
 
   document.getElementById("postCategory").textContent = currentPost.cat;
-  document.getElementById("postTime").textContent = `${currentPost.time} · von ${currentPost.user} (${currentPost.canton})`;
+  document.getElementById("postTime").textContent = currentPost.time;
+  const viewsEl = document.getElementById("postViews");
+  if(viewsEl) viewsEl.textContent = `${currentPost.views.toLocaleString('de-CH')} Aufrufe`;
   document.getElementById("postTitle").textContent = currentPost.title;
   document.getElementById("postBody").innerHTML = currentPost.body.map(x => `<p>${escapeHTML(x)}</p>`).join("");
   document.getElementById("postCommentCount").textContent = currentPost.comments;
 
   const authorAvatar = document.getElementById("postAuthorAvatar");
   const authorName = document.getElementById("postAuthorName");
-  const authorMeta = document.getElementById("postAuthorMeta");
+  const authorCanton = document.getElementById("postAuthorCanton");
+  const authorSub = document.getElementById("postAuthorSub");
+  
   if(authorAvatar) authorAvatar.textContent = (currentPost.user || "U").substring(0, 2).toUpperCase();
   if(authorName) authorName.textContent = currentPost.user;
-  if(authorMeta) authorMeta.textContent = `Kanton ${currentPost.canton || 'CH'} · Verfasser`;
+  if(authorCanton) authorCanton.textContent = currentPost.canton || 'CH';
+  if(authorSub) authorSub.textContent = currentPost.user_id ? 'Registriertes Mitglied' : 'Community-Beitrag';
 
   await loadForumComments(currentPost.id);
   showPage("postdetail");
