@@ -4,47 +4,47 @@ let currentPoll = null;
 let activeFeaturedIndex = 0;
 
 // REALISTISCHE SCHWEIZER BASIS-DATEN FÜR ALTE TEST-FRAGEN
-// REALISTISCHE SCHWEIZER BASIS-DATEN FÜR ALLE ABSTIMMUNGEN
+// REALISTISCHE SCHWEIZER BASIS-DATEN FÜR ALLE ABSTIMMUNGEN (ALLE UNTER 500 STIMMEN)
 const POLL_BASELINES = {
-  "10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?": { baseVotes: 1420, optionCounts: [738, 682, 0] },
-  "poll_10m_schweiz": { baseVotes: 1420, optionCounts: [738, 682, 0] },
-  "10000000-0000-0000-0000-000000000001": { baseVotes: 1420, optionCounts: [738, 682, 0] },
+  "10-Millionen-Schweiz: Rettung vor Wohnungsnot oder wirtschaftlicher Selbstmord?": { baseVotes: 380, optionCounts: [198, 167, 15] },
+  "poll_10m_schweiz": { baseVotes: 380, optionCounts: [198, 167, 15] },
+  "10000000-0000-0000-0000-000000000001": { baseVotes: 380, optionCounts: [198, 167, 15] },
 
-  "Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?": { baseVotes: 1180, optionCounts: [425, 484, 271] },
-  "poll_tempo30": { baseVotes: 1180, optionCounts: [425, 484, 271] },
-  "10000000-0000-0000-0000-000000000002": { baseVotes: 1180, optionCounts: [425, 484, 271] },
+  "Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?": { baseVotes: 340, optionCounts: [122, 148, 70] },
+  "poll_tempo30": { baseVotes: 340, optionCounts: [122, 148, 70] },
+  "10000000-0000-0000-0000-000000000002": { baseVotes: 340, optionCounts: [122, 148, 70] },
 
-  "Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?": { baseVotes: 1060, optionCounts: [498, 403, 159] },
-  "poll_srg_gebuehren": { baseVotes: 1060, optionCounts: [498, 403, 159] },
-  "10000000-0000-0000-0000-000000000003": { baseVotes: 1060, optionCounts: [498, 403, 159] },
+  "Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?": { baseVotes: 310, optionCounts: [146, 118, 46] },
+  "poll_srg_gebuehren": { baseVotes: 310, optionCounts: [146, 118, 46] },
+  "10000000-0000-0000-0000-000000000003": { baseVotes: 310, optionCounts: [146, 118, 46] },
 
-  "Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?": { baseVotes: 880, optionCounts: [387, 273, 220] },
-  "poll_wohnungsnot_mieten": { baseVotes: 880, optionCounts: [387, 273, 220] },
-  "10000000-0000-0000-0000-000000000004": { baseVotes: 880, optionCounts: [387, 273, 220] },
+  "Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?": { baseVotes: 290, optionCounts: [128, 90, 72] },
+  "poll_wohnungsnot_mieten": { baseVotes: 290, optionCounts: [128, 90, 72] },
+  "10000000-0000-0000-0000-000000000004": { baseVotes: 290, optionCounts: [128, 90, 72] },
 
-  "Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?": { baseVotes: 950, optionCounts: [323, 171, 456] },
-  "poll_wehrpflicht_miliz": { baseVotes: 950, optionCounts: [323, 171, 456] },
-  "10000000-0000-0000-0000-000000000005": { baseVotes: 950, optionCounts: [323, 171, 456] },
+  "Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?": { baseVotes: 320, optionCounts: [109, 58, 153] },
+  "poll_wehrpflicht_miliz": { baseVotes: 320, optionCounts: [109, 58, 153] },
+  "10000000-0000-0000-0000-000000000005": { baseVotes: 320, optionCounts: [109, 58, 153] },
 
-  "Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?": { baseVotes: 642, optionCounts: [198, 348, 96] },
-  "10000000-0000-0000-0000-000000000006": { baseVotes: 642, optionCounts: [198, 348, 96] },
+  "Sind CHF 6'000 Monatslohn heute noch ein guter Lohn in der Schweiz?": { baseVotes: 280, optionCounts: [87, 151, 42] },
+  "10000000-0000-0000-0000-000000000006": { baseVotes: 280, optionCounts: [87, 151, 42] },
 
-  "Ist es komisch, mit 25 noch bei den Eltern zu wohnen?": { baseVotes: 489, optionCounts: [136, 231, 122] },
-  "10000000-0000-0000-0000-000000000007": { baseVotes: 489, optionCounts: [136, 231, 122] },
+  "Ist es komisch, mit 25 noch bei den Eltern zu wohnen?": { baseVotes: 240, optionCounts: [67, 113, 60] },
+  "10000000-0000-0000-0000-000000000007": { baseVotes: 240, optionCounts: [67, 113, 60] },
 
-  "Coop oder Migros?": { baseVotes: 742, optionCounts: [341, 319, 82] },
-  "10000000-0000-0000-0000-000000000008": { baseVotes: 742, optionCounts: [341, 319, 82] },
+  "Coop oder Migros?": { baseVotes: 360, optionCounts: [166, 155, 39] },
+  "10000000-0000-0000-0000-000000000008": { baseVotes: 360, optionCounts: [166, 155, 39] },
 
-  "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 318, optionCounts: [95, 223] },
-  "10000000-0000-0000-0000-000000000009": { baseVotes: 318, optionCounts: [95, 223] },
+  "Würdest du für CHF 1'000 mehr Lohn täglich eine Stunde länger pendeln?": { baseVotes: 210, optionCounts: [63, 147] },
+  "10000000-0000-0000-0000-000000000009": { baseVotes: 210, optionCounts: [63, 147] },
 
-  "Sind 30 Franken für eine Pizza in der Schweiz zu viel?": { baseVotes: 382, optionCounts: [267, 46, 69] },
-  "10000000-0000-0000-0000-000000000010": { baseVotes: 382, optionCounts: [267, 46, 69] },
+  "Sind 30 Franken für eine Pizza in der Schweiz zu viel?": { baseVotes: 190, optionCounts: [133, 23, 34] },
+  "10000000-0000-0000-0000-000000000010": { baseVotes: 190, optionCounts: [133, 23, 34] },
 
-  "Sollte man seinem Partner das Handy-Passwort geben?": { baseVotes: 521, optionCounts: [130, 297, 94] },
-  "iPhone oder Samsung?": { baseVotes: 612, optionCounts: [336, 227, 49] },
-  "Homeoffice oder Büro?": { baseVotes: 467, optionCounts: [280, 65, 122] },
-  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 279, optionCounts: [187, 39, 53] }
+  "Sollte man seinem Partner das Handy-Passwort geben?": { baseVotes: 260, optionCounts: [65, 148, 47] },
+  "iPhone oder Samsung?": { baseVotes: 300, optionCounts: [165, 111, 24] },
+  "Homeoffice oder Büro?": { baseVotes: 230, optionCounts: [137, 32, 61] },
+  "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 180, optionCounts: [120, 25, 35] }
 };
 
 // INITIALE SCHWEIZER COMMUNITY-KOMMENTARE FÜR BESTEHENDE FRAGEN
@@ -62,34 +62,34 @@ function getBaselineForPoll(p){
   
   const title = (p.title || "").toLowerCase();
   if(title.includes("10-millionen") || title.includes("10 millionen") || title.includes("10 mio")){
-    return { baseVotes: 1420, optionCounts: [738, 682, 0] };
+    return { baseVotes: 380, optionCounts: [198, 167, 15] };
   }
   if(title.includes("tempo 30") || title.includes("tempo-30")){
-    return { baseVotes: 1180, optionCounts: [425, 484, 271] };
+    return { baseVotes: 340, optionCounts: [122, 148, 70] };
   }
   if(title.includes("srg") || title.includes("serafe") || title.includes("halbierungs")){
-    return { baseVotes: 1060, optionCounts: [498, 403, 159] };
+    return { baseVotes: 310, optionCounts: [146, 118, 46] };
   }
   if(title.includes("wohnungsnot") || title.includes("gier-investoren")){
-    return { baseVotes: 880, optionCounts: [387, 273, 220] };
+    return { baseVotes: 290, optionCounts: [128, 90, 72] };
   }
   if(title.includes("wehrpflicht") || title.includes("milizsystem")){
-    return { baseVotes: 950, optionCounts: [323, 171, 456] };
+    return { baseVotes: 320, optionCounts: [109, 58, 153] };
   }
   if(title.includes("6'000") || title.includes("6000")){
-    return { baseVotes: 642, optionCounts: [198, 348, 96] };
+    return { baseVotes: 280, optionCounts: [87, 151, 42] };
   }
   if(title.includes("25 noch bei den eltern") || title.includes("eltern zu wohnen")){
-    return { baseVotes: 489, optionCounts: [136, 231, 122] };
+    return { baseVotes: 240, optionCounts: [67, 113, 60] };
   }
   if(title.includes("coop oder migros")){
-    return { baseVotes: 742, optionCounts: [341, 319, 82] };
+    return { baseVotes: 360, optionCounts: [166, 155, 39] };
   }
   if(title.includes("pendeln")){
-    return { baseVotes: 318, optionCounts: [95, 223] };
+    return { baseVotes: 210, optionCounts: [63, 147] };
   }
   if(title.includes("pizza")){
-    return { baseVotes: 382, optionCounts: [267, 46, 69] };
+    return { baseVotes: 190, optionCounts: [133, 23, 34] };
   }
   return { baseVotes: 0, optionCounts: (p.options || []).map(() => 0) };
 }
