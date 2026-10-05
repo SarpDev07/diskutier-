@@ -25,6 +25,31 @@ const SEED_COMMENTS = [
   { username: "romand92", canton: "VD", created_at: "2026-10-02T09:10:00.000Z", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 11, downvotes: 4 }
 ];
 
+// ERMITTLUNG DER BASIS-DATEN (MIT ROBUSTEM FUZZY-MATCHING FÜR DATENBANK-FRAGEN)
+function getBaselineForPoll(p){
+  if(!p) return { baseVotes: 0, optionCounts: [] };
+  if(p.id && POLL_BASELINES[p.id]) return POLL_BASELINES[p.id];
+  if(p.title && POLL_BASELINES[p.title]) return POLL_BASELINES[p.title];
+  
+  const title = (p.title || "").toLowerCase();
+  if(title.includes("10-millionen") || title.includes("10 millionen") || title.includes("10 mio")){
+    return { baseVotes: 1420, optionCounts: [738, 682, 0] };
+  }
+  if(title.includes("tempo 30") || title.includes("tempo-30")){
+    return POLL_BASELINES["Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?"] || { baseVotes: 0, optionCounts: [0, 0, 0] };
+  }
+  if(title.includes("srg") || title.includes("serafe") || title.includes("halbierungs")){
+    return POLL_BASELINES["Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?"] || { baseVotes: 0, optionCounts: [0, 0, 0] };
+  }
+  if(title.includes("wohnungsnot") || title.includes("gier-investoren")){
+    return POLL_BASELINES["Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?"] || { baseVotes: 0, optionCounts: [0, 0, 0] };
+  }
+  if(title.includes("wehrpflicht") || title.includes("milizsystem")){
+    return POLL_BASELINES["Milizsystem am Anschlag: Sollten wir die allgemeine Wehrpflicht endlich abschaffen und auf eine Profi-Armee umstellen?"] || { baseVotes: 0, optionCounts: [0, 0, 0] };
+  }
+  return { baseVotes: 0, optionCounts: (p.options || []).map(() => 0) };
+}
+
 // LOKALE SPEICHERUNG DER ABSTIMMUNGEN (BLEIBT NACH REFRESH / NEUSTART ERHALTEN)
 function getLocalVotes(){
   try {
@@ -129,7 +154,7 @@ async function loadPolls(){
 
   currentPolls = polls.map((p, pIdx) => {
     const votes = p.poll_votes || [];
-    const base = POLL_BASELINES[p.title] || (p.id && POLL_BASELINES[p.id]) || { baseVotes: 0, optionCounts: (p.options || []).map(()=>0) };
+    const base = getBaselineForPoll(p);
     
     // Prüfe lokale Abstimmung (LocalStorage) & Datenbank
     let localVoteIndex = null;
@@ -137,6 +162,9 @@ async function loadPolls(){
       localVoteIndex = localVotes[p.id];
     } else if (p.title && localVotes[p.title] !== undefined) {
       localVoteIndex = localVotes[p.title];
+    } else {
+      const matchKey = Object.keys(localVotes).find(k => k && p.title && (k.toLowerCase().includes(p.title.toLowerCase().substring(0, 25)) || p.title.toLowerCase().includes(k.toLowerCase().substring(0, 25))));
+      if (matchKey !== undefined) localVoteIndex = localVotes[matchKey];
     }
 
     const dbUserVote = votes.find(v => (currentUser && v.user_id === currentUser.id) || (v.session_token && v.session_token === guestSession));
@@ -451,15 +479,18 @@ async function finalizeVote(pollId, optionIndex, isFeatured){
   const previousVotedIndex = poll.userVotedIndex;
   poll.userVotedIndex = optionIndex;
 
-  if(!poll.optionCounts) poll.optionCounts = poll.options.map(() => 0);
+  if(!poll.optionCounts || poll.optionCounts.length === 0 || poll.optionCounts.every(c => c === 0)){
+    const base = getBaselineForPoll(poll);
+    poll.optionCounts = (poll.options || []).map((_, i) => (base.optionCounts && base.optionCounts[i] !== undefined) ? base.optionCounts[i] : 0);
+  }
   
   if(previousVotedIndex === null || previousVotedIndex === undefined){
     poll.optionCounts[optionIndex] = (poll.optionCounts[optionIndex] || 0) + 1;
-    poll.totalVotes = (poll.totalVotes || 0) + 1;
   } else if(previousVotedIndex !== optionIndex){
     poll.optionCounts[previousVotedIndex] = Math.max(0, (poll.optionCounts[previousVotedIndex] || 1) - 1);
     poll.optionCounts[optionIndex] = (poll.optionCounts[optionIndex] || 0) + 1;
   }
+  poll.totalVotes = poll.optionCounts.reduce((a, b) => a + b, 0);
 
   // Dauerhaft im LocalStorage sichern
   saveLocalVote(poll.id, optionIndex, poll.title);

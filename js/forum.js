@@ -42,6 +42,26 @@ const SEED_FORUM_REPLIES = [
   { username: "JuraNord", canton: "SO", created_at: "2026-10-02T11:05:00.000Z", content: "Kommt vor allem auch darauf an, ob der Fluchtweg betroffen ist. Wenn es wirklich eng wird bei einem Notfall, würde ich nicht ewig warten.", upvotes: 5 }
 ];
 
+function getBaselineForPost(p){
+  if(!p) return { comments: 0, views: 0 };
+  if(p.id && POST_BASELINES[p.id]) return POST_BASELINES[p.id];
+  if(p.title && POST_BASELINES[p.title]) return POST_BASELINES[p.title];
+  const title = (p.title || "").toLowerCase();
+  if(title.includes("10-millionen") || title.includes("10 millionen") || title.includes("10 mio")){
+    return POST_BASELINES["10-Millionen-Schweiz: Rettung vor dem Kollaps oder wirtschaftlicher Selbstmord?"] || { comments: 3, views: 184 };
+  }
+  if(title.includes("tempo 30") || title.includes("tempo-30")){
+    return POST_BASELINES["Flächendeckend Tempo 30 in Städten und immer weniger Parkplätze: Sinnvoller Umweltschutz oder reiner Krieg gegen Autofahrer?"] || { comments: 3, views: 142 };
+  }
+  if(title.includes("srg") || title.includes("serafe") || title.includes("halbierungs")){
+    return POST_BASELINES["Über 330 Franken im Jahr für die SRG, ob man will oder nicht: Zeit für die Halbierungs-Initiative oder ruinieren wir damit den Schweizer Journalismus?"] || { comments: 2, views: 98 };
+  }
+  if(title.includes("wohnungsnot") || title.includes("gier-investoren")){
+    return POST_BASELINES["Wohnungsnot in Zürich und Genf: Sind die steigenden Mieten das Resultat von Gier-Investoren oder von zu strengen Baugesetzen und Einsprachen?"] || { comments: 2, views: 115 };
+  }
+  return { comments: 0, views: 0 };
+}
+
 async function loadForum(){
   let posts = [];
   if(db){
@@ -145,8 +165,7 @@ async function loadForum(){
   }
 
   currentPosts = posts.map(p => {
-    const hasBaseline = POST_BASELINES[p.title] || (p.id && POST_BASELINES[p.id]);
-    const base = hasBaseline || { comments: 0, views: 0 };
+    const base = getBaselineForPost(p);
     const dbCommentsCount = p.comments ? p.comments.length : 0;
     return {
       id: p.id,
@@ -158,8 +177,8 @@ async function loadForum(){
       user: p.profiles?.username || (p.user_id ? "Mitglied" : "Community"),
       canton: p.profiles?.canton || "CH",
       user_id: p.user_id,
-      comments: hasBaseline ? (base.comments + dbCommentsCount) : dbCommentsCount,
-      views: hasBaseline ? Math.max(base.views, p.views || 1) : Math.max(1, p.views || 1),
+      comments: base.comments + dbCommentsCount,
+      views: Math.max(base.views, p.views || 1),
       created_at: p.created_at
     };
   });
