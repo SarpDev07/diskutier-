@@ -515,3 +515,74 @@ async function renderPublicProfile(username){
     profActivity.innerHTML = `<p style="color:#777;padding:20px 0">Keine öffentlichen Beiträge von ${escapeHTML(cleanUser)} gefunden.</p>`;
   }
 }
+
+// MODAL FÜR KONTO-PFLICHT (ABSTIMMEN, POSTEN & KOMMENTIEREN)
+function openAuthRequiredModal(customMessage){
+  let modal = document.getElementById("authRequiredModal");
+  if(!modal){
+    createAuthModalDOM();
+    modal = document.getElementById("authRequiredModal");
+  }
+
+  const msgEl = document.getElementById("authRequiredMsg");
+  if(msgEl && customMessage){
+    msgEl.textContent = customMessage;
+  }
+
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeAuthRequiredModal(){
+  const modal = document.getElementById("authRequiredModal");
+  if(modal) modal.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function createAuthModalDOM(){
+  if(document.getElementById("authRequiredModal")) return;
+  const modal = document.createElement("div");
+  modal.id = "authRequiredModal";
+  modal.className = "authModalOverlay";
+  modal.innerHTML = `
+    <div class="authModalCard">
+      <div class="authModalHeader">
+        <div>
+          <div class="eyebrow" style="color:var(--red);margin-bottom:4px">Konto erforderlich</div>
+          <h2 style="font-size:20px;margin:0;font-weight:800">Mitdiskutieren & Abstimmen</h2>
+        </div>
+        <button class="authCloseBtn" onclick="closeAuthRequiredModal()" aria-label="Schliessen">&times;</button>
+      </div>
+      <div class="authModalBody">
+        <p id="authRequiredMsg" style="font-size:14px;color:#444;margin:0 0 16px;line-height:1.55">
+          Um bei Schweizer Abstimmungen abzustimmen, eigene Beiträge zu verfassen oder zu kommentieren, musst du angemeldet sein.
+        </p>
+        <div style="background:#fafafa;border:1px solid #e0dfdb;padding:14px 16px;border-radius:var(--radius);margin-bottom:20px">
+          <div style="font-size:13px;font-weight:800;color:var(--ink);margin-bottom:6px">Deine Vorteile mit kostenlosem Konto:</div>
+          <ul style="margin:0;padding-left:18px;font-size:12px;color:#555;line-height:1.6">
+            <li>Echte Schweizer Abstimmungsergebnisse in Echtzeit sehen</li>
+            <li>Eigene Abstimmungen & Forenbeiträge starten</li>
+            <li>Mit der Schweizer Community mitdiskutieren & upvoten</li>
+            <li>Dauert weniger als 30 Sekunden</li>
+          </ul>
+        </div>
+      </div>
+      <div class="authModalFooter">
+        <button class="smallbtn" style="color:#666;font-weight:800;padding:11px 14px" onclick="closeAuthRequiredModal()">Abbrechen</button>
+        <button class="smallbtn" style="border:1px solid #bbb;font-weight:900;padding:11px 16px;border-radius:var(--radius);color:var(--ink)" onclick="closeAuthRequiredModal();Router.navigate('/anmelden')">Anmelden</button>
+        <button class="publish" style="margin-top:0;padding:11px 20px" onclick="closeAuthRequiredModal();Router.navigate('/registrieren')">Kostenlos registrieren &rarr;</button>
+      </div>
+    </div>
+  `;
+
+  modal.addEventListener("click", (e) => {
+    if(e.target === modal) closeAuthRequiredModal();
+  });
+
+  document.body.appendChild(modal);
+}
+
+// Global verfügbar
+window.openAuthRequiredModal = openAuthRequiredModal;
+window.closeAuthRequiredModal = closeAuthRequiredModal;
+

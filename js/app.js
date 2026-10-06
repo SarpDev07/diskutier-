@@ -22,6 +22,11 @@ function updateCreatePreview(){
 }
 
 async function submitCreate(){
+  if(!currentUser){
+    openAuthRequiredModal("Um einen Beitrag oder eine Abstimmung zu veröffentlichen, erstelle kurz ein kostenloses Konto oder melde dich an.");
+    return;
+  }
+
   const title = sanitizeText(document.getElementById("createTitle").value, 150);
   const body = sanitizeText(document.getElementById("createBody").value, 4000);
   const category = sanitizeText(document.getElementById("createCategory").value, 40);

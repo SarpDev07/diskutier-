@@ -275,6 +275,10 @@ function restartFeaturedPolls(){
 }
 
 function createMyOwnPoll(){
+  if(!currentUser){
+    openAuthRequiredModal("Um eine eigene Abstimmung für die Schweizer Community zu starten, erstelle kurz ein kostenloses Konto oder melde dich an.");
+    return;
+  }
   if(typeof setCreateType === 'function'){
     setCreateType('poll');
   }
@@ -460,6 +464,11 @@ function renderResultsHTML(container, poll){
 const pendingVotes = {}; // pollId -> { timeoutId, intervalId, optionIndex, isFeatured }
 
 function submitPollVote(pollId, optionIndex, isFeatured){
+  if(!currentUser){
+    openAuthRequiredModal("Um bei Schweizer Abstimmungen abzustimmen und das Live-Ergebnis zu sehen, erstelle kurz ein kostenloses Konto oder melde dich an.");
+    return;
+  }
+
   const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
   if(!poll) return;
 
@@ -752,6 +761,11 @@ async function loadPollComments(pollId){
 }
 
 async function addPollComment(){
+  if(!currentUser){
+    openAuthRequiredModal("Um einen Kommentar abzugeben und mitzudiskutieren, erstelle kurz ein kostenloses Konto oder melde dich an.");
+    return;
+  }
+
   const textarea = document.getElementById("newPollComment");
   const content = sanitizeText(textarea.value, 1500);
   if(!content || !currentPoll) return;

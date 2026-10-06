@@ -503,6 +503,11 @@ async function loadForumComments(postId){
 }
 
 async function addForumComment(){
+  if(!currentUser){
+    openAuthRequiredModal("Um auf diesen Beitrag zu antworten und mitzudiskutieren, erstelle kurz ein kostenloses Konto oder melde dich an.");
+    return;
+  }
+
   const t = document.getElementById("newComment");
   const content = sanitizeText(t.value, 2000);
   if(!content || !currentPost) return;
@@ -537,6 +542,11 @@ async function addForumComment(){
 }
 
 async function voteComment(commentId, diff, el){
+  if(!currentUser){
+    openAuthRequiredModal("Um Kommentare und Antworten zu bewerten, erstelle kurz ein kostenloses Konto oder melde dich an.");
+    return;
+  }
+
   if(!db || !commentId) {
     if(el) el.textContent = "Danke!";
     return;
