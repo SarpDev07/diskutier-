@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=12">
+  <link rel="stylesheet" href="css/style.css?v=13">
 
   <!-- Externe SDKs & Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -230,13 +230,13 @@
       <button id="btnTypePoll" onclick="setCreateType('poll')">Abstimmung</button>
     </div>
     <label>Titel / Frage</label>
-    <input id="createTitle" maxlength="140" placeholder="Deine Frage oder Beitragstitel…" oninput="updateCreatePreview()">
+    <input id="createTitle" maxlength="140" placeholder="Deine Frage oder Beitragstitel…" oninput="updateCreatePreview(); if(window.saveCreateDraft) saveCreateDraft();">
     
     <label>Beschreibung / Text <span style="font-weight:400;color:#888">(optional bei Abstimmung)</span></label>
-    <textarea id="createBody" maxlength="4000" placeholder="Etwas Kontext für die Community…"></textarea>
+    <textarea id="createBody" maxlength="4000" placeholder="Etwas Kontext für die Community…" oninput="if(window.saveCreateDraft) saveCreateDraft();"></textarea>
     
     <label>Kategorie</label>
-    <select id="createCategory">
+    <select id="createCategory" onchange="if(window.saveCreateDraft) saveCreateDraft();">
       <option>Alltag</option>
       <option>Beziehungen</option>
       <option>Geld & Beruf</option>
@@ -253,7 +253,7 @@
     
     <div id="pollFields" style="display:none">
       <label>Optionen (durch Komma getrennt)</label>
-      <input id="createOptions" maxlength="200" placeholder="z. B. JA, NEIN, KOMMT DARAUF AN" value="JA, NEIN, KOMMT DARAUF AN" oninput="updateCreatePreview()">
+      <input id="createOptions" maxlength="200" placeholder="z. B. JA, NEIN, KOMMT DARAUF AN" value="JA, NEIN, KOMMT DARAUF AN" oninput="updateCreatePreview(); if(window.saveCreateDraft) saveCreateDraft();">
     </div>
     
     <div class="preview">
@@ -674,15 +674,15 @@
 </nav>
 
 <!-- Modulare Anwendungs-Skripte -->
-<script src="js/supabase-config.js?v=12"></script>
-<script src="js/router.js?v=12"></script>
-<script src="js/report.js?v=12"></script>
-<script src="js/analytics.js?v=12"></script>
-<script src="js/notifications.js?v=12"></script>
-<script src="js/auth.js?v=12"></script>
-<script src="js/polls.js?v=12"></script>
-<script src="js/forum.js?v=12"></script>
-<script src="js/app.js?v=12"></script>
+<script src="js/supabase-config.js?v=13"></script>
+<script src="js/router.js?v=13"></script>
+<script src="js/report.js?v=13"></script>
+<script src="js/analytics.js?v=13"></script>
+<script src="js/notifications.js?v=13"></script>
+<script src="js/auth.js?v=13"></script>
+<script src="js/polls.js?v=13"></script>
+<script src="js/forum.js?v=13"></script>
+<script src="js/app.js?v=13"></script>
 <script>
 // Cookie Consent Management
 function checkCookiesConsent(){

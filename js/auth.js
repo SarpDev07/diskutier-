@@ -148,7 +148,19 @@ async function handleLogin(){
     await fetchProfile();
     updateNavAuth();
     showToast("Willkommen zurück, " + (currentProfile?.username || ""));
-    if(window.Router && typeof window.Router.navigate === "function"){
+    
+    const redirectPath = sessionStorage.getItem("diskutier_auth_redirect");
+    if(redirectPath){
+      sessionStorage.removeItem("diskutier_auth_redirect");
+      if(window.Router && typeof window.Router.navigate === "function"){
+        window.Router.navigate(redirectPath);
+      } else {
+        showPage(redirectPath.replace("/", "") || "home");
+      }
+      if(typeof restoreCreateDraft === 'function'){
+        restoreCreateDraft();
+      }
+    } else if(window.Router && typeof window.Router.navigate === "function"){
       window.Router.navigate("/");
     } else {
       showPage("home");
@@ -203,7 +215,19 @@ async function handleRegister(){
     await fetchProfile();
     updateNavAuth();
     showToast("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
-    if(window.Router && typeof window.Router.navigate === "function"){
+    
+    const redirectPath = sessionStorage.getItem("diskutier_auth_redirect");
+    if(redirectPath){
+      sessionStorage.removeItem("diskutier_auth_redirect");
+      if(window.Router && typeof window.Router.navigate === "function"){
+        window.Router.navigate(redirectPath);
+      } else {
+        showPage(redirectPath.replace("/", "") || "home");
+      }
+      if(typeof restoreCreateDraft === 'function'){
+        restoreCreateDraft();
+      }
+    } else if(window.Router && typeof window.Router.navigate === "function"){
       window.Router.navigate("/");
     } else {
       showPage("home");

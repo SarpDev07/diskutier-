@@ -236,6 +236,9 @@ const Router = {
     // 8. Beitrag erstellen: /erstellen
     if (path === "/erstellen" || path === "/create") {
       showPageElement("create");
+      if (typeof restoreCreateDraft === "function") {
+        restoreCreateDraft();
+      }
       updateMetaTags({
         title: "Beitrag oder Abstimmung erstellen",
         description: "Starte eine neue Diskussion oder erstelle eine Abstimmung für die Schweizer Community.",

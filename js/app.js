@@ -1,6 +1,58 @@
 // HAUPT-APPLIKATION, INITIALISIERUNG & HELPER
 let activeCreateType = "post";
 
+// ENTWURF AUTOMATISCH SPEICHERN & WIEDERHERSTELLEN
+function saveCreateDraft(){
+  try {
+    const title = document.getElementById("createTitle")?.value || "";
+    const body = document.getElementById("createBody")?.value || "";
+    const category = document.getElementById("createCategory")?.value || "Alltag";
+    const options = document.getElementById("createOptions")?.value || "";
+    if(title.trim() || body.trim()){
+      localStorage.setItem("diskutier_create_draft", JSON.stringify({
+        type: activeCreateType,
+        title,
+        body,
+        category,
+        options,
+        savedAt: Date.now()
+      }));
+    }
+  } catch(e){}
+}
+
+function restoreCreateDraft(){
+  try {
+    const raw = localStorage.getItem("diskutier_create_draft");
+    if(!raw) return false;
+    const draft = JSON.parse(raw);
+    if(draft){
+      if(draft.type && typeof setCreateType === 'function'){
+        setCreateType(draft.type);
+      }
+      const titleEl = document.getElementById("createTitle");
+      const bodyEl = document.getElementById("createBody");
+      const catEl = document.getElementById("createCategory");
+      const optEl = document.getElementById("createOptions");
+
+      if(titleEl && draft.title !== undefined) titleEl.value = draft.title;
+      if(bodyEl && draft.body !== undefined) bodyEl.value = draft.body;
+      if(catEl && draft.category !== undefined) catEl.value = draft.category;
+      if(optEl && draft.options !== undefined) optEl.value = draft.options;
+
+      updateCreatePreview();
+      return true;
+    }
+  } catch(e){}
+  return false;
+}
+
+function clearCreateDraft(){
+  try {
+    localStorage.removeItem("diskutier_create_draft");
+  } catch(e){}
+}
+
 // BEITRAG ODER ABSTIMMUNG ERSTELLEN
 function setCreateType(type){
   activeCreateType = type;
@@ -9,6 +61,7 @@ function setCreateType(type){
   document.getElementById("pollFields").style.display = type === "poll" ? "block" : "none";
   document.getElementById("previewVotes").style.display = type === "poll" ? "flex" : "none";
   updateCreatePreview();
+  saveCreateDraft();
 }
 
 function updateCreatePreview(){
@@ -22,18 +75,11 @@ function updateCreatePreview(){
 }
 
 async function submitCreate(){
-  if(!currentUser){
-    openAuthRequiredModal("Um einen Beitrag oder eine Abstimmung zu veröffentlichen, erstelle kurz ein kostenloses Konto oder melde dich an.");
-    return;
-  }
-
   const title = sanitizeText(document.getElementById("createTitle").value, 150);
   const body = sanitizeText(document.getElementById("createBody").value, 4000);
   const category = sanitizeText(document.getElementById("createCategory").value, 40);
   const errDiv = document.getElementById("createError");
   errDiv.textContent = "";
-
-  if(!checkRateLimit("submit_create", 4000)) return;
 
   if(!title){
     errDiv.textContent = "Bitte einen Titel / Frage angeben.";
@@ -44,6 +90,16 @@ async function submitCreate(){
     errDiv.textContent = "Der Titel muss mindestens 5 Zeichen lang sein.";
     return;
   }
+
+  // Falls der Nutzer nicht eingeloggt ist:
+  if(!currentUser){
+    saveCreateDraft();
+    sessionStorage.setItem("diskutier_auth_redirect", "/erstellen");
+    openAuthRequiredModal("Um deinen Beitrag oder deine Abstimmung zu veröffentlichen, melde dich kurz an oder erstelle ein Konto. Dein eingegebener Entwurf bleibt sicher gespeichert!");
+    return;
+  }
+
+  if(!checkRateLimit("submit_create", 4000)) return;
 
   if(activeCreateType === "post"){
     const paragraphs = body ? body.split("\n\n").map(p => sanitizeText(p, 2000)).filter(Boolean) : [title];
@@ -61,6 +117,7 @@ async function submitCreate(){
     if(data && data[0] && data[0].id && typeof saveMyPostId === 'function'){
       saveMyPostId(data[0].id);
     }
+    clearCreateDraft();
     showToast("Beitrag erfolgreich veröffentlicht!");
     document.getElementById("createTitle").value = "";
     document.getElementById("createBody").value = "";
@@ -86,6 +143,7 @@ async function submitCreate(){
       errDiv.textContent = "Fehler beim Erstellen: " + error.message;
       return;
     }
+    clearCreateDraft();
     showToast("Abstimmung erfolgreich veröffentlicht!");
     document.getElementById("createTitle").value = "";
     document.getElementById("createBody").value = "";
@@ -97,6 +155,10 @@ async function submitCreate(){
     }
   }
 }
+
+window.saveCreateDraft = saveCreateDraft;
+window.restoreCreateDraft = restoreCreateDraft;
+window.clearCreateDraft = clearCreateDraft;
 
 // SUCHE
 function doSearch(){
