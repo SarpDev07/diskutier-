@@ -214,22 +214,24 @@ async function loadPolls(){
     const votes = p.poll_votes || [];
     const base = getBaselineForPoll(p);
     
-    // Prüfe lokale Abstimmung (LocalStorage) & Datenbank
+    // Prüfe lokale Abstimmung (LocalStorage) & Datenbank nur für eingeloggte Nutzer
     let localVoteIndex = null;
-    if (localVotes[p.id] !== undefined) {
-      localVoteIndex = localVotes[p.id];
-    } else if (p.title && localVotes[p.title] !== undefined) {
-      localVoteIndex = localVotes[p.title];
-    } else {
-      const matchKey = Object.keys(localVotes).find(k => k && p.title && (k.toLowerCase().includes(p.title.toLowerCase().substring(0, 25)) || p.title.toLowerCase().includes(k.toLowerCase().substring(0, 25))));
-      if (matchKey !== undefined) localVoteIndex = localVotes[matchKey];
+    if (currentUser) {
+      if (localVotes[p.id] !== undefined) {
+        localVoteIndex = localVotes[p.id];
+      } else if (p.title && localVotes[p.title] !== undefined) {
+        localVoteIndex = localVotes[p.title];
+      } else {
+        const matchKey = Object.keys(localVotes).find(k => k && p.title && (k.toLowerCase().includes(p.title.toLowerCase().substring(0, 25)) || p.title.toLowerCase().includes(k.toLowerCase().substring(0, 25))));
+        if (matchKey !== undefined) localVoteIndex = localVotes[matchKey];
+      }
     }
 
-    const dbUserVote = votes.find(v => (currentUser && v.user_id === currentUser.id) || (v.session_token && v.session_token === guestSession));
-    const effectiveUserVotedIndex = dbUserVote !== undefined ? dbUserVote.option_index : localVoteIndex;
+    const dbUserVote = currentUser ? votes.find(v => v.user_id === currentUser.id) : null;
+    const effectiveUserVotedIndex = dbUserVote ? dbUserVote.option_index : (currentUser ? localVoteIndex : null);
 
     // Falls aus DB eine Stimme vorhanden ist, synchronisiere lokal
-    if (dbUserVote !== undefined && localVoteIndex === null) {
+    if (currentUser && dbUserVote && localVoteIndex === null) {
       saveLocalVote(p.id, dbUserVote.option_index, p.title);
     }
 

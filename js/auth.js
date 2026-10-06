@@ -569,8 +569,8 @@ function createAuthModalDOM(){
       </div>
       <div class="authModalFooter">
         <button class="smallbtn" style="color:#666;font-weight:800;padding:11px 14px" onclick="closeAuthRequiredModal()">Abbrechen</button>
-        <button class="smallbtn" style="border:1px solid #bbb;font-weight:900;padding:11px 16px;border-radius:var(--radius);color:var(--ink)" onclick="closeAuthRequiredModal();Router.navigate('/anmelden')">Anmelden</button>
-        <button class="publish" style="margin-top:0;padding:11px 20px" onclick="closeAuthRequiredModal();Router.navigate('/registrieren')">Kostenlos registrieren &rarr;</button>
+        <button class="smallbtn" style="border:1px solid #bbb;font-weight:900;padding:11px 16px;border-radius:var(--radius);color:var(--ink)" onclick="closeAuthRequiredModal(); if(window.Router && window.Router.navigate) window.Router.navigate('/anmelden'); else window.location.href='/anmelden';">Anmelden</button>
+        <button class="publish" style="margin-top:0;padding:11px 20px" onclick="closeAuthRequiredModal(); if(window.Router && window.Router.navigate) window.Router.navigate('/registrieren'); else window.location.href='/registrieren';">Kostenlos registrieren &rarr;</button>
       </div>
     </div>
   `;
