@@ -1,7 +1,7 @@
 // DISKUTIER.CH — ZENTRALES GA4 & ANALYTICS FRAMEWORK
 // Vollständige Google Analytics 4 Implementierung mit Consent Mode v2, SPA Funnel & Event-Tracking
 
-const GA_MEASUREMENT_ID = window.GA_MEASUREMENT_ID || "G-XXXXXXXXXX";
+const GA_MEASUREMENT_ID = window.GA_MEASUREMENT_ID || "G-N5YKTEDFZE";
 
 const GA = {
   measurementId: GA_MEASUREMENT_ID,
