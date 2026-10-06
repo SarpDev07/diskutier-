@@ -9,28 +9,72 @@
   <meta name="description" content="Die unabhängige Schweizer Meinungs- und Abstimmungs-Community. Diskutiere täglich über Politik, Alltag, Finanzen, Wohnen und Beziehungen in der Schweiz.">
   <link rel="canonical" href="https://diskutier.ch/">
   
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph / Facebook & Discover -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://diskutier.ch/">
   <meta property="og:title" content="diskutier.ch — Die Schweiz stimmt ab">
   <meta property="og:description" content="Täglich neue Schweizer Abstimmungen und Foren-Diskussionen. Stimme anonym ab und sieh die Ergebnisse in Echtzeit.">
   <meta property="og:site_name" content="diskutier.ch">
   <meta property="og:locale" content="de_CH">
-
-  <meta property="og:image" content="https://diskutier.ch/favicon.png">
+  <meta property="og:image" content="https://diskutier.ch/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/png">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://diskutier.ch/">
   <meta name="twitter:title" content="diskutier.ch — Die Schweiz stimmt ab">
   <meta name="twitter:description" content="Täglich neue Schweizer Abstimmungen und Foren-Diskussionen.">
-  <meta name="twitter:image" content="https://diskutier.ch/favicon.png">
+  <meta name="twitter:image" content="https://diskutier.ch/og-image.png">
 
-  <!-- Favicons & Icons -->
+  <!-- Favicons & App Icons (Google Search & Safari Optimiert) -->
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#e02020">
+
+  <!-- Schema.org Structured Data für Google Search Snippets & Logo -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://diskutier.ch/#organization",
+        "name": "diskutier.ch",
+        "url": "https://diskutier.ch/",
+        "logo": {
+          "@type": "ImageObject",
+          "@id": "https://diskutier.ch/#logo",
+          "url": "https://diskutier.ch/logo.png",
+          "contentUrl": "https://diskutier.ch/logo.png",
+          "caption": "diskutier.ch Logo",
+          "width": 512,
+          "height": 512
+        },
+        "image": "https://diskutier.ch/logo.png"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://diskutier.ch/#website",
+        "url": "https://diskutier.ch/",
+        "name": "diskutier.ch",
+        "alternateName": ["Diskutier Schweiz", "diskutier"],
+        "description": "Die unabhängige Schweizer Meinungs- und Abstimmungs-Community",
+        "publisher": {
+          "@id": "https://diskutier.ch/#organization"
+        },
+        "inLanguage": "de-CH"
+      }
+    ]
+  }
+  </script>
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/style.css?v=15">

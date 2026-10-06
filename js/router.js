@@ -58,14 +58,13 @@ function updateMetaTags({ title, description, canonicalUrl, ogType = "website", 
   setMetaTag("og:type", ogType, "property");
   setMetaTag("og:site_name", SITE_NAME, "property");
   setMetaTag("og:locale", "de_CH", "property");
-  if (ogImage) {
-    setMetaTag("og:image", ogImage, "property");
-  }
+  setMetaTag("og:image", ogImage || `${SITE_URL}/og-image.png`, "property");
 
   // Twitter Card
   setMetaTag("twitter:card", "summary_large_image");
   setMetaTag("twitter:title", fullTitle);
   setMetaTag("twitter:description", fullDesc);
+  setMetaTag("twitter:image", ogImage || `${SITE_URL}/og-image.png`);
 
   // GA4 SPA Page View Dispatcher
   if (window.GA && typeof window.GA.trackPageView === "function") {
