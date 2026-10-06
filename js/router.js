@@ -66,6 +66,11 @@ function updateMetaTags({ title, description, canonicalUrl, ogType = "website", 
   setMetaTag("twitter:card", "summary_large_image");
   setMetaTag("twitter:title", fullTitle);
   setMetaTag("twitter:description", fullDesc);
+
+  // GA4 SPA Page View Dispatcher
+  if (window.GA && typeof window.GA.trackPageView === "function") {
+    window.GA.trackPageView(window.location.pathname, fullTitle, window.location.href, document.referrer);
+  }
 }
 
 function setMetaTag(name, content, attr = "name") {
@@ -275,6 +280,9 @@ const Router = {
     // 11. Registrieren: /registrieren oder /register
     if (path === "/registrieren" || path === "/register") {
       showPageElement("register");
+      if (window.GA && typeof window.GA.trackSignUpStart === "function") {
+        window.GA.trackSignUpStart({ sourcePage: document.referrer || "/" });
+      }
       updateMetaTags({
         title: "Registrieren",
         description: "Werde Teil der Schweizer Diskussions-Community auf diskutier.ch.",

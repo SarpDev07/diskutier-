@@ -118,6 +118,16 @@ async function submitCreate(){
       saveMyPostId(data[0].id);
     }
     clearCreateDraft();
+
+    // GA4 Key Event: post_created
+    if(window.GA && typeof window.GA.trackPostCreated === 'function'){
+      window.GA.trackPostCreated({
+        postId: data && data[0] ? data[0].id : '',
+        category: category,
+        loggedIn: true
+      });
+    }
+
     showToast("Beitrag erfolgreich veröffentlicht!");
     document.getElementById("createTitle").value = "";
     document.getElementById("createBody").value = "";
@@ -144,6 +154,15 @@ async function submitCreate(){
       return;
     }
     clearCreateDraft();
+
+    // GA4 Event: poll_created
+    if(window.GA && typeof window.GA.trackEvent === 'function'){
+      window.GA.trackEvent("poll_created", {
+        category: category,
+        logged_in: true
+      });
+    }
+
     showToast("Abstimmung erfolgreich veröffentlicht!");
     document.getElementById("createTitle").value = "";
     document.getElementById("createBody").value = "";
@@ -161,12 +180,22 @@ window.restoreCreateDraft = restoreCreateDraft;
 window.clearCreateDraft = clearCreateDraft;
 
 // SUCHE
+let searchDebounceTimer = null;
 function doSearch(){
   const s = sanitizeText(document.getElementById("searchInput").value, 100).toLowerCase();
   if(!s){
     document.getElementById("searchResults").innerHTML = "";
     return;
   }
+
+  // GA4 Search Tracking (Debounced 700ms, PII-bereinigt)
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    if(s && s.length >= 2 && window.GA && typeof window.GA.trackSearch === 'function'){
+      window.GA.trackSearch({ searchTerm: s });
+    }
+  }, 700);
+
   const pollMatches = currentPolls.filter(q => (q.title && q.title.toLowerCase().includes(s)) || (q.category && q.category.toLowerCase().includes(s)));
   const postMatches = currentPosts.filter(p => (p.title && p.title.toLowerCase().includes(s)) || (p.cat && p.cat.toLowerCase().includes(s)));
 
@@ -282,6 +311,19 @@ function scrollFeed(){
 function shareCurrent(){
   const url = window.location.href;
   const title = document.title;
+  const isNative = !!navigator.share;
+  const activeType = window.currentPoll ? "poll" : (window.currentPost ? "post" : "page");
+  const activeId = window.currentPoll?.id || window.currentPost?.id || window.location.pathname;
+
+  // GA4 Share Tracking
+  if(window.GA && typeof window.GA.trackShare === 'function'){
+    window.GA.trackShare({
+      contentType: activeType,
+      contentId: activeId,
+      method: isNative ? "native_share" : "clipboard_copy"
+    });
+  }
+
   if(navigator.share){
     navigator.share({ title: title, url: url }).catch(()=>{});
   } else {

@@ -346,6 +346,15 @@ async function openPost(postId, updateUrl = true){
     }
   }
 
+  if (window.GA && typeof window.GA.trackPostView === 'function') {
+    window.GA.trackPostView({
+      postId: currentPost.id,
+      postSlug: slugify(currentPost.title),
+      category: currentPost.cat,
+      authorType: currentPost.user_id ? "registered" : "community"
+    });
+  }
+
   await loadForumComments(currentPost.id);
   showPageElement("postdetail");
 }
@@ -525,6 +534,14 @@ async function addForumComment(){
   document.getElementById("postCommentCount").textContent = currentPost.comments;
   showToast("Antwort erfolgreich veröffentlicht!");
 
+  if (window.GA && typeof window.GA.trackCommentCreated === 'function') {
+    window.GA.trackCommentCreated({
+      contentType: "post",
+      contentId: currentPost.id,
+      loggedIn: !!currentUser
+    });
+  }
+
   if (typeof createNotification === 'function') {
     const authorName = (currentProfile && currentProfile.username) ? currentProfile.username : 'Ein Nutzer';
     const authorCanton = (currentProfile && currentProfile.canton) ? currentProfile.canton : 'CH';
@@ -552,6 +569,21 @@ async function voteComment(commentId, diff, el){
     return;
   }
   if(!checkRateLimit(`vote_comment_${commentId}`, 2000)) return;
+
+  if (window.GA && typeof window.GA.trackUpvote === 'function') {
+    if (diff > 0) {
+      window.GA.trackUpvote({
+        contentType: "comment",
+        contentId: commentId,
+        loggedIn: !!currentUser
+      });
+    } else {
+      window.GA.trackUpvoteRemoved({
+        contentType: "comment",
+        contentId: commentId
+      });
+    }
+  }
 
   if(diff > 0 && db.rpc){
     await db.rpc('increment_upvote', { comment_id: commentId });

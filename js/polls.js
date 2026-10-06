@@ -263,10 +263,18 @@ async function loadPolls(){
 
 // NÄCHSTE FRAGE DIREKT AUF DER FLÄCHE WECHSELN
 function nextFeaturedPoll(){
+  const fromPoll = currentPolls[activeFeaturedIndex];
   if(activeFeaturedIndex < currentPolls.length - 1){
     activeFeaturedIndex++;
   } else {
     activeFeaturedIndex = currentPolls.length; // Abschluss-Karte anzeigen
+  }
+  const toPoll = currentPolls[activeFeaturedIndex];
+  if(window.GA && typeof window.GA.trackNextQuestionClick === 'function'){
+    window.GA.trackNextQuestionClick({
+      fromPollId: fromPoll ? fromPoll.id : '',
+      toPollId: toPoll ? toPoll.id : ''
+    });
   }
   renderPollsUI();
 }
@@ -320,6 +328,14 @@ function renderPollsUI(){
   const isVoted = featured.userVotedIndex !== null;
   const isLast = activeFeaturedIndex >= currentPolls.length - 1;
   const nextLabel = isLast ? "Abschliessen" : "Nächste Frage";
+
+  if(window.GA && typeof window.GA.trackPollView === 'function'){
+    window.GA.trackPollView({
+      pollId: featured.id,
+      pollSlug: slugify(featured.title),
+      category: featured.category
+    });
+  }
 
   featContainer.innerHTML = `
     <div class="meta">
@@ -624,6 +640,23 @@ async function finalizeVote(pollId, optionIndex, isFeatured){
     trackEvent('poll_vote', { poll_id: poll.id, option: optionIndex, title: poll.title });
   }
 
+  // GA4 Conversion Event: vote & result_view
+  if(window.GA && typeof window.GA.trackVote === 'function'){
+    window.GA.trackVote({
+      pollId: poll.id,
+      pollSlug: slugify(poll.title),
+      pollTitle: poll.title,
+      category: poll.category,
+      voteOption: poll.options[optionIndex] || '',
+      sourcePage: window.location.pathname,
+      loggedIn: !!currentUser
+    });
+    window.GA.trackResultView({
+      pollId: poll.id,
+      pollSlug: slugify(poll.title)
+    });
+  }
+
   showToast("Stimme erfolgreich gezählt!");
 
   if(isFeatured){
@@ -667,6 +700,14 @@ async function openPollDetail(pollId, updateUrl = true){
   document.getElementById("detailTime").textContent = currentPoll.time;
   document.getElementById("detailTitle").textContent = currentPoll.title;
   document.getElementById("detailDesc").textContent = currentPoll.description || "Stimme ab und diskutiere mit der Community über diese Frage.";
+
+  if(window.GA && typeof window.GA.trackPollView === 'function'){
+    window.GA.trackPollView({
+      pollId: currentPoll.id,
+      pollSlug: slugify(currentPoll.title),
+      category: currentPoll.category
+    });
+  }
 
   const votesContainer = document.getElementById("detailVotes");
   const resultsContainer = document.getElementById("detailResults");
@@ -782,6 +823,14 @@ async function addPollComment(){
   await db.from("comments").insert([payload]);
   textarea.value = "";
   showToast("Kommentar veröffentlicht!");
+
+  if (window.GA && typeof window.GA.trackCommentCreated === 'function') {
+    window.GA.trackCommentCreated({
+      contentType: "poll",
+      contentId: currentPoll.id,
+      loggedIn: !!currentUser
+    });
+  }
 
   if (typeof createNotification === 'function') {
     const authorName = (typeof currentProfile !== 'undefined' && currentProfile && currentProfile.username) ? currentProfile.username : 'Ein Nutzer';

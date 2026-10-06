@@ -149,6 +149,11 @@ async function handleLogin(){
     updateNavAuth();
     showToast("Willkommen zurück, " + (currentProfile?.username || ""));
     
+    // GA4 Login Event (keine PII)
+    if(window.GA && typeof window.GA.trackLogin === 'function'){
+      window.GA.trackLogin({ method: 'email' });
+    }
+
     const redirectPath = sessionStorage.getItem("diskutier_auth_redirect");
     if(redirectPath){
       sessionStorage.removeItem("diskutier_auth_redirect");
@@ -216,6 +221,11 @@ async function handleRegister(){
     updateNavAuth();
     showToast("Konto erfolgreich erstellt! Du bist jetzt eingeloggt.");
     
+    // GA4 Key Event: sign_up (keine PII)
+    if(window.GA && typeof window.GA.trackSignUp === 'function'){
+      window.GA.trackSignUp({ method: 'email', sourcePage: sessionStorage.getItem("diskutier_auth_redirect") || '/' });
+    }
+
     const redirectPath = sessionStorage.getItem("diskutier_auth_redirect");
     if(redirectPath){
       sessionStorage.removeItem("diskutier_auth_redirect");

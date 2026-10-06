@@ -33,9 +33,13 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=13">
+  <link rel="stylesheet" href="css/style.css?v=14">
 
   <!-- Externe SDKs & Analytics -->
+  <script>
+    // Google Analytics 4 Measurement ID
+    window.GA_MEASUREMENT_ID = "G-XXXXXXXXXX";
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3662739009730293" crossorigin="anonymous"></script>
   
@@ -674,15 +678,15 @@
 </nav>
 
 <!-- Modulare Anwendungs-Skripte -->
-<script src="js/supabase-config.js?v=13"></script>
-<script src="js/router.js?v=13"></script>
-<script src="js/report.js?v=13"></script>
-<script src="js/analytics.js?v=13"></script>
-<script src="js/notifications.js?v=13"></script>
-<script src="js/auth.js?v=13"></script>
-<script src="js/polls.js?v=13"></script>
-<script src="js/forum.js?v=13"></script>
-<script src="js/app.js?v=13"></script>
+<script src="js/supabase-config.js?v=14"></script>
+<script src="js/router.js?v=14"></script>
+<script src="js/report.js?v=14"></script>
+<script src="js/analytics.js?v=14"></script>
+<script src="js/notifications.js?v=14"></script>
+<script src="js/auth.js?v=14"></script>
+<script src="js/polls.js?v=14"></script>
+<script src="js/forum.js?v=14"></script>
+<script src="js/app.js?v=14"></script>
 <script>
 // Cookie Consent Management
 function checkCookiesConsent(){
@@ -693,6 +697,9 @@ function checkCookiesConsent(){
 }
 function acceptCookies(){
   localStorage.setItem("diskutier_cookies_accepted", "true");
+  if (window.GA && typeof window.GA.updateConsent === "function") {
+    window.GA.updateConsent(true);
+  }
   const banner = document.getElementById("cookieBanner");
   if(banner) banner.style.display = "none";
 }
