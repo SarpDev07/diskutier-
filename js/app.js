@@ -263,7 +263,7 @@ function filterByCat(catName, updateUrl = true){
   if(filtered.length > 0){
     forumListEl.innerHTML = filtered.map(p => `
       <article class="postRow">
-        <div class="replyCount"><b>${p.comments}</b>Antworten</div>
+        <div class="replyCount"><b>${p.comments}</b><span>${p.comments === 1 ? 'Antwort' : 'Antworten'}</span></div>
         <div>
           <div class="postTitle"><a href="/beitrag/${slugify(p.title)}" style="color:inherit;text-decoration:none">${escapeHTML(p.title)}</a></div>
           <div class="postExcerpt">${escapeHTML(p.excerpt)}</div>

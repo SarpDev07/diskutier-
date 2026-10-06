@@ -230,7 +230,7 @@ function renderForum(){
     const catSlug = getCategorySlug(p.cat);
     return `
       <article class="postRow">
-        <div class="replyCount"><b>${p.comments}</b>Antworten</div>
+        <div class="replyCount"><b>${p.comments}</b><span>${p.comments === 1 ? 'Antwort' : 'Antworten'}</span></div>
         <div>
           <div class="postTitle"><a href="/beitrag/${postSlug}" style="color:inherit;text-decoration:none">${escapeHTML(p.title)}</a></div>
           <div class="postExcerpt">${escapeHTML(p.excerpt)}</div>
