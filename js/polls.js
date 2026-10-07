@@ -484,29 +484,24 @@ function renderResultsHTML(container, poll){
 const pendingVotes = {}; // pollId -> { timeoutId, intervalId, optionIndex, isFeatured }
 
 function submitPollVote(pollId, optionIndex, isFeatured){
-  const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
+  const poll = currentPolls.find(p => String(p.id) === String(pollId)) || (currentPoll && String(currentPoll.id) === String(pollId) ? currentPoll : null) || currentPolls[activeFeaturedIndex] || currentPoll || { id: pollId, title: "Abstimmung", category: "Allgemein" };
 
   if(!currentUser){
     // 1. GA4 vote_attempt Event (Nicht eingeloggter Nutzer versucht abzustimmen)
-    if(window.GA && typeof window.GA.trackVoteAttempt === 'function' && poll){
+    if(window.GA && typeof window.GA.trackVoteAttempt === 'function'){
       window.GA.trackVoteAttempt({
-        pollId: poll.id,
-        pollTitle: poll.title,
-        category: poll.category,
-        pagePath: window.location.pathname
-      });
-    }
-
-    // 2. GA4 login_prompt_view Event (Login-Prompt wird für Abstimmung geöffnet)
-    if(window.GA && typeof window.GA.trackLoginPromptView === 'function'){
-      window.GA.trackLoginPromptView({
-        trigger: "poll_vote",
         pollId: poll ? poll.id : pollId,
+        pollTitle: poll ? poll.title : '',
+        category: poll ? poll.category : 'Allgemein',
         pagePath: window.location.pathname
       });
     }
 
-    openAuthRequiredModal("Um bei Schweizer Abstimmungen abzustimmen und das Live-Ergebnis zu sehen, erstelle kurz ein kostenloses Konto oder melde dich an.");
+    // 2. Auth Modal öffnen (löst automatisch login_prompt_view aus)
+    openAuthRequiredModal("Um bei Schweizer Abstimmungen abzustimmen und das Live-Ergebnis zu sehen, erstelle kurz ein kostenloses Konto oder melde dich an.", {
+      trigger: "poll_vote",
+      pollId: poll ? poll.id : pollId
+    });
     return;
   }
 

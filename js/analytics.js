@@ -281,9 +281,9 @@ const GA = {
   },
 
   // vote_attempt: wenn ein nicht eingeloggter Nutzer versucht abzustimmen
-  trackVoteAttempt({ pollId, pollTitle, category, pagePath }) {
+  trackVoteAttempt({ pollId, pollTitle, category, pagePath } = {}) {
     this.trackEvent("vote_attempt", {
-      poll_id: pollId || "",
+      poll_id: pollId ? String(pollId) : "",
       poll_title: pollTitle || "",
       category: category || "Allgemein",
       page_path: pagePath || window.location.pathname
@@ -291,10 +291,10 @@ const GA = {
   },
 
   // login_prompt_view: wenn das Login-/Registrierungsfenster geöffnet wird
-  trackLoginPromptView({ trigger = "poll_vote", pollId, pagePath }) {
+  trackLoginPromptView({ trigger = "poll_vote", pollId, pagePath } = {}) {
     this.trackEvent("login_prompt_view", {
       trigger: trigger || "poll_vote",
-      poll_id: pollId || "",
+      poll_id: pollId ? String(pollId) : "",
       page_path: pagePath || window.location.pathname
     });
   },

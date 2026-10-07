@@ -551,7 +551,7 @@ async function renderPublicProfile(username){
 }
 
 // MODAL FÜR KONTO-PFLICHT (ABSTIMMEN, POSTEN & KOMMENTIEREN)
-function openAuthRequiredModal(customMessage){
+function openAuthRequiredModal(customMessage, options = {}){
   let modal = document.getElementById("authRequiredModal");
   if(!modal){
     createAuthModalDOM();
@@ -565,6 +565,17 @@ function openAuthRequiredModal(customMessage){
 
   modal.classList.add("open");
   document.body.style.overflow = "hidden";
+
+  // GA4 login_prompt_view Tracking
+  if(window.GA && typeof window.GA.trackLoginPromptView === 'function'){
+    const trigger = (options && options.trigger) ? options.trigger : "poll_vote";
+    const pollId = (options && options.pollId) ? options.pollId : (window.currentPoll ? window.currentPoll.id : "");
+    window.GA.trackLoginPromptView({
+      trigger: trigger,
+      pollId: pollId,
+      pagePath: window.location.pathname
+    });
+  }
 }
 
 function closeAuthRequiredModal(){
