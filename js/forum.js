@@ -534,11 +534,12 @@ async function addForumComment(){
   document.getElementById("postCommentCount").textContent = currentPost.comments;
   showToast("Antwort erfolgreich veröffentlicht!");
 
-  if (window.GA && typeof window.GA.trackCommentCreated === 'function') {
-    window.GA.trackCommentCreated({
-      contentType: "post",
+  if (window.GA && typeof window.GA.trackCommentSubmit === 'function') {
+    window.GA.trackCommentSubmit({
+      contentType: "discussion",
       contentId: currentPost.id,
-      loggedIn: !!currentUser
+      category: currentPost.cat || "Alltag",
+      pagePath: window.location.pathname
     });
   }
 

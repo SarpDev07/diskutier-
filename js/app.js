@@ -119,12 +119,11 @@ async function submitCreate(){
     }
     clearCreateDraft();
 
-    // GA4 Key Event: post_created
-    if(window.GA && typeof window.GA.trackPostCreated === 'function'){
-      window.GA.trackPostCreated({
-        postId: data && data[0] ? data[0].id : '',
+    // GA4 Key Event: discussion_create
+    if(window.GA && typeof window.GA.trackDiscussionCreate === 'function'){
+      window.GA.trackDiscussionCreate({
         category: category,
-        loggedIn: true
+        pagePath: window.location.pathname
       });
     }
 
@@ -319,8 +318,8 @@ function shareCurrent(){
   if(window.GA && typeof window.GA.trackShare === 'function'){
     window.GA.trackShare({
       contentType: activeType,
-      contentId: activeId,
-      method: isNative ? "native_share" : "clipboard_copy"
+      itemId: activeId,
+      method: isNative ? "native_share" : "copy_link"
     });
   }
 

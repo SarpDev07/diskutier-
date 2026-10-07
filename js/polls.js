@@ -269,11 +269,12 @@ function nextFeaturedPoll(){
   } else {
     activeFeaturedIndex = currentPolls.length; // Abschluss-Karte anzeigen
   }
-  const toPoll = currentPolls[activeFeaturedIndex];
-  if(window.GA && typeof window.GA.trackNextQuestionClick === 'function'){
-    window.GA.trackNextQuestionClick({
-      fromPollId: fromPoll ? fromPoll.id : '',
-      toPollId: toPoll ? toPoll.id : ''
+  
+  if(fromPoll && window.GA && typeof window.GA.trackNextPollClick === 'function'){
+    window.GA.trackNextPollClick({
+      currentPollId: fromPoll.id,
+      currentPollTitle: fromPoll.title,
+      pagePath: window.location.pathname
     });
   }
   renderPollsUI();
@@ -329,11 +330,12 @@ function renderPollsUI(){
   const isLast = activeFeaturedIndex >= currentPolls.length - 1;
   const nextLabel = isLast ? "Abschliessen" : "Nächste Frage";
 
-  if(window.GA && typeof window.GA.trackPollView === 'function'){
+  if(window.GA && typeof window.GA.trackPollView === 'function' && featured){
     window.GA.trackPollView({
       pollId: featured.id,
-      pollSlug: slugify(featured.title),
-      category: featured.category
+      pollTitle: featured.title,
+      category: featured.category,
+      pagePath: window.location.pathname
     });
   }
 
@@ -640,17 +642,37 @@ async function finalizeVote(pollId, optionIndex, isFeatured){
     trackEvent('poll_vote', { poll_id: poll.id, option: optionIndex, title: poll.title });
   }
 
-  // GA4 Conversion Event: vote & result_view
-  if(window.GA && typeof window.GA.trackVote === 'function'){
-    window.GA.trackVote({
-      pollId: poll.id,
-      pollSlug: slugify(poll.title),
-      pollTitle: poll.title,
-      category: poll.category,
-      voteOption: poll.options[optionIndex] || '',
-      sourcePage: window.location.pathname,
-      loggedIn: !!currentUser
-    });
+  // GA4 Conversion Events: poll_vote vs poll_vote_change
+  const hasVotedHistoryKey = `diskutier_has_voted_${poll.id}`;
+  const hadVotedBefore = (previousVotedIndex !== null && previousVotedIndex !== undefined && previousVotedIndex !== optionIndex);
+  const isVoteChange = hadVotedBefore || (localStorage.getItem(hasVotedHistoryKey) === "true" && poll.userVotedIndex === null);
+
+  try {
+    localStorage.setItem(hasVotedHistoryKey, "true");
+  } catch(e){}
+
+  if(isVoteChange){
+    if(window.GA && typeof window.GA.trackPollVoteChange === 'function'){
+      window.GA.trackPollVoteChange({
+        pollId: poll.id,
+        pollTitle: poll.title,
+        category: poll.category,
+        pagePath: window.location.pathname
+      });
+    }
+  } else {
+    if(window.GA && typeof window.GA.trackPollVote === 'function'){
+      window.GA.trackPollVote({
+        pollId: poll.id,
+        pollTitle: poll.title,
+        voteOption: poll.options[optionIndex] || '',
+        category: poll.category,
+        pagePath: window.location.pathname
+      });
+    }
+  }
+
+  if(window.GA && typeof window.GA.trackResultView === 'function'){
     window.GA.trackResultView({
       pollId: poll.id,
       pollSlug: slugify(poll.title)
@@ -704,8 +726,17 @@ async function openPollDetail(pollId, updateUrl = true){
   if(window.GA && typeof window.GA.trackPollView === 'function'){
     window.GA.trackPollView({
       pollId: currentPoll.id,
-      pollSlug: slugify(currentPoll.title),
-      category: currentPoll.category
+      pollTitle: currentPoll.title,
+      category: currentPoll.category,
+      pagePath: window.location.pathname
+    });
+  }
+
+  if(window.GA && typeof window.GA.trackDiscussionView === 'function'){
+    window.GA.trackDiscussionView({
+      pollId: currentPoll.id,
+      pollTitle: currentPoll.title,
+      pagePath: window.location.pathname
     });
   }
 
@@ -742,6 +773,13 @@ async function openPollDetail(pollId, updateUrl = true){
     const nextBtn = nextContainer.querySelector("button");
     if(nextBtn){
       nextBtn.onclick = () => {
+        if(window.GA && typeof window.GA.trackNextPollClick === 'function'){
+          window.GA.trackNextPollClick({
+            currentPollId: currentPoll.id,
+            currentPollTitle: currentPoll.title,
+            pagePath: window.location.pathname
+          });
+        }
         if(window.Router && typeof window.Router.navigate === "function"){
           window.Router.navigate(`/frage/${slugify(otherPoll.title)}`);
         }
@@ -824,11 +862,12 @@ async function addPollComment(){
   textarea.value = "";
   showToast("Kommentar veröffentlicht!");
 
-  if (window.GA && typeof window.GA.trackCommentCreated === 'function') {
-    window.GA.trackCommentCreated({
+  if (window.GA && typeof window.GA.trackCommentSubmit === 'function') {
+    window.GA.trackCommentSubmit({
       contentType: "poll",
       contentId: currentPoll.id,
-      loggedIn: !!currentUser
+      category: currentPoll.category || "Allgemein",
+      pagePath: window.location.pathname
     });
   }
 
