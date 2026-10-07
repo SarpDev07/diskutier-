@@ -487,14 +487,23 @@ async function loadForumComments(postId){
       upvotes: r.upvotes,
       id: r.id
     })),
-    ...dbReplies.map(r => ({
-      username: r.profiles?.username || 'Anonym',
-      canton: r.profiles?.canton || 'CH',
-      time: formatTimeAgo(r.created_at),
-      content: r.content,
-      upvotes: r.upvotes || 0,
-      id: r.id
-    }))
+    ...dbReplies.map(r => {
+      let uName = r.profiles?.username;
+      let uCanton = r.profiles?.canton;
+      if (!uName || uName === 'Anonym') {
+        const gen = typeof getSwissCommunityAuthor === 'function' ? getSwissCommunityAuthor(r.id || r.content) : { username: 'Lukas_SG', canton: 'SG' };
+        uName = uName || gen.username;
+        uCanton = uCanton || gen.canton;
+      }
+      return {
+        username: uName || 'Community_CH',
+        canton: uCanton || 'CH',
+        time: formatTimeAgo(r.created_at),
+        content: r.content,
+        upvotes: r.upvotes || 0,
+        id: r.id
+      };
+    })
   ];
 
   container.innerHTML = allReplies.map(r => `

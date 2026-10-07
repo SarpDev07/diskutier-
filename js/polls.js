@@ -47,12 +47,92 @@ const POLL_BASELINES = {
   "Würdest du für die Liebe in einen anderen Kanton ziehen?": { baseVotes: 180, optionCounts: [120, 25, 35] }
 };
 
-// INITIALE SCHWEIZER COMMUNITY-KOMMENTARE FÜR BESTEHENDE FRAGEN
-const SEED_COMMENTS = [
-  { username: "AlpenFuchs", canton: "BE", created_at: "2026-10-03T11:20:00.000Z", content: "Mit den heutigen Mieten sind 6'000 Franken definitiv nicht mehr dasselbe wie vor zehn Jahren. Allein die Krankenkasse frisst schon einen riesigen Teil.", upvotes: 24, downvotes: 3 },
-  { username: "NinaZH", canton: "ZH", created_at: "2026-10-03T15:45:00.000Z", content: "Kommt extrem darauf an, ob man allein wohnt, Kinder hat und wo in der Schweiz man lebt. In Zürich Stadt ist es knapp, auf dem Land völlig okay.", upvotes: 18, downvotes: 2 },
-  { username: "romand92", canton: "VD", created_at: "2026-10-02T09:10:00.000Z", content: "Ausserhalb der grossen Städte kann man damit meiner Meinung nach immer noch gut leben, wenn man etwas aufs Budget achtet.", upvotes: 11, downvotes: 4 }
+// AUTHENTISCHE SCHWEIZER COMMUNITY-AUTOREN
+const SWISS_AUTHORS = [
+  { username: "Sandro_ZH", canton: "ZH" },
+  { username: "AlpenBueb", canton: "BE" },
+  { username: "Elena_BS", canton: "BS" },
+  { username: "Marco_LU", canton: "LU" },
+  { username: "Sina_AG", canton: "AG" },
+  { username: "Pascal_SG", canton: "SG" },
+  { username: "Nico_SO", canton: "SO" },
+  { username: "Tessin_Fan", canton: "TI" },
+  { username: "Walliser_94", canton: "VS" },
+  { username: "Thurgauer_90", canton: "TG" },
+  { username: "Schwyzer_Bueb", canton: "SZ" },
+  { username: "Graubünden_Pur", canton: "GR" }
 ];
+
+function getSwissCommunityAuthor(idOrContent) {
+  let hash = 0;
+  const str = String(idOrContent || "swiss");
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const idx = Math.abs(hash) % SWISS_AUTHORS.length;
+  return SWISS_AUTHORS[idx];
+}
+
+// INITIALE SCHWEIZER COMMUNITY-KOMMENTARE FÜR ALLE FRAGEN
+const SEED_POLL_COMMENTS = {
+  "6000": [
+    { username: "AlpenFuchs", canton: "BE", created_at: new Date(Date.now() - 1000 * 60 * 50).toISOString(), content: "Als Single reicht es zum Leben, aber wenn du in Zürich oder Zug eine Wohnung suchst und noch Steuern und Krankenkasse zahlst bleibt Ende Monat fast nichts mehr übrig.", upvotes: 24, downvotes: 3 },
+    { username: "NinaZH", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(), content: "Kommt extrem auf den Wohnort an. Auf dem Land im Thurgau lebst du mit 6000 wie ein König, in der Stadt Zürich bist du damit unterer Durchschnitt.", upvotes: 18, downvotes: 2 }
+  ],
+  "eltern": [
+    { username: "ZüriSpargel", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 40).toISOString(), content: "Bei den aktuellen Mietpreisen ist das die schlauste Entscheidung überhaupt. Lieber 2 Jahre richtig Geld sparen statt einem Vermieter 2000 Stutz im Monat in den Rachen zu werfen.", upvotes: 28, downvotes: 1 },
+    { username: "Lukas_SG", canton: "SG", created_at: new Date(Date.now() - 1000 * 60 * 95).toISOString(), content: "Kommt drauf an ob man sich daheim beteiligt. Wenn Mama mit 25 noch deine Wäsche macht ist es peinlich, wenn man Miete zahlt und hilft völlig in Ordnung.", upvotes: 21, downvotes: 2 }
+  ],
+  "pendeln": [
+    { username: "Beni_AG", canton: "AG", created_at: new Date(Date.now() - 1000 * 60 * 35).toISOString(), content: "Habe das 2 Jahre lang gemacht und war am Abend nur noch kaputt. Die 1000 Franken mehr sind die verlorene Lebenszeit einfach nicht wert.", upvotes: 32, downvotes: 3 },
+    { username: "Pendler_BE", canton: "BE", created_at: new Date(Date.now() - 1000 * 60 * 80).toISOString(), content: "Wenn man im Zug mit dem GA gemütlich sitzen und arbeiten oder Podcasts hören kann geht es eigentlich voll klar.", upvotes: 11, downvotes: 4 }
+  ],
+  "migros": [
+    { username: "MigrosKind", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 20).toISOString(), content: "Ganz klar Migros wegen dem Kultstatus vom Ice Tea Zitrone. Da kommt Coop einfach nicht ran.", upvotes: 45, downvotes: 5 },
+    { username: "CoopFan_BS", canton: "BS", created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(), content: "Für Früchte und Gemüse Migros, aber wenn man am Feierabend noch ein Bier braucht geht man zum Coop.", upvotes: 36, downvotes: 2 }
+  ],
+  "handy": [
+    { username: "Fabian_LU", canton: "LU", created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(), content: "Wer nichts zu verheimlichen hat braucht auch kein Drama daraus zu machen. Aber heimlich rumschnüffeln geht gar nicht.", upvotes: 25, downvotes: 3 },
+    { username: "Sarah_ZH", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 110).toISOString(), content: "Privatsphäre muss auch in einer Beziehung sein. Man liest ja auch nicht die Tagebücher vom Partner.", upvotes: 18, downvotes: 4 }
+  ],
+  "pizza": [
+    { username: "Gino_TI", canton: "TI", created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), content: "Für 30 Franken muss die Pizza aber direkt aus Neapel eingeflogen werden. Mehr als 22 bis 24 Franken für eine normale Margherita ist reine Abzocke.", upvotes: 41, downvotes: 2 },
+    { username: "ZürichGourmet", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 75).toISOString(), content: "In Zürich leider schon fast Standard. Wenn die Qualität stimmt zahle ich es ab und zu, aber oft koche ich lieber daheim.", upvotes: 15, downvotes: 3 }
+  ],
+  "iphone": [
+    { username: "TechNerd_ZH", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(), content: "Einmal im Apple Universum mit MacBook und AirPods drin und man kommt nie wieder weg. Funktioniert einfach jahrelang ohne Probleme.", upvotes: 29, downvotes: 4 },
+    { username: "AndroidUser_SO", canton: "SO", created_at: new Date(Date.now() - 1000 * 60 * 85).toISOString(), content: "Samsung hat die viel besseren Kameras und Akkus. Verstehe den Apple Hype bis heute nicht ganz.", upvotes: 22, downvotes: 6 }
+  ],
+  "homeoffice": [
+    { username: "Pascal_BS", canton: "BS", created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(), content: "Die Mischung machts. 2 Tage Büro für den Austausch mit den Kollegen und 3 Tage Homeoffice wo man in Ruhe arbeiten kann.", upvotes: 37, downvotes: 1 },
+    { username: "RemoteCH", canton: "BE", created_at: new Date(Date.now() - 1000 * 60 * 65).toISOString(), content: "Nie wieder 5 Tage die Woche ins Büro. Die gewonnene Zeit ohne Pendelstress gebe ich nicht mehr her.", upvotes: 26, downvotes: 2 }
+  ],
+  "kanton": [
+    { username: "RomandieLover", canton: "VD", created_at: new Date(Date.now() - 1000 * 60 * 40).toISOString(), content: "Solange ich nicht nach Olten muss sofort. Für die richtige Person zieht man überall hin.", upvotes: 33, downvotes: 2 },
+    { username: "Walliser_94", canton: "VS", created_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(), content: "Vom Wallis nach Zürich wäre schon ein harter Kulturschock, aber wenn es die grosse Liebe ist warum nicht.", upvotes: 17, downvotes: 1 }
+  ],
+  "10m": [
+    { username: "AareFuchs", canton: "BE", created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), content: "Die Züge sind jetzt schon voll und bezahlbare Wohnungen gibt es kaum mehr. Wir müssen beim Wachstum endlich mal eine Pause einlegen.", upvotes: 31, downvotes: 4 },
+    { username: "SpitalArzt_ZH", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 70).toISOString(), content: "Unsere Wirtschaft und die Spitäler brauchen Arbeitskräfte. Ohne Zuwanderung bricht unser Rentensystem komplett zusammen.", upvotes: 24, downvotes: 5 }
+  ],
+  "tempo30": [
+    { username: "VeloFan_BS", canton: "BS", created_at: new Date(Date.now() - 1000 * 60 * 20).toISOString(), content: "In Wohnquartieren super wegen Sicherheit und Lärm. Auf Hauptstrassen wo Busse und Trams fahren macht es nur Stau.", upvotes: 29, downvotes: 3 },
+    { username: "Marco_AG", canton: "AG", created_at: new Date(Date.now() - 1000 * 60 * 55).toISOString(), content: "Fahre jeden Tag mit dem Auto zur Arbeit und seit Tempo 30 steht man nur noch im Stop and Go.", upvotes: 16, downvotes: 2 }
+  ],
+  "srg": [
+    { username: "Bünzli_Prime", canton: "SO", created_at: new Date(Date.now() - 1000 * 60 * 35).toISOString(), content: "330 Franken im Jahr ist zu viel für Leute die nur Netflix und YouTube schauen. 200 Franken wären völlig fair.", upvotes: 35, downvotes: 4 },
+    { username: "Tessin_Fan", canton: "TI", created_at: new Date(Date.now() - 1000 * 60 * 80).toISOString(), content: "Wer soll denn sonst über unsere Politik und Regionen neutral berichten. Private Medien sterben doch jetzt schon aus.", upvotes: 27, downvotes: 3 }
+  ],
+  "wohnung": [
+    { username: "Zügelmeister", canton: "ZH", created_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(), content: "Es wird einfach viel zu langsam gebaut weil jede kleine Einsprache ein Projekt um Jahre blockiert.", upvotes: 38, downvotes: 2 },
+    { username: "Mieterverband_BS", canton: "BS", created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(), content: "Pensionskassen reissen alte günstige Wohnungen ab und bauen Luxuswohnungen für 3500 Franken. Das ist das wahre Problem.", upvotes: 42, downvotes: 3 }
+  ],
+  "wehrpflicht": [
+    { username: "MilizSoldat", canton: "LU", created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(), content: "Entweder Dienstpflicht für alle oder auf eine moderne Profi-Armee umstellen. Das heutige System ist nicht mehr zeitgemäss.", upvotes: 30, downvotes: 4 },
+    { username: "Schwyzer_Bueb", canton: "SZ", created_at: new Date(Date.now() - 1000 * 60 * 100).toISOString(), content: "Das Milizsystem bringt Leute aus allen Schichten und Kantonen zusammen. Das hält die Schweiz zusammen.", upvotes: 23, downvotes: 2 }
+  ]
+};
 
 // ERMITTLUNG DER BASIS-DATEN (MIT ROBUSTEM FUZZY-MATCHING FÜR DATENBANK-FRAGEN)
 function getBaselineForPoll(p){
@@ -816,18 +896,31 @@ async function loadPollComments(pollId){
     if(data) dbComments = data;
   }
   
-  const attachSeed = pollId === "f64a69b1-4fc9-4d99-a812-a7dedfc01407";
+  // Finde passende Seed-Kommentare für die Frage
+  const p = currentPoll || currentPolls.find(x => String(x.id) === String(pollId));
+  const titleLower = p ? (p.title || "").toLowerCase() : "";
+  let seedList = [];
+  for(const [k, list] of Object.entries(SEED_POLL_COMMENTS)){
+    if(titleLower.includes(k)){
+      seedList = list;
+      break;
+    }
+  }
+
   const allComments = [
-    ...dbComments.map(c => ({
-      username: c.profiles?.username || 'Anonym',
-      canton: c.profiles?.canton || 'CH',
-      time: formatTimeAgo(c.created_at),
-      content: c.content,
-      upvotes: c.upvotes || 0,
-      downvotes: c.downvotes || 0,
-      id: c.id
-    })),
-    ...(attachSeed ? SEED_COMMENTS.map(c => ({
+    ...dbComments.map(c => {
+      const fallback = getSwissCommunityAuthor(c.id || c.content);
+      return {
+        username: (c.profiles && c.profiles.username && c.profiles.username !== 'Anonym') ? c.profiles.username : fallback.username,
+        canton: (c.profiles && c.profiles.canton) ? c.profiles.canton : fallback.canton,
+        time: formatTimeAgo(c.created_at),
+        content: c.content,
+        upvotes: c.upvotes || 0,
+        downvotes: c.downvotes || 0,
+        id: c.id
+      };
+    }),
+    ...(dbComments.length === 0 ? seedList.map(c => ({
       username: c.username,
       canton: c.canton,
       time: formatTimeAgo(c.created_at),
