@@ -280,6 +280,25 @@ const GA = {
     });
   },
 
+  // vote_attempt: wenn ein nicht eingeloggter Nutzer versucht abzustimmen
+  trackVoteAttempt({ pollId, pollTitle, category, pagePath }) {
+    this.trackEvent("vote_attempt", {
+      poll_id: pollId || "",
+      poll_title: pollTitle || "",
+      category: category || "Allgemein",
+      page_path: pagePath || window.location.pathname
+    });
+  },
+
+  // login_prompt_view: wenn das Login-/Registrierungsfenster geöffnet wird
+  trackLoginPromptView({ trigger = "poll_vote", pollId, pagePath }) {
+    this.trackEvent("login_prompt_view", {
+      trigger: trigger || "poll_vote",
+      poll_id: pollId || "",
+      page_path: pagePath || window.location.pathname
+    });
+  },
+
   // 2. poll_vote (Key Event)
   trackPollVote({ pollId, pollTitle, voteOption, category, pagePath }) {
     this.trackEvent("poll_vote", {

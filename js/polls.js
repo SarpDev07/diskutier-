@@ -484,12 +484,32 @@ function renderResultsHTML(container, poll){
 const pendingVotes = {}; // pollId -> { timeoutId, intervalId, optionIndex, isFeatured }
 
 function submitPollVote(pollId, optionIndex, isFeatured){
+  const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
+
   if(!currentUser){
+    // 1. GA4 vote_attempt Event (Nicht eingeloggter Nutzer versucht abzustimmen)
+    if(window.GA && typeof window.GA.trackVoteAttempt === 'function' && poll){
+      window.GA.trackVoteAttempt({
+        pollId: poll.id,
+        pollTitle: poll.title,
+        category: poll.category,
+        pagePath: window.location.pathname
+      });
+    }
+
+    // 2. GA4 login_prompt_view Event (Login-Prompt wird für Abstimmung geöffnet)
+    if(window.GA && typeof window.GA.trackLoginPromptView === 'function'){
+      window.GA.trackLoginPromptView({
+        trigger: "poll_vote",
+        pollId: poll ? poll.id : pollId,
+        pagePath: window.location.pathname
+      });
+    }
+
     openAuthRequiredModal("Um bei Schweizer Abstimmungen abzustimmen und das Live-Ergebnis zu sehen, erstelle kurz ein kostenloses Konto oder melde dich an.");
     return;
   }
 
-  const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
   if(!poll) return;
 
   // Bestehenden Timer für dieselbe Frage abbrechen
