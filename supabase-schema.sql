@@ -123,12 +123,69 @@ BEGIN
     RAISE EXCEPTION 'Ungueltige Antwort-Option.';
   END IF;
 
-  v_token_hash := encode(digest(trim(p_session_secret), 'sha256'), 'hex');
+  v_token_hash := encode(digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
 
-  INSERT INTO public.poll_votes (poll_id, session_token, option_index, user_id)
-  VALUES (p_poll_id, v_token_hash, p_option_index, NULL)
-  ON CONFLICT (poll_id, session_token) 
-  DO UPDATE SET option_index = EXCLUDED.option_index, created_at = NOW();
+  SELECT id INTO v_existing_id
+  FROM public.poll_votes
+  WHERE poll_id = p_poll_id AND session_token = v_token_hash
+  FOR UPDATE;
+
+  IF v_existing_id IS NOT NULL THEN
+    UPDATE public.poll_votes
+    SET option_index = p_option_index, created_at = NOW()
+    WHERE id = v_existing_id;
+  ELSE
+    INSERT INTO public.poll_votes (poll_id, session_token, option_index, user_id)
+    VALUES (p_poll_id, v_token_hash, p_option_index, NULL);
+  END IF;
+
+  RETURN jsonb_build_object('success', true, 'poll_id', p_poll_id, 'option_index', p_option_index);
+END;
+$$;
+
+-- Funktion zur sicheren Nutzer-Abstimmung (cast_user_vote)
+CREATE OR REPLACE FUNCTION public.cast_user_vote(
+  p_poll_id UUID,
+  p_option_index INTEGER
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_user_id UUID := auth.uid();
+  v_poll_options JSONB;
+  v_max_option INTEGER;
+  v_existing_id UUID;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Nicht authentifiziert: Bitte einloggen.';
+  END IF;
+
+  SELECT options INTO v_poll_options FROM public.polls WHERE id = p_poll_id;
+  IF v_poll_options IS NULL THEN
+    RAISE EXCEPTION 'Abstimmung existiert nicht.';
+  END IF;
+
+  v_max_option := jsonb_array_length(v_poll_options) - 1;
+  IF p_option_index < 0 OR p_option_index > v_max_option THEN
+    RAISE EXCEPTION 'Ungueltige Antwort-Option.';
+  END IF;
+
+  SELECT id INTO v_existing_id
+  FROM public.poll_votes
+  WHERE poll_id = p_poll_id AND user_id = v_user_id
+  FOR UPDATE;
+
+  IF v_existing_id IS NOT NULL THEN
+    UPDATE public.poll_votes
+    SET option_index = p_option_index, created_at = NOW()
+    WHERE id = v_existing_id;
+  ELSE
+    INSERT INTO public.poll_votes (poll_id, user_id, option_index, session_token)
+    VALUES (p_poll_id, v_user_id, p_option_index, NULL);
+  END IF;
 
   RETURN jsonb_build_object('success', true, 'poll_id', p_poll_id, 'option_index', p_option_index);
 END;
