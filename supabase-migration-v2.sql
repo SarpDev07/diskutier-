@@ -29,21 +29,54 @@ EXCEPTION
     NULL;
 END $$;
 
--- 3. RLS-POLICIES FÜR POLL_VOTES AKTUALISIEREN (SELECT, INSERT, UPDATE, DELETE)
+-- 3. RLS-POLICIES FÜR POLL_VOTES (STRENG GETRENNT: AUTH & ANONYME GÄSTE)
 ALTER TABLE public.poll_votes ENABLE ROW LEVEL SECURITY;
 
+-- 3a. Öffentlich lesbar (für Aggregation und Auswertung)
 DROP POLICY IF EXISTS "Stimmen sind öffentlich lesbar" ON public.poll_votes;
 CREATE POLICY "Stimmen sind öffentlich lesbar"
 ON public.poll_votes FOR SELECT
 TO public, anon, authenticated
 USING (true);
 
+-- 3b. Abstimmen (INSERT): Entweder verifizierter Nutzer oder anonymer Gast mit session_token
+DROP POLICY IF EXISTS "Stimmen können abgegeben werden" ON public.poll_votes;
 DROP POLICY IF EXISTS "Stimmen können abgegeben oder geändert werden" ON public.poll_votes;
-CREATE POLICY "Stimmen können abgegeben oder geändert werden"
-ON public.poll_votes FOR ALL
+CREATE POLICY "Stimmen können abgegeben werden"
+ON public.poll_votes FOR INSERT
 TO public, anon, authenticated
-USING (true)
-WITH CHECK (true);
+WITH CHECK (
+  (auth.uid() IS NOT NULL AND user_id = auth.uid())
+  OR
+  (auth.uid() IS NULL AND user_id IS NULL AND session_token IS NOT NULL)
+);
+
+-- 3c. Ändern der eigenen Stimme (UPDATE)
+DROP POLICY IF EXISTS "Eigene Stimme ändern" ON public.poll_votes;
+CREATE POLICY "Eigene Stimme ändern"
+ON public.poll_votes FOR UPDATE
+TO public, anon, authenticated
+USING (
+  (auth.uid() IS NOT NULL AND user_id = auth.uid())
+  OR
+  (user_id IS NULL AND session_token IS NOT NULL)
+)
+WITH CHECK (
+  (auth.uid() IS NOT NULL AND user_id = auth.uid())
+  OR
+  (user_id IS NULL AND session_token IS NOT NULL)
+);
+
+-- 3d. Löschen der eigenen Stimme (DELETE)
+DROP POLICY IF EXISTS "Eigene Stimme löschen" ON public.poll_votes;
+CREATE POLICY "Eigene Stimme löschen"
+ON public.poll_votes FOR DELETE
+TO public, anon, authenticated
+USING (
+  (auth.uid() IS NOT NULL AND user_id = auth.uid())
+  OR
+  (user_id IS NULL AND session_token IS NOT NULL)
+);
 
 -- 4. SERVER-FUNKTION: ATOMARE ZUSAMMENFÜHRUNG VON GAST-STIMMEN (MERGE ON LOGIN)
 CREATE OR REPLACE FUNCTION public.merge_guest_votes(

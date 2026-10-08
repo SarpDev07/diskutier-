@@ -66,8 +66,34 @@ ALTER TABLE public.poll_votes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Stimmen sind öffentlich lesbar"
 ON public.poll_votes FOR SELECT USING (true);
 
-CREATE POLICY "Stimmen können abgegeben oder geändert werden"
-ON public.poll_votes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Stimmen können abgegeben werden"
+ON public.poll_votes FOR INSERT
+WITH CHECK (
+  (auth.uid() IS NOT NULL AND user_id = auth.uid())
+  OR
+  (auth.uid() IS NULL AND user_id IS NULL AND session_token IS NOT NULL)
+);
+
+CREATE POLICY "Eigene Stimme ändern"
+ON public.poll_votes FOR UPDATE
+USING (
+  (auth.uid() IS NOT NULL AND user_id = auth.uid())
+  OR
+  (user_id IS NULL AND session_token IS NOT NULL)
+)
+WITH CHECK (
+  (auth.uid() IS NOT NULL AND user_id = auth.uid())
+  OR
+  (user_id IS NULL AND session_token IS NOT NULL)
+);
+
+CREATE POLICY "Eigene Stimme löschen"
+ON public.poll_votes FOR DELETE
+USING (
+  (auth.uid() IS NOT NULL AND user_id = auth.uid())
+  OR
+  (user_id IS NULL AND session_token IS NOT NULL)
+);
 
 -- Funktion zur sicheren Zusammenführung von Gaststimmen
 CREATE OR REPLACE FUNCTION public.merge_guest_votes(

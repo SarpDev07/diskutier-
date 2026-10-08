@@ -39,9 +39,6 @@ const GA = {
 
       // Initialisiere Scroll-Tracking
       this.initScrollDepthTracking();
-
-      // Initialisiere Engagement-Heartbeat für korrekte Verweildauer & Bounce Rate in SPA
-      this.initEngagementHeartbeat();
     } catch(err) {
       console.warn("[GA4] Initialisierungsfehler:", err);
     }
@@ -69,23 +66,6 @@ const GA = {
     } catch(e){
       return {};
     }
-  },
-
-  initEngagementHeartbeat() {
-    // Sendet periodische User-Engagement Signale in aktiven Tabs
-    let lastActive = Date.now();
-    ['click', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
-      window.addEventListener(evt, () => { lastActive = Date.now(); }, { passive: true });
-    });
-
-    setInterval(() => {
-      if (Date.now() - lastActive < 20000 && !document.hidden && !this.isExcluded) {
-        this.trackEvent("user_engagement", {
-          engagement_time_msec: 15000,
-          page_path: window.location.pathname
-        });
-      }
-    }, 15000);
   },
 
   setMeasurementId(id) {
