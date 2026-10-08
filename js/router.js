@@ -315,7 +315,21 @@ const Router = {
       return;
     }
 
-    // 14. Benutzer-Einstellungen: /einstellungen
+    // 14. Schweiz-Match: /schweiz-match oder /mein-match
+    if (path === "/schweiz-match" || path === "/mein-match") {
+      showPageElement("swiss-match");
+      if (typeof SwissMatch !== "undefined" && typeof SwissMatch.renderMatchPage === "function") {
+        SwissMatch.renderMatchPage();
+      }
+      updateMetaTags({
+        title: "Mein Schweiz-Match — Wie denkst du im Vergleich zur Community?",
+        description: "Entdecke deinen persönlichen Schweiz-Match: Vergleiche deine Meinungen zu Politik, Alltag und Wirtschaft mit anderen Teilnehmern.",
+        canonicalUrl: "/schweiz-match"
+      });
+      return;
+    }
+
+    // 15. Benutzer-Einstellungen: /einstellungen
     if (path === "/einstellungen" || path === "/settings") {
       showPageElement("settings");
       updateMetaTags({

@@ -294,24 +294,22 @@ async function loadPolls(){
     const votes = p.poll_votes || [];
     const base = getBaselineForPoll(p);
     
-    // Prüfe lokale Abstimmung (LocalStorage) & Datenbank nur für eingeloggte Nutzer
+    // Prüfe lokale Abstimmung (LocalStorage) & Datenbank für eingeloggte & Gast-Nutzer
     let localVoteIndex = null;
-    if (currentUser) {
-      if (localVotes[p.id] !== undefined) {
-        localVoteIndex = localVotes[p.id];
-      } else if (p.title && localVotes[p.title] !== undefined) {
-        localVoteIndex = localVotes[p.title];
-      } else {
-        const matchKey = Object.keys(localVotes).find(k => k && p.title && (k.toLowerCase().includes(p.title.toLowerCase().substring(0, 25)) || p.title.toLowerCase().includes(k.toLowerCase().substring(0, 25))));
-        if (matchKey !== undefined) localVoteIndex = localVotes[matchKey];
-      }
+    if (localVotes[p.id] !== undefined) {
+      localVoteIndex = localVotes[p.id];
+    } else if (p.title && localVotes[p.title] !== undefined) {
+      localVoteIndex = localVotes[p.title];
+    } else {
+      const matchKey = Object.keys(localVotes).find(k => k && p.title && (k.toLowerCase().includes(p.title.toLowerCase().substring(0, 25)) || p.title.toLowerCase().includes(k.toLowerCase().substring(0, 25))));
+      if (matchKey !== undefined) localVoteIndex = localVotes[matchKey];
     }
 
-    const dbUserVote = currentUser ? votes.find(v => v.user_id === currentUser.id) : null;
-    const effectiveUserVotedIndex = dbUserVote ? dbUserVote.option_index : (currentUser ? localVoteIndex : null);
+    const dbUserVote = currentUser ? votes.find(v => v.user_id === currentUser.id) : (guestSession ? votes.find(v => v.session_token === guestSession) : null);
+    const effectiveUserVotedIndex = dbUserVote ? dbUserVote.option_index : localVoteIndex;
 
     // Falls aus DB eine Stimme vorhanden ist, synchronisiere lokal
-    if (currentUser && dbUserVote && localVoteIndex === null) {
+    if (dbUserVote && localVoteIndex === null) {
       saveLocalVote(p.id, dbUserVote.option_index, p.title);
     }
 
@@ -339,6 +337,10 @@ async function loadPolls(){
   });
 
   renderPollsUI();
+
+  if (typeof SwissMatch !== "undefined" && typeof SwissMatch.updateGlobalMatchBadge === "function") {
+    SwissMatch.updateGlobalMatchBadge();
+  }
 }
 
 // NÄCHSTE FRAGE DIREKT AUF DER FLÄCHE WECHSELN
@@ -392,10 +394,10 @@ function renderPollsUI(){
         <div class="eyebrow" style="color:var(--red);margin-bottom:8px">Alle Fragen durchgesehen</div>
         <h2 style="font-size:22px;line-height:1.25;margin:6px 0 10px;font-weight:800">Du bist auf dem neuesten Stand!</h2>
         <p style="font-size:14px;color:var(--muted);line-height:1.55;margin:0 0 20px">
-          Du hast alle aktuellen Abstimmungen durchgeklickt. Welche Frage brennt dir auf dem Herzen? Starte jetzt deine eigene Abstimmung für die Schweizer Community.
+          Du hast alle aktuellen Abstimmungen durchgeklickt. Sieh dir jetzt deinen persönlichen Schweiz-Match an oder starte deine eigene Frage!
         </p>
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-          <button class="publish" style="margin-top:0;padding:12px 18px" onclick="createMyOwnPoll()">Eigene Abstimmung erstellen</button>
+          <a href="/schweiz-match" class="publish" style="margin-top:0;padding:12px 20px;text-decoration:none;display:inline-block">🇨🇭 Mein Schweiz-Match ansehen</a>
           <button class="smallbtn" style="border:1px solid var(--line);padding:11px 16px;border-radius:var(--radius);font-weight:800" onclick="restartFeaturedPolls()">Von vorne anfangen</button>
         </div>
       </div>
@@ -489,10 +491,10 @@ function renderFeedAndSidebar(){
           <div class="results" style="display:block;margin-top:10px">
             ${resultsHtml}
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:10px;border-top:1px solid var(--line-light);flex-wrap:wrap;gap:8px">
-              <span class="you" style="margin-top:0;font-size:12px;font-weight:800;color:var(--ink)">Du hast wie ${userPct} % abgestimmt.</span>
+              <span class="you" style="margin-top:0;font-size:12px;font-weight:800;color:var(--ink)">Du denkst wie ${userPct} % der Teilnehmer.</span>
               <div style="display:flex;gap:14px;align-items:center">
-                <a href="/frage/${pollSlug}" class="smallbtn" style="margin:0;font-size:12px;font-weight:800;color:var(--ink);text-decoration:none">Kommentare ansehen &rarr;</a>
-                <button class="smallbtn" style="margin:0;font-size:12px;font-weight:700;color:var(--muted);border:0;background:none;cursor:pointer;padding:0" onclick="cancelPendingVote('${safeId}', false)">Stimme ändern</button>
+                <a href="/frage/${pollSlug}" class="smallbtn" style="margin:0;font-size:12px;font-weight:800;color:var(--ink);text-decoration:none">Kommentare &rarr;</a>
+                <a href="/schweiz-match" class="smallbtn" style="margin:0;font-size:12px;font-weight:800;color:var(--red);text-decoration:none">Schweiz-Match 🇨🇭</a>
               </div>
             </div>
           </div>
@@ -547,162 +549,48 @@ function renderResultsHTML(container, poll){
     const isSel = poll.userVotedIndex === idx;
     return `
       <div class="result ${isSel ? 'selected' : ''}">
-        <div class="resulttop"><span>${escapeHTML(opt)}</span><span>${pct} %</span></div>
-        <div class="track"><div class="bar" style="width:${pct}%"></div></div>
+        <div class="resulttop">
+          <span>${escapeHTML(opt)}${isSel ? ' <span style="color:var(--red);font-weight:900">(Deine Wahl)</span>' : ''}</span>
+          <span>${pct} %</span>
+        </div>
+        <div class="track"><div class="bar" style="width:${pct}%;${isSel ? 'background:var(--red);' : ''}"></div></div>
       </div>
     `;
   }).join("");
 
-  let youText = "";
-  if(poll.userVotedIndex !== null){
+  let feedbackHTML = "";
+  if(poll.userVotedIndex !== null && poll.userVotedIndex !== undefined){
     const userPct = Math.round(((poll.optionCounts[poll.userVotedIndex] || 0) / total) * 100);
-    youText = `<div class="you">Du hast wie ${userPct} % abgestimmt.</div>`;
-  }
-  container.innerHTML = html + youText;
-}
+    const stats = (typeof SwissMatch !== 'undefined' && typeof SwissMatch.calculateStats === 'function') ? SwissMatch.calculateStats() : null;
+    const matchTeaser = stats && stats.totalAnswered >= 1 ? `
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid #e0dfdb;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <span style="font-size:13px;font-weight:800;color:var(--ink)">🇨🇭 Schweiz-Match: <strong>${stats.matchPercent}%</strong> (${stats.totalAnswered} beantwortet)</span>
+        <a href="/schweiz-match" class="smallbtn" style="color:var(--red);font-weight:900;text-decoration:none;margin:0">Zum Profil &rarr;</a>
+      </div>
+    ` : '';
 
-const pendingVotes = {}; // pollId -> { timeoutId, intervalId, optionIndex, isFeatured }
-
-function submitPollVote(pollId, optionIndex, isFeatured){
-  const poll = currentPolls.find(p => String(p.id) === String(pollId)) || (currentPoll && String(currentPoll.id) === String(pollId) ? currentPoll : null) || currentPolls[activeFeaturedIndex] || currentPoll || { id: pollId, title: "Abstimmung", category: "Allgemein" };
-
-  if(!currentUser){
-    // 1. GA4 vote_attempt Event (Nicht eingeloggter Nutzer versucht abzustimmen)
-    if(window.GA && typeof window.GA.trackVoteAttempt === 'function'){
-      window.GA.trackVoteAttempt({
-        pollId: poll ? poll.id : pollId,
-        pollTitle: poll ? poll.title : '',
-        category: poll ? poll.category : 'Allgemein',
-        pagePath: window.location.pathname
-      });
-    }
-
-    // 2. Auth Modal öffnen (löst automatisch login_prompt_view aus)
-    openAuthRequiredModal("Um bei Schweizer Abstimmungen abzustimmen und das Live-Ergebnis zu sehen, erstelle kurz ein kostenloses Konto oder melde dich an.", {
-      trigger: "poll_vote",
-      pollId: poll ? poll.id : pollId
-    });
-    return;
-  }
-
-  if(!poll) return;
-
-  // Bestehenden Timer für dieselbe Frage abbrechen
-  if(pendingVotes[pollId]){
-    clearInterval(pendingVotes[pollId].intervalId);
-    clearTimeout(pendingVotes[pollId].timeoutId);
-    delete pendingVotes[pollId];
-  }
-
-  // Ziel-Container finden
-  let container = null;
-  if(isFeatured){
-    container = document.getElementById("featuredVotes");
-  } else if(currentPoll && currentPoll.id === pollId && document.getElementById("detail") && document.getElementById("detail").classList.contains("active")){
-    container = document.getElementById("detailVotes");
-  } else {
-    container = document.getElementById(`qv-${pollId}`);
-  }
-
-  const selectedOpt = poll.options[optionIndex] || "Deine Wahl";
-  let secondsLeft = 5;
-
-  if(container){
-    container.innerHTML = `
-      <div class="voteConfirmationBox" id="voteConfirmBox-${escapeHTML(pollId)}" style="grid-column: 1 / -1; width: 100%;">
-        <div class="voteConfirmTop">
-          <div class="voteConfirmCheck">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red)"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <strong>Stimme für «${escapeHTML(selectedOpt)}» gewählt</strong>
-          </div>
-          <span class="undoTimerBadge" id="undoTimerBadge-${escapeHTML(pollId)}">${secondsLeft}s</span>
-        </div>
-        <div class="undoProgressTrack">
-          <div class="undoProgressBar" id="undoProgressBar-${escapeHTML(pollId)}" style="width: 100%;"></div>
-        </div>
-        <div class="voteConfirmActions">
-          <button class="undoVoteBtn" onclick="cancelPendingVote('${escapeHTML(pollId)}', ${isFeatured})">Rückgängig machen</button>
-          <button class="confirmVoteBtn" onclick="finalizeVoteEarly('${escapeHTML(pollId)}', ${optionIndex}, ${isFeatured})">Ergebnis anzeigen &rarr;</button>
-        </div>
+    feedbackHTML = `
+      <div class="you" style="margin-top:14px;background:#fafafa;border:1px solid #e4e3df;padding:12px 14px;border-radius:var(--radius)">
+        <div style="font-size:13px;font-weight:800;color:var(--ink)">✓ Du denkst wie <strong>${userPct} %</strong> der bisherigen Teilnehmer.</div>
+        ${matchTeaser}
       </div>
     `;
-
-    setTimeout(() => {
-      const bar = document.getElementById(`undoProgressBar-${pollId}`);
-      if(bar) {
-        bar.style.transition = "width 5s linear";
-        bar.style.width = "0%";
-      }
-    }, 40);
   }
-
-  const intervalId = setInterval(() => {
-    secondsLeft--;
-    const badge = document.getElementById(`undoTimerBadge-${pollId}`);
-    if(badge && secondsLeft >= 0) {
-      badge.textContent = `${secondsLeft}s`;
-    }
-    if(secondsLeft <= 0){
-      clearInterval(intervalId);
-    }
-  }, 1000);
-
-  const timeoutId = setTimeout(() => {
-    finalizeVote(pollId, optionIndex, isFeatured);
-  }, 5000);
-
-  pendingVotes[pollId] = {
-    timeoutId,
-    intervalId,
-    optionIndex,
-    isFeatured
-  };
+  container.innerHTML = html + feedbackHTML;
 }
 
-function cancelPendingVote(pollId, isFeatured){
-  if(pendingVotes[pollId]){
-    clearInterval(pendingVotes[pollId].intervalId);
-    clearTimeout(pendingVotes[pollId].timeoutId);
-    delete pendingVotes[pollId];
-  }
-
-  const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
-  if(poll){
-    poll.userVotedIndex = null;
-    removeLocalVote(poll.id, poll.title);
-  }
-
-  showToast("Stimme rückgängig gemacht.");
-
-  if(isFeatured){
-    renderPollsUI();
-  } else if(currentPoll && currentPoll.id === pollId && document.getElementById("detail") && document.getElementById("detail").classList.contains("active")){
-    openPollDetail(pollId, false);
-  } else {
-    renderPollsUI();
-  }
-}
-
-function finalizeVoteEarly(pollId, optionIndex, isFeatured){
-  if(pendingVotes[pollId]){
-    clearInterval(pendingVotes[pollId].intervalId);
-    clearTimeout(pendingVotes[pollId].timeoutId);
-    delete pendingVotes[pollId];
-  }
-  finalizeVote(pollId, optionIndex, isFeatured);
-}
-
-async function finalizeVote(pollId, optionIndex, isFeatured){
-  if(pendingVotes[pollId]){
-    clearInterval(pendingVotes[pollId].intervalId);
-    clearTimeout(pendingVotes[pollId].timeoutId);
-    delete pendingVotes[pollId];
-  }
-
-  const poll = currentPolls.find(p => p.id === pollId) || currentPoll;
+// DIREKTE & SICHERE ABSTIMMUNG
+async function submitPollVote(pollId, optionIndex, isFeatured){
+  const poll = currentPolls.find(p => String(p.id) === String(pollId)) || (currentPoll && String(currentPoll.id) === String(pollId) ? currentPoll : null) || currentPolls[activeFeaturedIndex] || currentPoll;
   if(!poll) return;
 
+  // Anti-Spam / Rate-Limiting Cooldown
+  if(!checkRateLimit(`vote_${poll.id}`, 350)) return;
+
   const previousVotedIndex = poll.userVotedIndex;
+  const isVoteChange = (previousVotedIndex !== null && previousVotedIndex !== undefined && previousVotedIndex !== optionIndex);
+  
+  // Optimistisches Update
   poll.userVotedIndex = optionIndex;
 
   if(!poll.optionCounts || poll.optionCounts.length === 0 || poll.optionCounts.every(c => c === 0)){
@@ -730,48 +618,73 @@ async function finalizeVote(pollId, optionIndex, isFeatured){
       user_id: currentUser ? currentUser.id : null,
       session_token: currentUser ? null : guestSession
     };
-    db.from("poll_votes").upsert(payload, { onConflict: currentUser ? 'poll_id,user_id' : 'poll_id,session_token' }).then();
+    
+    try {
+      if (currentUser) {
+        db.from("poll_votes").upsert(payload, { onConflict: 'poll_id,user_id' }).then();
+      } else {
+        db.from("poll_votes").select("id").eq("poll_id", poll.id).eq("session_token", guestSession).then(({ data }) => {
+          if (data && data.length > 0) {
+            db.from("poll_votes").update({ option_index: optionIndex }).eq("poll_id", poll.id).eq("session_token", guestSession).then();
+          } else {
+            db.from("poll_votes").insert([payload]).then();
+          }
+        });
+      }
+    } catch(e){
+      console.warn("Vote sync error:", e);
+    }
   }
 
-  if(typeof trackEvent === 'function'){
-    trackEvent('poll_vote', { poll_id: poll.id, option: optionIndex, title: poll.title });
-  }
+  // GA4 Conversion Tracking
+  const stats = typeof SwissMatch !== 'undefined' ? SwissMatch.calculateStats() : null;
+  const answeredCount = stats ? stats.totalAnswered : 1;
 
-  // GA4 Conversion Events: poll_vote vs poll_vote_change
-  const hasVotedHistoryKey = `diskutier_has_voted_${poll.id}`;
-  const hadVotedBefore = (previousVotedIndex !== null && previousVotedIndex !== undefined && previousVotedIndex !== optionIndex);
-  const isVoteChange = hadVotedBefore || (localStorage.getItem(hasVotedHistoryKey) === "true" && poll.userVotedIndex === null);
-
-  try {
-    localStorage.setItem(hasVotedHistoryKey, "true");
-  } catch(e){}
-
-  if(isVoteChange){
-    if(window.GA && typeof window.GA.trackPollVoteChange === 'function'){
-      window.GA.trackPollVoteChange({
-        pollId: poll.id,
-        pollTitle: poll.title,
-        category: poll.category,
-        pagePath: window.location.pathname
-      });
+  if (currentUser) {
+    if (isVoteChange) {
+      if (window.GA && typeof window.GA.trackPollVoteChange === 'function') {
+        window.GA.trackPollVoteChange({
+          pollId: poll.id,
+          pollTitle: poll.title,
+          category: poll.category,
+          pagePath: window.location.pathname
+        });
+      }
+    } else {
+      if (window.GA && typeof window.GA.trackPollVote === 'function') {
+        window.GA.trackPollVote({
+          pollId: poll.id,
+          pollTitle: poll.title,
+          voteOption: poll.options[optionIndex] || '',
+          category: poll.category,
+          pagePath: window.location.pathname
+        });
+      }
     }
   } else {
-    if(window.GA && typeof window.GA.trackPollVote === 'function'){
-      window.GA.trackPollVote({
+    // Anonyme Stimme
+    if (window.GA && typeof window.GA.trackAnonymousVote === 'function') {
+      window.GA.trackAnonymousVote({
         pollId: poll.id,
         pollTitle: poll.title,
         voteOption: poll.options[optionIndex] || '',
         category: poll.category,
+        answeredCount: answeredCount,
         pagePath: window.location.pathname
       });
     }
   }
 
-  if(window.GA && typeof window.GA.trackResultView === 'function'){
-    window.GA.trackResultView({
+  if (window.GA && typeof window.GA.trackPollResultView === 'function') {
+    window.GA.trackPollResultView({
       pollId: poll.id,
       pollSlug: slugify(poll.title)
     });
+  }
+
+  // Update Global Schweiz-Match Badge in Navigation
+  if (typeof SwissMatch !== 'undefined' && typeof SwissMatch.updateGlobalMatchBadge === 'function') {
+    SwissMatch.updateGlobalMatchBadge();
   }
 
   showToast("Stimme erfolgreich gezählt!");

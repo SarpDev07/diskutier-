@@ -25,6 +25,9 @@ const GA = {
     this.isInitialized = true;
 
     try {
+      // UTM Parameter erfassen und für die Session dauerhaft sichern
+      this.preserveInitialUTMs();
+
       // Prüfe Admin / Dev / Localhost Ausschluss
       this.isExcluded = this.checkIfExcluded();
 
@@ -36,9 +39,53 @@ const GA = {
 
       // Initialisiere Scroll-Tracking
       this.initScrollDepthTracking();
+
+      // Initialisiere Engagement-Heartbeat für korrekte Verweildauer & Bounce Rate in SPA
+      this.initEngagementHeartbeat();
     } catch(err) {
       console.warn("[GA4] Initialisierungsfehler:", err);
     }
+  },
+
+  preserveInitialUTMs() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'];
+      let utms = {};
+      utmKeys.forEach(k => {
+        const val = urlParams.get(k);
+        if (val) utms[k] = val;
+      });
+      if (Object.keys(utms).length > 0) {
+        sessionStorage.setItem("diskutier_initial_utms", JSON.stringify(utms));
+      }
+    } catch(e){}
+  },
+
+  getPreservedUTMs() {
+    try {
+      const stored = sessionStorage.getItem("diskutier_initial_utms");
+      return stored ? JSON.parse(stored) : {};
+    } catch(e){
+      return {};
+    }
+  },
+
+  initEngagementHeartbeat() {
+    // Sendet periodische User-Engagement Signale in aktiven Tabs
+    let lastActive = Date.now();
+    ['click', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+      window.addEventListener(evt, () => { lastActive = Date.now(); }, { passive: true });
+    });
+
+    setInterval(() => {
+      if (Date.now() - lastActive < 20000 && !document.hidden && !this.isExcluded) {
+        this.trackEvent("user_engagement", {
+          engagement_time_msec: 15000,
+          page_path: window.location.pathname
+        });
+      }
+    }, 15000);
   },
 
   setMeasurementId(id) {
@@ -155,8 +202,12 @@ const GA = {
     }
 
     try {
+      // Füge dauerhafte UTM-Attribution an, falls noch nicht vorhanden
+      const utms = this.getPreservedUTMs();
+      const enrichedParams = { ...utms, ...params };
+
       // Bereinige Parameter (keine undefined, PII entfernen)
-      const cleanParams = this.sanitizeParams(params);
+      const cleanParams = this.sanitizeParams(enrichedParams);
 
       if (typeof window.gtag === "function" && this.measurementId && this.measurementId !== "G-XXXXXXXXXX") {
         window.gtag("event", eventName, cleanParams);
@@ -186,9 +237,7 @@ const GA = {
   stripPII(str) {
     if (!str) return "";
     let s = str.toString();
-    // Keine E-Mails
     s = s.replace(/[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/g, "[EMAIL]");
-    // Keine Telefonnummern
     s = s.replace(/(\+41|0041|0)[0-9\s-]{7,15}/g, "[PHONE]");
     return s.trim();
   },
@@ -198,11 +247,9 @@ const GA = {
     const cleanPath = path || window.location.pathname;
     const cleanTitle = title || document.title || "diskutier.ch";
 
-    // Verhindere doppelte aufeinanderfolgende Hits für denselben Pfad
     if (this.lastTrackedPagePath === cleanPath) return;
     this.lastTrackedPagePath = cleanPath;
 
-    // Reset Tracking-Sperren bei Routenwechsel
     this.lastTrackedPollId = null;
     this.lastTrackedPollPath = null;
     this.lastTrackedDiscussionPollId = null;
@@ -256,12 +303,11 @@ const GA = {
 
   // 5. ERWEITERTE EVENT-HELPER
 
-  // 1. poll_view (mit robuster Entprellung gegen Re-Renders)
+  // 1. poll_view
   trackPollView({ pollId, pollTitle, category, pagePath }) {
     if (!pollId) return;
     const currentPath = pagePath || window.location.pathname;
 
-    // Deduplizierung: Falls dieser Poll auf diesem Pfad bereits getrackt wurde, nicht doppelt feuern
     if (this.lastTrackedPollId === pollId && this.lastTrackedPollPath === currentPath) {
       return;
     }
@@ -280,7 +326,27 @@ const GA = {
     });
   },
 
-  // vote_attempt: wenn ein nicht eingeloggter Nutzer versucht abzustimmen
+  // anonymous_vote: Anonymer Gast stimmt ab
+  trackAnonymousVote({ pollId, pollTitle, voteOption, category, answeredCount, pagePath } = {}) {
+    this.trackEvent("anonymous_vote", {
+      poll_id: pollId ? String(pollId) : "",
+      poll_title: pollTitle || "",
+      vote_option: voteOption || "",
+      category: category || "Allgemein",
+      answered_count: answeredCount || 1,
+      page_path: pagePath || window.location.pathname
+    });
+  },
+
+  // poll_result_view: Ergebnisansicht
+  trackPollResultView({ pollId, pollSlug } = {}) {
+    this.trackEvent("poll_result_view", {
+      poll_id: pollId ? String(pollId) : "",
+      poll_slug: pollSlug || ""
+    });
+  },
+
+  // vote_attempt: wenn ein Nutzer versucht abzustimmen
   trackVoteAttempt({ pollId, pollTitle, category, pagePath } = {}) {
     this.trackEvent("vote_attempt", {
       poll_id: pollId ? String(pollId) : "",
@@ -299,7 +365,7 @@ const GA = {
     });
   },
 
-  // 2. poll_vote (Key Event)
+  // 2. poll_vote (Key Event für registrierte Stimmen)
   trackPollVote({ pollId, pollTitle, voteOption, category, pagePath }) {
     this.trackEvent("poll_vote", {
       poll_id: pollId,
@@ -329,7 +395,56 @@ const GA = {
     });
   },
 
-  // 5. discussion_view
+  // 5. swiss_match_view
+  trackSwissMatchView({ matchPercent, answeredCount, isRegistered } = {}) {
+    this.trackEvent("swiss_match_view", {
+      match_percent: matchPercent || 0,
+      answered_count: answeredCount || 0,
+      is_registered: !!isRegistered,
+      page_path: window.location.pathname
+    });
+  },
+
+  // 6. swiss_match_progress
+  trackSwissMatchProgress({ milestone, answeredCount } = {}) {
+    this.trackEvent("swiss_match_progress", {
+      milestone: milestone || "",
+      answered_count: answeredCount || 0
+    });
+  },
+
+  // 7. auth_start
+  trackAuthStart({ trigger = "button", method = "email" } = {}) {
+    this.trackEvent("auth_start", {
+      trigger: trigger,
+      method: method,
+      page_path: window.location.pathname
+    });
+  },
+
+  // 8. login
+  trackLogin({ method = "email" } = {}) {
+    this.trackEvent("login", {
+      method: method
+    });
+  },
+
+  // 9. sign_up
+  trackSignUp({ method = "email", sourcePage } = {}) {
+    this.trackEvent("sign_up", {
+      method: method,
+      source_page: sourcePage || window.location.pathname
+    });
+  },
+
+  // 10. anonymous_votes_merged
+  trackAnonymousVotesMerged({ voteCount } = {}) {
+    this.trackEvent("anonymous_votes_merged", {
+      votes_count: voteCount || 0
+    });
+  },
+
+  // 11. discussion_view
   trackDiscussionView({ pollId, pollTitle, pagePath }) {
     if (!pollId) return;
     const currentPath = pagePath || window.location.pathname;
@@ -346,7 +461,7 @@ const GA = {
     });
   },
 
-  // 6. comment_submit (Key Event)
+  // 12. comment_submit (Key Event)
   trackCommentSubmit({ contentType, contentId, category, pagePath }) {
     this.trackEvent("comment_submit", {
       content_type: contentType || "poll",
@@ -356,21 +471,7 @@ const GA = {
     });
   },
 
-  // 7. sign_up (Key Event)
-  trackSignUp({ method = "email" } = {}) {
-    this.trackEvent("sign_up", {
-      method: method
-    });
-  },
-
-  // 8. login
-  trackLogin({ method = "email" } = {}) {
-    this.trackEvent("login", {
-      method: method
-    });
-  },
-
-  // 9. share
+  // 13. share
   trackShare({ contentType, itemId, contentId, method }) {
     this.trackEvent("share", {
       content_type: contentType || "poll",
@@ -379,7 +480,7 @@ const GA = {
     });
   },
 
-  // 10. discussion_create (Key Event)
+  // 14. discussion_create (Key Event)
   trackDiscussionCreate({ category, pagePath }) {
     this.trackEvent("discussion_create", {
       category: category || "Alltag",

@@ -55,6 +55,12 @@ CREATE TABLE IF NOT EXISTS public.poll_votes (
   CONSTRAINT unique_session_vote UNIQUE NULLS NOT DISTINCT (poll_id, session_token)
 );
 
+-- Indizes für schnelle Abfragen & Schweiz-Match Aggregationen
+CREATE INDEX IF NOT EXISTS idx_poll_votes_poll_id ON public.poll_votes(poll_id);
+CREATE INDEX IF NOT EXISTS idx_poll_votes_user_id ON public.poll_votes(user_id);
+CREATE INDEX IF NOT EXISTS idx_poll_votes_session_token ON public.poll_votes(session_token);
+CREATE INDEX IF NOT EXISTS idx_poll_votes_option_index ON public.poll_votes(poll_id, option_index);
+
 ALTER TABLE public.poll_votes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Stimmen sind öffentlich lesbar"
@@ -62,6 +68,45 @@ ON public.poll_votes FOR SELECT USING (true);
 
 CREATE POLICY "Stimmen können abgegeben oder geändert werden"
 ON public.poll_votes FOR ALL USING (true) WITH CHECK (true);
+
+-- Funktion zur sicheren Zusammenführung von Gaststimmen
+CREATE OR REPLACE FUNCTION public.merge_guest_votes(
+  p_user_id UUID,
+  p_session_token TEXT
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_merged_count INTEGER := 0;
+  v_rec RECORD;
+BEGIN
+  IF p_user_id IS NULL OR p_session_token IS NULL OR trim(p_session_token) = '' THEN
+    RETURN 0;
+  END IF;
+
+  FOR v_rec IN 
+    SELECT id, poll_id, option_index 
+    FROM public.poll_votes 
+    WHERE session_token = p_session_token
+  LOOP
+    IF EXISTS (
+      SELECT 1 FROM public.poll_votes 
+      WHERE poll_id = v_rec.poll_id AND user_id = p_user_id
+    ) THEN
+      DELETE FROM public.poll_votes WHERE id = v_rec.id;
+    ELSE
+      UPDATE public.poll_votes 
+      SET user_id = p_user_id, session_token = NULL 
+      WHERE id = v_rec.id;
+      v_merged_count := v_merged_count + 1;
+    END IF;
+  END LOOP;
+
+  RETURN v_merged_count;
+END;
+$$;
 
 
 -- 4. FORUMS-BEITRÄGE (POSTS)

@@ -9,6 +9,7 @@ async function initAuth(){
     currentUser = session.user;
     await ensureProfileRecord(currentUser);
     await fetchProfile();
+    await mergeAnonymousVotes(currentUser.id);
   }
   updateNavAuth();
 
@@ -16,6 +17,7 @@ async function initAuth(){
   checkPasswordResetHash();
 
   db.auth.onAuthStateChange(async (event, session)=>{
+    const previousUser = currentUser;
     currentUser = session?.user || null;
     if(event === "PASSWORD_RECOVERY"){
       if(window.Router && typeof window.Router.navigate === "function"){
@@ -25,6 +27,9 @@ async function initAuth(){
     if(currentUser){
       await ensureProfileRecord(currentUser);
       await fetchProfile();
+      if(!previousUser || previousUser.id !== currentUser.id){
+        await mergeAnonymousVotes(currentUser.id);
+      }
     } else {
       currentProfile = null;
     }
@@ -39,6 +44,68 @@ async function initAuth(){
       loadPolls();
     }
   });
+}
+
+// ZUSAMMENFÜHRUNG ANONYMER GAST-STIMMEN IN DAS BENUTZERKONTO
+async function mergeAnonymousVotes(userId){
+  if(!userId || !db) return;
+  const guestSession = getGuestSession();
+  let localVotes = {};
+  try {
+    localVotes = JSON.parse(localStorage.getItem("diskutier_poll_votes") || "{}");
+  } catch(e){}
+
+  const pollKeys = Object.keys(localVotes);
+
+  try {
+    // 1. Hole alle Stimmen, die unter dieser Gast-Session in Supabase liegen
+    const { data: guestDbVotes } = await db.from("poll_votes").select("*").eq("session_token", guestSession);
+    
+    // 2. Hole bestehende Stimmen des Nutzers
+    const { data: existingUserVotes } = await db.from("poll_votes").select("poll_id").eq("user_id", userId);
+    const existingPollIds = new Set((existingUserVotes || []).map(v => v.poll_id));
+
+    let mergedCount = 0;
+
+    // A. Übernehme DB-Gaststimmen
+    if(guestDbVotes && guestDbVotes.length > 0){
+      for(const gv of guestDbVotes){
+        if(!existingPollIds.has(gv.poll_id)){
+          await db.from("poll_votes").update({ user_id: userId, session_token: null }).eq("id", gv.id);
+          existingPollIds.add(gv.poll_id);
+          mergedCount++;
+        } else {
+          // Bereits vorhanden -> Duplikat-Gaststimme bereinigen
+          await db.from("poll_votes").delete().eq("id", gv.id);
+        }
+      }
+    }
+
+    // B. Übernehme lokale Stimmen, die evtl. noch nicht in der DB waren
+    for(const pollIdOrTitle of pollKeys){
+      const optionIndex = localVotes[pollIdOrTitle];
+      if(optionIndex !== undefined && pollIdOrTitle.length === 36 && !existingPollIds.has(pollIdOrTitle)){
+        await db.from("poll_votes").upsert({
+          poll_id: pollIdOrTitle,
+          option_index: optionIndex,
+          user_id: userId,
+          session_token: null
+        }, { onConflict: 'poll_id,user_id' });
+        existingPollIds.add(pollIdOrTitle);
+        mergedCount++;
+      }
+    }
+
+    if(mergedCount > 0){
+      console.info(`[Auth] ${mergedCount} anonyme Stimmen erfolgreich zusammengeführt.`);
+      if(window.GA && typeof window.GA.trackAnonymousVotesMerged === 'function'){
+        window.GA.trackAnonymousVotesMerged({ voteCount: mergedCount });
+      }
+      showToast(`🇨🇭 ${mergedCount} vorherige Abstimmungen in dein Profil übernommen!`);
+    }
+  } catch(e){
+    console.warn("Vote merge error:", e);
+  }
 }
 
 function checkPasswordResetHash(){
@@ -550,7 +617,56 @@ async function renderPublicProfile(username){
   }
 }
 
-// MODAL FÜR KONTO-PFLICHT (ABSTIMMEN, POSTEN & KOMMENTIEREN)
+// GOOGLE & APPLE OAUTH AUTHENTIFIZIERUNG
+async function signInWithGoogle(){
+  if(!db) return;
+  if(window.GA && typeof window.GA.trackAuthStart === 'function'){
+    window.GA.trackAuthStart({ method: 'google', trigger: 'oauth_button' });
+  }
+  const redirectUrl = window.location.origin + '/schweiz-match';
+  try {
+    const { error } = await db.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl
+      }
+    });
+    if(error){
+      showToast("Google-Anmeldung: " + error.message);
+    }
+  } catch(e){
+    console.warn("Google OAuth error:", e);
+    showToast("Google-Anmeldung momentan nicht erreichbar.");
+  }
+}
+
+async function signInWithApple(){
+  if(!db) return;
+  if(window.GA && typeof window.GA.trackAuthStart === 'function'){
+    window.GA.trackAuthStart({ method: 'apple', trigger: 'oauth_button' });
+  }
+  const redirectUrl = window.location.origin + '/schweiz-match';
+  try {
+    const { error } = await db.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: redirectUrl
+      }
+    });
+    if(error){
+      if(error.message && (error.message.includes("provider is not enabled") || error.message.includes("unsupported"))){
+        showToast("Apple-Login wird derzeit für dieses Projekt eingerichtet. Bitte nutze Google oder E-Mail.");
+      } else {
+        showToast("Apple-Anmeldung: " + error.message);
+      }
+    }
+  } catch(e){
+    console.warn("Apple OAuth error:", e);
+    showToast("Apple-Anmeldung momentan nicht erreichbar.");
+  }
+}
+
+// MODAL FÜR KONTO-PFLICHT (SCHWEIZ-MATCH SICHERN, POSTEN & KOMMENTIEREN)
 function openAuthRequiredModal(customMessage, options = {}){
   let modal = document.getElementById("authRequiredModal");
   if(!modal){
@@ -568,7 +684,7 @@ function openAuthRequiredModal(customMessage, options = {}){
 
   // GA4 login_prompt_view Tracking
   if(window.GA && typeof window.GA.trackLoginPromptView === 'function'){
-    const trigger = (options && options.trigger) ? options.trigger : "poll_vote";
+    const trigger = (options && options.trigger) ? options.trigger : "swiss_match_save";
     const pollId = (options && options.pollId) ? options.pollId : (window.currentPoll ? window.currentPoll.id : "");
     window.GA.trackLoginPromptView({
       trigger: trigger,
@@ -593,29 +709,47 @@ function createAuthModalDOM(){
     <div class="authModalCard">
       <div class="authModalHeader">
         <div>
-          <div class="eyebrow" style="color:var(--red);margin-bottom:4px">Konto erforderlich</div>
-          <h2 style="font-size:20px;margin:0;font-weight:800">Mitdiskutieren & Abstimmen</h2>
+          <div class="eyebrow" style="color:var(--red);margin-bottom:4px">Dein Schweiz-Match 🇨🇭</div>
+          <h2 style="font-size:20px;margin:0;font-weight:800">Meinungsprofil speichern</h2>
         </div>
         <button class="authCloseBtn" onclick="closeAuthRequiredModal()" aria-label="Schliessen">&times;</button>
       </div>
       <div class="authModalBody">
         <p id="authRequiredMsg" style="font-size:14px;color:#444;margin:0 0 16px;line-height:1.55">
-          Um bei Schweizer Abstimmungen abzustimmen, eigene Beiträge zu verfassen oder zu kommentieren, musst du angemeldet sein.
+          Speichere deine bisherigen Antworten dauerhaft, um deinen persönlichen Schweiz-Match zu behalten und mit neuen Fragen weiterzuentwickeln.
         </p>
-        <div style="background:#fafafa;border:1px solid #e0dfdb;padding:14px 16px;border-radius:var(--radius);margin-bottom:20px">
-          <div style="font-size:13px;font-weight:800;color:var(--ink);margin-bottom:6px">Deine Vorteile mit kostenlosem Konto:</div>
-          <ul style="margin:0;padding-left:18px;font-size:12px;color:#555;line-height:1.6">
-            <li>Echte Schweizer Abstimmungsergebnisse in Echtzeit sehen</li>
-            <li>Eigene Abstimmungen & Forenbeiträge starten</li>
-            <li>Mit der Schweizer Community mitdiskutieren & upvoten</li>
-            <li>Dauert weniger als 30 Sekunden</li>
+
+        <!-- 1-Click Social Logins -->
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+          <button class="oauthBtn googleBtn" onclick="signInWithGoogle()">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+            Mit Google fortfahren
+          </button>
+          <button class="oauthBtn appleBtn" onclick="signInWithApple()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.65-.79 1.09-1.9 0.97-3.01-.94.04-2.08.63-2.75 1.42-.59.68-1.11 1.79-.97 2.86 1.05.08 2.13-.53 2.75-1.27z"/></svg>
+            Mit Apple fortfahren
+          </button>
+        </div>
+
+        <div style="display:flex;align-items:center;margin:12px 0 16px;color:#888;font-size:12px;text-align:center">
+          <div style="flex:1;height:1px;background:#e0dfdb"></div>
+          <span style="padding:0 10px;text-transform:uppercase;font-weight:700">oder mit E-Mail</span>
+          <div style="flex:1;height:1px;background:#e0dfdb"></div>
+        </div>
+
+        <div style="background:#fafafa;border:1px solid #e0dfdb;padding:12px 14px;border-radius:var(--radius);margin-bottom:16px">
+          <div style="font-size:12px;font-weight:800;color:var(--ink);margin-bottom:4px">Deine Vorteile:</div>
+          <ul style="margin:0;padding-left:16px;font-size:12px;color:#555;line-height:1.55">
+            <li>Alle deine anonymen Stimmen werden automatisch übernommen</li>
+            <li>Dauerhafter Schweiz-Match & Vergleich mit der Community</li>
+            <li>Eigene Abstimmungen & Foren-Themen erstellen</li>
           </ul>
         </div>
       </div>
       <div class="authModalFooter">
         <button class="smallbtn" style="color:#666;font-weight:800;padding:11px 14px" onclick="closeAuthRequiredModal()">Abbrechen</button>
-        <button class="smallbtn" style="border:1px solid #bbb;font-weight:900;padding:11px 16px;border-radius:var(--radius);color:var(--ink)" onclick="closeAuthRequiredModal(); if(window.Router && window.Router.navigate) window.Router.navigate('/anmelden'); else window.location.href='/anmelden';">Anmelden</button>
-        <button class="publish" style="margin-top:0;padding:11px 20px" onclick="closeAuthRequiredModal(); if(window.Router && window.Router.navigate) window.Router.navigate('/registrieren'); else window.location.href='/registrieren';">Kostenlos registrieren &rarr;</button>
+        <button class="smallbtn" style="border:1px solid #bbb;font-weight:900;padding:11px 16px;border-radius:var(--radius);color:var(--ink)" onclick="closeAuthRequiredModal(); if(window.Router && window.Router.navigate) window.Router.navigate('/anmelden'); else window.location.href='/anmelden';">E-Mail Login</button>
+        <button class="publish" style="margin-top:0;padding:11px 18px" onclick="closeAuthRequiredModal(); if(window.Router && window.Router.navigate) window.Router.navigate('/registrieren'); else window.location.href='/registrieren';">Konto erstellen &rarr;</button>
       </div>
     </div>
   `;
@@ -630,4 +764,8 @@ function createAuthModalDOM(){
 // Global verfügbar
 window.openAuthRequiredModal = openAuthRequiredModal;
 window.closeAuthRequiredModal = closeAuthRequiredModal;
+window.signInWithGoogle = signInWithGoogle;
+window.signInWithApple = signInWithApple;
+window.mergeAnonymousVotes = mergeAnonymousVotes;
+
 
