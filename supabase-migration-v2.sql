@@ -81,8 +81,13 @@ CREATE TABLE IF NOT EXISTS public.poll_guest_rate_limits (
   last_vote_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Automatischer Index auf Zeitstempel für schnelle Bereinigung
 CREATE INDEX IF NOT EXISTS idx_poll_guest_rate_limits_last_vote ON public.poll_guest_rate_limits(last_vote_at);
+
+ALTER TABLE public.poll_guest_rate_limits ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.poll_guest_rate_limits FROM PUBLIC;
+REVOKE ALL ON TABLE public.poll_guest_rate_limits FROM anon;
+REVOKE ALL ON TABLE public.poll_guest_rate_limits FROM authenticated;
+GRANT ALL ON TABLE public.poll_guest_rate_limits TO service_role;
 
 -- 6. VOLLSTÄNDIGE BEREINIGUNG ALTER RLS POLICIES & ZERO-TRUST NEUKONFIGURATION
 ALTER TABLE public.poll_votes ENABLE ROW LEVEL SECURITY;
@@ -155,15 +160,15 @@ DECLARE
   v_token_hash TEXT;
   v_poll_options JSONB;
   v_max_option INTEGER;
-  v_is_active BOOLEAN := TRUE;
-  v_rate_rec RECORD;
+  v_current_rate_count INTEGER;
 BEGIN
   -- 1. Validierung des Session-Secrets (mindestens 16 Zeichen)
   IF p_session_secret IS NULL OR length(trim(p_session_secret)) < 16 THEN
     RAISE EXCEPTION 'Ungueltiges Gast-Token (mindestens 16 Zeichen erforderlich).';
   END IF;
 
-  -- 2. Validierung des Polls, Aktivitätsstatus & der Option
+  -- 2. Validierung: Existenz des Polls & der Antwort-Option in public.polls
+  -- Hinweis: public.polls führt keinen separaten is_active-Status; das Vorhandensein des Datensatzes definiert die Gültigkeit.
   SELECT options INTO v_poll_options FROM public.polls WHERE id = p_poll_id;
   IF v_poll_options IS NULL THEN
     RAISE EXCEPTION 'Abstimmung existiert nicht.';
@@ -177,28 +182,29 @@ BEGIN
   -- 3. Kryptografischer Hash (One-Way SHA-256)
   v_token_hash := encode(digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
 
-  -- 4. Serverseitige Missbrauchsbegrenzung (Sliding Window: Max 20 Stimmen pro Minute pro Gast-Token)
-  SELECT * INTO v_rate_rec FROM public.poll_guest_rate_limits WHERE token_hash = v_token_hash FOR UPDATE;
-  IF v_rate_rec IS NULL THEN
-    INSERT INTO public.poll_guest_rate_limits (token_hash, vote_count, first_vote_at, last_vote_at)
-    VALUES (v_token_hash, 1, NOW(), NOW())
-    ON CONFLICT (token_hash) DO NOTHING;
-  ELSE
-    IF v_rate_rec.last_vote_at > NOW() - INTERVAL '1 minute' THEN
-      IF v_rate_rec.vote_count >= 20 THEN
-        RAISE EXCEPTION 'Rate-Limit erreicht: Bitte warte kurz vor der naechsten Abstimmung.';
-      END IF;
-      UPDATE public.poll_guest_rate_limits 
-      SET vote_count = vote_count + 1, last_vote_at = NOW() 
-      WHERE token_hash = v_token_hash;
-    ELSE
-      UPDATE public.poll_guest_rate_limits 
-      SET vote_count = 1, first_vote_at = NOW(), last_vote_at = NOW() 
-      WHERE token_hash = v_token_hash;
-    END IF;
+  -- 4. Atomarer Concurrency-sicherer Rate-Limiting Upsert (Max 20 Stimmen / Minute pro Token)
+  INSERT INTO public.poll_guest_rate_limits (token_hash, vote_count, first_vote_at, last_vote_at)
+  VALUES (v_token_hash, 1, NOW(), NOW())
+  ON CONFLICT (token_hash) DO UPDATE
+  SET 
+    vote_count = CASE 
+      WHEN public.poll_guest_rate_limits.last_vote_at > NOW() - INTERVAL '1 minute' 
+      THEN public.poll_guest_rate_limits.vote_count + 1 
+      ELSE 1 
+    END,
+    first_vote_at = CASE 
+      WHEN public.poll_guest_rate_limits.last_vote_at > NOW() - INTERVAL '1 minute' 
+      THEN public.poll_guest_rate_limits.first_vote_at 
+      ELSE NOW() 
+    END,
+    last_vote_at = NOW()
+  RETURNING vote_count INTO v_current_rate_count;
+
+  IF v_current_rate_count > 20 THEN
+    RAISE EXCEPTION 'Rate-Limit erreicht: Bitte warte kurz vor der naechsten Abstimmung.';
   END IF;
 
-  -- 5. Concurrency-sicherer Upsert (immun gegen Race Conditions)
+  -- 5. Concurrency-sicherer Upsert für Stimmen (immun gegen Race Conditions)
   LOOP
     UPDATE public.poll_votes
     SET option_index = p_option_index, created_at = NOW()
@@ -213,7 +219,7 @@ BEGIN
       VALUES (p_poll_id, v_token_hash, p_option_index, NULL);
       EXIT;
     EXCEPTION WHEN unique_violation THEN
-      -- Race condition: Parallel transaction inserted simultaneously -> Loop will UPDATE
+      -- Race condition: Parallel insert occurred simultaneously -> Loop will UPDATE
     END;
   END LOOP;
 

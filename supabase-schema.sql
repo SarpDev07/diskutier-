@@ -93,6 +93,22 @@ SELECT
 FROM public.poll_votes
 GROUP BY poll_id, option_index;
 
+-- 5. SERVERSEITIGE RATE-LIMITING TABELLE FÜR GAST-VOTES
+CREATE TABLE IF NOT EXISTS public.poll_guest_rate_limits (
+  token_hash TEXT PRIMARY KEY,
+  vote_count INTEGER DEFAULT 1,
+  first_vote_at TIMESTAMPTZ DEFAULT NOW(),
+  last_vote_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_poll_guest_rate_limits_last_vote ON public.poll_guest_rate_limits(last_vote_at);
+
+ALTER TABLE public.poll_guest_rate_limits ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.poll_guest_rate_limits FROM PUBLIC;
+REVOKE ALL ON TABLE public.poll_guest_rate_limits FROM anon;
+REVOKE ALL ON TABLE public.poll_guest_rate_limits FROM authenticated;
+GRANT ALL ON TABLE public.poll_guest_rate_limits TO service_role;
+
 -- Funktion zur sicheren Gast-Abstimmung mit Token-Hash
 CREATE OR REPLACE FUNCTION public.cast_guest_vote(
   p_poll_id UUID,
@@ -108,11 +124,15 @@ DECLARE
   v_token_hash TEXT;
   v_poll_options JSONB;
   v_max_option INTEGER;
+  v_current_rate_count INTEGER;
 BEGIN
+  -- 1. Validierung des Session-Secrets (mindestens 16 Zeichen)
   IF p_session_secret IS NULL OR length(trim(p_session_secret)) < 16 THEN
-    RAISE EXCEPTION 'Ungueltiges Gast-Token.';
+    RAISE EXCEPTION 'Ungueltiges Gast-Token (mindestens 16 Zeichen erforderlich).';
   END IF;
 
+  -- 2. Validierung: Existenz des Polls & der Antwort-Option in public.polls
+  -- Hinweis: public.polls führt keinen separaten is_active-Status; das Vorhandensein des Datensatzes definiert die Gültigkeit.
   SELECT options INTO v_poll_options FROM public.polls WHERE id = p_poll_id;
   IF v_poll_options IS NULL THEN
     RAISE EXCEPTION 'Abstimmung existiert nicht.';
@@ -123,23 +143,55 @@ BEGIN
     RAISE EXCEPTION 'Ungueltige Antwort-Option.';
   END IF;
 
+  -- 3. Kryptografischer Hash (One-Way SHA-256)
   v_token_hash := encode(digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
 
-  SELECT id INTO v_existing_id
-  FROM public.poll_votes
-  WHERE poll_id = p_poll_id AND session_token = v_token_hash
-  FOR UPDATE;
+  -- 4. Atomarer Concurrency-sicherer Rate-Limiting Upsert (Max 20 Stimmen / Minute pro Token)
+  INSERT INTO public.poll_guest_rate_limits (token_hash, vote_count, first_vote_at, last_vote_at)
+  VALUES (v_token_hash, 1, NOW(), NOW())
+  ON CONFLICT (token_hash) DO UPDATE
+  SET 
+    vote_count = CASE 
+      WHEN public.poll_guest_rate_limits.last_vote_at > NOW() - INTERVAL '1 minute' 
+      THEN public.poll_guest_rate_limits.vote_count + 1 
+      ELSE 1 
+    END,
+    first_vote_at = CASE 
+      WHEN public.poll_guest_rate_limits.last_vote_at > NOW() - INTERVAL '1 minute' 
+      THEN public.poll_guest_rate_limits.first_vote_at 
+      ELSE NOW() 
+    END,
+    last_vote_at = NOW()
+  RETURNING vote_count INTO v_current_rate_count;
 
-  IF v_existing_id IS NOT NULL THEN
-    UPDATE public.poll_votes
-    SET option_index = p_option_index, created_at = NOW()
-    WHERE id = v_existing_id;
-  ELSE
-    INSERT INTO public.poll_votes (poll_id, session_token, option_index, user_id)
-    VALUES (p_poll_id, v_token_hash, p_option_index, NULL);
+  IF v_current_rate_count > 20 THEN
+    RAISE EXCEPTION 'Rate-Limit erreicht: Bitte warte kurz vor der naechsten Abstimmung.';
   END IF;
 
-  RETURN jsonb_build_object('success', true, 'poll_id', p_poll_id, 'option_index', p_option_index);
+  -- 5. Concurrency-sicherer Upsert für Stimmen (immun gegen Race Conditions)
+  LOOP
+    UPDATE public.poll_votes
+    SET option_index = p_option_index, created_at = NOW()
+    WHERE poll_id = p_poll_id AND session_token = v_token_hash;
+
+    IF FOUND THEN
+      EXIT;
+    END IF;
+
+    BEGIN
+      INSERT INTO public.poll_votes (poll_id, session_token, option_index, user_id)
+      VALUES (p_poll_id, v_token_hash, p_option_index, NULL);
+      EXIT;
+    EXCEPTION WHEN unique_violation THEN
+      -- Race condition: Parallel insert occurred simultaneously -> Loop will UPDATE
+    END;
+  END LOOP;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'poll_id', p_poll_id,
+    'option_index', p_option_index
+  );
 END;
 $$;
 
