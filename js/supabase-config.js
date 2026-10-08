@@ -39,7 +39,7 @@ function checkRateLimit(actionKey, cooldownMs = 2500) {
 // GAST-SESSION FÜR ANONYMES ABSTIMMEN (KRYPTOGRAFISCH SICHERES TOKEN)
 function getGuestSession(){
   let s = localStorage.getItem("diskutier_guest_session");
-  if(!s || s.length < 24){
+  if(!s || s.length < 16){
     try {
       const array = new Uint8Array(24);
       if (typeof window !== "undefined" && window.crypto && window.crypto.getRandomValues) {
