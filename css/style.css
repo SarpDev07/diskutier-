@@ -2271,6 +2271,10 @@ aside {
     grid-template-columns: 1fr;
     gap: 8px;
   }
+  .matchMilestonesGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 .choiceLabel {
@@ -2301,7 +2305,7 @@ aside {
 
 .matchMilestonesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
 }
 
@@ -2310,35 +2314,79 @@ aside {
   border-radius: var(--radius);
   padding: 12px 14px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
+  transition: all 0.2s ease;
 }
 
 .matchMilestoneCard.achieved {
-  background: #f4faf4;
-  border-color: #c8e6c9;
+  background: #ffffff;
+  border-color: #d1d5db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.matchMilestoneCard.achieved .milestoneTitle {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.matchMilestoneCard.achieved .milestoneDesc {
+  color: #555552;
 }
 
 .matchMilestoneCard.locked {
-  background: #fdfdfc;
-  opacity: 0.6;
+  background: #fafaf8;
+  border-color: #ebebea;
+}
+
+.matchMilestoneCard.locked .milestoneTitle {
+  color: #888884;
+  font-weight: 600;
+}
+
+.matchMilestoneCard.locked .milestoneDesc {
+  color: #a3a39e;
 }
 
 .milestoneIcon {
-  font-size: 16px;
-  font-weight: 900;
-  width: 26px;
-  height: 26px;
+  font-size: 13px;
+  font-weight: 800;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.06);
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .matchMilestoneCard.achieved .milestoneIcon {
-  background: #2e7d32;
-  color: #fff;
+  background: #198754;
+  color: #ffffff;
+}
+
+.matchMilestoneCard.locked .milestoneIcon {
+  background: transparent;
+  border: 1.5px solid #d4d4d0;
+  color: transparent;
+}
+
+.milestoneInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.milestoneTitle {
+  font-size: 13.5px;
+  line-height: 1.3;
+}
+
+.milestoneDesc {
+  font-size: 11.5px;
+  line-height: 1.35;
 }
 
 .matchShareBar {

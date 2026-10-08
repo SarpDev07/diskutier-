@@ -391,10 +391,10 @@ const SwissMatch = {
         <div class="matchMilestonesGrid">
           ${stats.milestones.map(m => `
             <div class="matchMilestoneCard ${m.achieved ? 'achieved' : 'locked'}">
-              <div class="milestoneIcon">${m.achieved ? '✓' : '🔒'}</div>
-              <div>
-                <strong style="font-size:14px;display:block;margin-bottom:2px">${escapeHTML(m.title)}</strong>
-                <small style="font-size:12px;color:#666">${escapeHTML(m.desc)}</small>
+              <div class="milestoneIcon">${m.achieved ? '✓' : ''}</div>
+              <div class="milestoneInfo">
+                <div class="milestoneTitle">${escapeHTML(m.title)}</div>
+                <div class="milestoneDesc">${escapeHTML(m.desc)}</div>
               </div>
             </div>
           `).join("")}
