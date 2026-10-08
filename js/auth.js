@@ -50,6 +50,27 @@ async function initAuth(){
 async function mergeAnonymousVotes(userId){
   if(!userId || !db) return;
   const guestSession = getGuestSession();
+  if(!guestSession) return;
+
+  try {
+    // 1. Primäre sichere Methode: DB RPC mit kryptografischer Hash-Verifikation
+    const { data: rpcMergedCount, error: rpcError } = await db.rpc('merge_guest_votes', {
+      p_session_secret: guestSession
+    });
+
+    if(!rpcError && typeof rpcMergedCount === 'number' && rpcMergedCount > 0){
+      console.info(`[Auth] ${rpcMergedCount} anonyme Stimmen via sichere DB-Funktion zusammengeführt.`);
+      if(window.GA && typeof window.GA.trackAnonymousVotesMerged === 'function'){
+        window.GA.trackAnonymousVotesMerged({ voteCount: rpcMergedCount });
+      }
+      showToast(`🇨🇭 ${rpcMergedCount} vorherige Abstimmungen in dein Profil übernommen!`);
+      return;
+    }
+  } catch(e){
+    console.warn("RPC merge attempt:", e);
+  }
+
+  // 2. Client-seitiger Fallback (für noch nicht migrierte DB)
   let localVotes = {};
   try {
     localVotes = JSON.parse(localStorage.getItem("diskutier_poll_votes") || "{}");
@@ -58,16 +79,12 @@ async function mergeAnonymousVotes(userId){
   const pollKeys = Object.keys(localVotes);
 
   try {
-    // 1. Hole alle Stimmen, die unter dieser Gast-Session in Supabase liegen
     const { data: guestDbVotes } = await db.from("poll_votes").select("*").eq("session_token", guestSession);
-    
-    // 2. Hole bestehende Stimmen des Nutzers
     const { data: existingUserVotes } = await db.from("poll_votes").select("poll_id").eq("user_id", userId);
     const existingPollIds = new Set((existingUserVotes || []).map(v => v.poll_id));
 
     let mergedCount = 0;
 
-    // A. Übernehme DB-Gaststimmen
     if(guestDbVotes && guestDbVotes.length > 0){
       for(const gv of guestDbVotes){
         if(!existingPollIds.has(gv.poll_id)){
@@ -75,13 +92,11 @@ async function mergeAnonymousVotes(userId){
           existingPollIds.add(gv.poll_id);
           mergedCount++;
         } else {
-          // Bereits vorhanden -> Duplikat-Gaststimme bereinigen
           await db.from("poll_votes").delete().eq("id", gv.id);
         }
       }
     }
 
-    // B. Übernehme lokale Stimmen, die evtl. noch nicht in der DB waren
     for(const pollIdOrTitle of pollKeys){
       const optionIndex = localVotes[pollIdOrTitle];
       if(optionIndex !== undefined && pollIdOrTitle.length === 36 && !existingPollIds.has(pollIdOrTitle)){
@@ -104,7 +119,7 @@ async function mergeAnonymousVotes(userId){
       showToast(`🇨🇭 ${mergedCount} vorherige Abstimmungen in dein Profil übernommen!`);
     }
   } catch(e){
-    console.warn("Vote merge error:", e);
+    console.warn("Vote merge fallback error:", e);
   }
 }
 

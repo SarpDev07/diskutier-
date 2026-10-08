@@ -63,68 +63,116 @@ CREATE INDEX IF NOT EXISTS idx_poll_votes_option_index ON public.poll_votes(poll
 
 ALTER TABLE public.poll_votes ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Stimmen sind öffentlich lesbar"
-ON public.poll_votes FOR SELECT USING (true);
+CREATE POLICY "Nutzer sehen nur eigene Stimmen"
+ON public.poll_votes FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
 
-CREATE POLICY "Stimmen können abgegeben werden"
+CREATE POLICY "Eingeloggte Nutzer stimmen ab"
 ON public.poll_votes FOR INSERT
-WITH CHECK (
-  (auth.uid() IS NOT NULL AND user_id = auth.uid())
-  OR
-  (auth.uid() IS NULL AND user_id IS NULL AND session_token IS NOT NULL)
-);
+TO authenticated
+WITH CHECK (auth.uid() IS NOT NULL AND user_id = auth.uid());
 
-CREATE POLICY "Eigene Stimme ändern"
+CREATE POLICY "Eingeloggte Nutzer ändern eigene Stimme"
 ON public.poll_votes FOR UPDATE
-USING (
-  (auth.uid() IS NOT NULL AND user_id = auth.uid())
-  OR
-  (user_id IS NULL AND session_token IS NOT NULL)
-)
-WITH CHECK (
-  (auth.uid() IS NOT NULL AND user_id = auth.uid())
-  OR
-  (user_id IS NULL AND session_token IS NOT NULL)
-);
+TO authenticated
+USING (auth.uid() IS NOT NULL AND user_id = auth.uid())
+WITH CHECK (auth.uid() IS NOT NULL AND user_id = auth.uid());
 
-CREATE POLICY "Eigene Stimme löschen"
+CREATE POLICY "Eingeloggte Nutzer löschen eigene Stimme"
 ON public.poll_votes FOR DELETE
-USING (
-  (auth.uid() IS NOT NULL AND user_id = auth.uid())
-  OR
-  (user_id IS NULL AND session_token IS NOT NULL)
-);
+TO authenticated
+USING (auth.uid() IS NOT NULL AND user_id = auth.uid());
+
+-- Datensparsame Aggregations-View
+CREATE OR REPLACE VIEW public.poll_aggregates AS
+SELECT 
+  poll_id,
+  option_index,
+  COUNT(*)::INTEGER AS vote_count
+FROM public.poll_votes
+GROUP BY poll_id, option_index;
+
+-- Funktion zur sicheren Gast-Abstimmung mit Token-Hash
+CREATE OR REPLACE FUNCTION public.cast_guest_vote(
+  p_poll_id UUID,
+  p_option_index INTEGER,
+  p_session_secret TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_token_hash TEXT;
+  v_poll_options JSONB;
+  v_max_option INTEGER;
+BEGIN
+  IF p_session_secret IS NULL OR length(trim(p_session_secret)) < 16 THEN
+    RAISE EXCEPTION 'Ungueltiges Gast-Token.';
+  END IF;
+
+  SELECT options INTO v_poll_options FROM public.polls WHERE id = p_poll_id;
+  IF v_poll_options IS NULL THEN
+    RAISE EXCEPTION 'Abstimmung existiert nicht.';
+  END IF;
+
+  v_max_option := jsonb_array_length(v_poll_options) - 1;
+  IF p_option_index < 0 OR p_option_index > v_max_option THEN
+    RAISE EXCEPTION 'Ungueltige Antwort-Option.';
+  END IF;
+
+  v_token_hash := encode(digest(trim(p_session_secret), 'sha256'), 'hex');
+
+  INSERT INTO public.poll_votes (poll_id, session_token, option_index, user_id)
+  VALUES (p_poll_id, v_token_hash, p_option_index, NULL)
+  ON CONFLICT (poll_id, session_token) 
+  DO UPDATE SET option_index = EXCLUDED.option_index, created_at = NOW();
+
+  RETURN jsonb_build_object('success', true, 'poll_id', p_poll_id, 'option_index', p_option_index);
+END;
+$$;
 
 -- Funktion zur sicheren Zusammenführung von Gaststimmen
 CREATE OR REPLACE FUNCTION public.merge_guest_votes(
-  p_user_id UUID,
-  p_session_token TEXT
+  p_session_secret TEXT
 )
 RETURNS INTEGER
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
+  v_user_id UUID := auth.uid();
+  v_token_hash TEXT;
   v_merged_count INTEGER := 0;
   v_rec RECORD;
 BEGIN
-  IF p_user_id IS NULL OR p_session_token IS NULL OR trim(p_session_token) = '' THEN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Nicht autorisiert: Gaststimmen koennen nur in ein aktives Konto uebertragen werden.';
+  END IF;
+
+  IF p_session_secret IS NULL OR length(trim(p_session_secret)) < 16 THEN
     RETURN 0;
   END IF;
+
+  v_token_hash := encode(digest(trim(p_session_secret), 'sha256'), 'hex');
 
   FOR v_rec IN 
     SELECT id, poll_id, option_index 
     FROM public.poll_votes 
-    WHERE session_token = p_session_token
+    WHERE session_token = v_token_hash
+    FOR UPDATE
   LOOP
     IF EXISTS (
       SELECT 1 FROM public.poll_votes 
-      WHERE poll_id = v_rec.poll_id AND user_id = p_user_id
+      WHERE poll_id = v_rec.poll_id AND user_id = v_user_id
     ) THEN
       DELETE FROM public.poll_votes WHERE id = v_rec.id;
     ELSE
       UPDATE public.poll_votes 
-      SET user_id = p_user_id, session_token = NULL 
+      SET user_id = v_user_id, session_token = NULL 
       WHERE id = v_rec.id;
       v_merged_count := v_merged_count + 1;
     END IF;

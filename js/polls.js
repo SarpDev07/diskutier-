@@ -204,8 +204,28 @@ function removeLocalVote(pollId, pollTitle){
 async function loadPolls(){
   let polls = [];
   if(db){
-    const { data, error } = await db.from("polls").select("*, poll_votes(id, option_index, user_id, session_token)").order("created_at", { ascending: false });
-    if(!error && data) polls = data;
+    try {
+      const { data: pData } = await db.from("polls").select("*").order("created_at", { ascending: false });
+      const { data: aggData } = await db.from("poll_aggregates").select("*");
+      
+      const aggMap = {};
+      if(aggData && Array.isArray(aggData)){
+        aggData.forEach(row => {
+          if(!aggMap[row.poll_id]) aggMap[row.poll_id] = {};
+          aggMap[row.poll_id][row.option_index] = row.vote_count;
+        });
+      }
+
+      if(pData && Array.isArray(pData)){
+        polls = pData.map(p => {
+          const counts = (p.options || []).map((_, idx) => (aggMap[p.id] && aggMap[p.id][idx]) ? aggMap[p.id][idx] : 0);
+          return { ...p, _dbOptionCounts: counts };
+        });
+      }
+    } catch(e){
+      const { data } = await db.from("polls").select("*, poll_votes(id, option_index, user_id, session_token)").order("created_at", { ascending: false });
+      if(data) polls = data;
+    }
   }
 
   // 4 NEUE SCHWEIZER DEBATTEN-THEMEN (FRISCH & OHNE INITIAL-STIMMEN)
@@ -313,10 +333,12 @@ async function loadPolls(){
       saveLocalVote(p.id, dbUserVote.option_index, p.title);
     }
 
-    // Kombiniere Basis-Stimmen mit echten DB-Stimmen
+    // Kombiniere Basis-Stimmen mit echten DB-Stimmen (aus Aggregations-View oder Poll Votes)
     const optionCounts = (p.options || []).map((_, idx) => {
       const baseCount = base.optionCounts && base.optionCounts[idx] !== undefined ? base.optionCounts[idx] : 0;
-      const dbCount = votes.filter(v => v.option_index === idx).length;
+      const dbCount = (p._dbOptionCounts && p._dbOptionCounts[idx] !== undefined) 
+        ? p._dbOptionCounts[idx] 
+        : votes.filter(v => v.option_index === idx).length;
       return baseCount + dbCount;
     });
 
@@ -609,25 +631,37 @@ async function submitPollVote(pollId, optionIndex, isFeatured){
   // Dauerhaft im LocalStorage sichern
   saveLocalVote(poll.id, optionIndex, poll.title);
 
-  // Supabase Sync im Hintergrund
+  // Supabase Sync im Hintergrund über gesicherte RPCs
   if(db){
     const guestSession = getGuestSession();
-    const payload = {
-      poll_id: poll.id,
-      option_index: optionIndex,
-      user_id: currentUser ? currentUser.id : null,
-      session_token: currentUser ? null : guestSession
-    };
-    
     try {
       if (currentUser) {
-        db.from("poll_votes").upsert(payload, { onConflict: 'poll_id,user_id' }).then();
+        db.rpc('cast_user_vote', {
+          p_poll_id: poll.id,
+          p_option_index: optionIndex
+        }).then(({ error }) => {
+          if (error) {
+            // Fallback
+            db.from("poll_votes").upsert({
+              poll_id: poll.id,
+              option_index: optionIndex,
+              user_id: currentUser.id
+            }, { onConflict: 'poll_id,user_id' }).then();
+          }
+        });
       } else {
-        db.from("poll_votes").select("id").eq("poll_id", poll.id).eq("session_token", guestSession).then(({ data }) => {
-          if (data && data.length > 0) {
-            db.from("poll_votes").update({ option_index: optionIndex }).eq("poll_id", poll.id).eq("session_token", guestSession).then();
-          } else {
-            db.from("poll_votes").insert([payload]).then();
+        db.rpc('cast_guest_vote', {
+          p_poll_id: poll.id,
+          p_option_index: optionIndex,
+          p_session_secret: guestSession
+        }).then(({ error }) => {
+          if (error) {
+            // Fallback
+            db.from("poll_votes").insert([{
+              poll_id: poll.id,
+              session_token: guestSession,
+              option_index: optionIndex
+            }]).then();
           }
         });
       }

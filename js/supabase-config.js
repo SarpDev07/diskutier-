@@ -36,11 +36,21 @@ function checkRateLimit(actionKey, cooldownMs = 2500) {
   return true;
 }
 
-// GAST-SESSION FÜR ANONYMES ABSTIMMEN
+// GAST-SESSION FÜR ANONYMES ABSTIMMEN (KRYPTOGRAFISCH SICHERES TOKEN)
 function getGuestSession(){
   let s = localStorage.getItem("diskutier_guest_session");
-  if(!s){
-    s = "guest_" + Math.random().toString(36).substring(2, 15) + "_" + Date.now();
+  if(!s || s.length < 24){
+    try {
+      const array = new Uint8Array(24);
+      if (typeof window !== "undefined" && window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(array);
+        s = "gst_" + Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      } else {
+        s = "gst_" + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2) + Date.now().toString(36);
+      }
+    } catch(e) {
+      s = "gst_" + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2) + Date.now().toString(36);
+    }
     localStorage.setItem("diskutier_guest_session", s);
   }
   return s;
