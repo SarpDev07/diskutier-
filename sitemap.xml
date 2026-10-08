@@ -1,237 +1,327 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Hauptseiten -->
   <url>
     <loc>https://diskutier.ch/</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://diskutier.ch/schweiz-match</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://diskutier.ch/beitraege</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorien</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
-
-  <!-- Öffentliche Kategorien -->
+  <url>
+    <loc>https://diskutier.ch/ueber-uns</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/kontakt</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/datenschutz</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/impressum</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/richtlinien</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <url>
     <loc>https://diskutier.ch/kategorie/schweiz-politik</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/geld-beruf</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/wohnen</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/beziehungen</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/alltag</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/technologie</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/gesellschaft</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/essen</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/gaming</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/auto-mobilitaet</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/sport</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/kategorie/schule-ausbildung</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
-
-  <!-- Öffentliche Abstimmungen (Fragen) -->
   <url>
-    <loc>https://diskutier.ch/frage/flaechendeckend-tempo-30-in-staedten-und-immer-weniger-parkplaetze-sinnvoller-umweltschutz-oder-reiner-krieg-gegen-autofahrer</loc>
+    <loc>https://diskutier.ch/frage/sind-chf-6000-monatslohn-heute-noch-ein-guter-lohn-in-der-schweiz</loc>
+    <lastmod>2026-10-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://diskutier.ch/frage/ueber-330-franken-im-jahr-fuer-die-srg-ob-man-will-oder-nicht-zeit-fuer-die-halbierungs-initiative-oder-ruinieren-wir-damit-den-schweizer-journalismus</loc>
+    <loc>https://diskutier.ch/frage/ist-es-komisch-mit-25-noch-bei-den-eltern-zu-wohnen</loc>
+    <lastmod>2026-10-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://diskutier.ch/frage/wohnungsnot-in-zuerich-und-genf-sind-die-steigenden-mieten-das-resultat-von-gier-investoren-oder-von-zu-strengen-baugesetzen-und-einsprachen</loc>
+    <loc>https://diskutier.ch/frage/wuerdest-du-fuer-chf-1000-mehr-lohn-taeglich-eine-stunde-laenger-pendeln</loc>
+    <lastmod>2026-10-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://diskutier.ch/frage/milizsystem-am-anschlag-sollten-wir-die-allgemeine-wehrpflicht-endlich-abschaffen-und-auf-eine-profi-armee-umstellen</loc>
+    <loc>https://diskutier.ch/frage/coop-oder-migros</loc>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/sollte-man-seinem-partner-das-handy-passwort-geben</loc>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/sind-30-franken-fuer-eine-pizza-in-der-schweiz-zu-viel</loc>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/iphone-oder-samsung</loc>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/homeoffice-oder-buero</loc>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/wuerdest-du-fuer-die-liebe-in-einen-anderen-kanton-ziehen</loc>
+    <lastmod>2026-10-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/frage/10-millionen-schweiz-rettung-vor-wohnungsnot-oder-wirtschaftlicher-selbstmord</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/flaechendeckend-tempo-30-in-staedten-und-immer-weniger-parkplaetze-sinnvoller-umweltschutz-oder-reiner-krieg-gegen-autofahrer</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/ueber-330-franken-im-jahr-fuer-die-srg-ob-man-will-oder-nicht-zeit-fuer-die-halbierungs-initiative-oder-ruinieren-wir-damit-den-schweizer-journalismus</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/wohnungsnot-in-zuerich-und-genf-sind-die-steigenden-mieten-das-resultat-von-gier-investoren-oder-von-zu-strengen-baugesetzen-und-einsprachen</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/frage/milizsystem-am-anschlag-sollten-wir-die-allgemeine-wehrpflicht-endlich-abschaffen-und-auf-eine-profi-armee-umstellen</loc>
+    <lastmod>2026-10-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/frage/sind-chf-6000-monatslohn-heute-noch-ein-guter-lohn-in-der-schweiz</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-10-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/frage/ist-es-komisch-mit-25-noch-bei-den-eltern-zu-wohnen</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://diskutier.ch/frage/wuerdest-du-fuer-chf-1000-mehr-lohn-taeglich-eine-stunde-laenger-pendeln</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/frage/coop-oder-migros</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://diskutier.ch/frage/sollte-man-seinem-partner-das-handy-passwort-geben</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <loc>https://diskutier.ch/frage/wuerdest-du-fuer-chf-1000-mehr-lohn-taeglich-eine-stunde-laenger-pendeln</loc>
+    <lastmod>2026-09-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/frage/sind-30-franken-fuer-eine-pizza-in-der-schweiz-zu-viel</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://diskutier.ch/frage/iphone-oder-samsung</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://diskutier.ch/frage/homeoffice-oder-buero</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://diskutier.ch/frage/wuerdest-du-fuer-die-liebe-in-einen-anderen-kanton-ziehen</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Öffentliche Forenbeiträge -->
-  <url>
-    <loc>https://diskutier.ch/beitrag/flaechendeckend-tempo-30-in-staedten-und-immer-weniger-parkplaetze-sinnvoller-umweltschutz-oder-reiner-krieg-gegen-autofahrer</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://diskutier.ch/beitrag/ueber-330-franken-im-jahr-fuer-die-srg-ob-man-will-oder-nicht-zeit-fuer-die-halbierungs-initiative-oder-ruinieren-wir-damit-den-schweizer-journalismus</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://diskutier.ch/beitrag/wohnungsnot-in-zuerich-und-genf-sind-die-steigenden-mieten-das-resultat-von-gier-investoren-oder-von-zu-strengen-baugesetzen-und-einsprachen</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://diskutier.ch/beitrag/milizsystem-am-anschlag-sollten-wir-die-allgemeine-wehrpflicht-endlich-abschaffen-und-auf-eine-profi-armee-umstellen</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://diskutier.ch/beitrag/10-millionen-schweiz-rettung-vor-dem-kollaps-oder-wirtschaftlicher-selbstmord</loc>
+    <lastmod>2026-09-29</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/beitrag/nachbar-stellt-staendig-sachen-ins-treppenhaus-was-wuerdet-ihr-machen</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/beitrag/chef-erwartet-dass-ich-nach-feierabend-auf-whatsapp-antworte</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/beitrag/freundeskreis-veraendert-sich-komplett-seit-alle-in-beziehungen-sind</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/beitrag/wie-viel-zahlt-ihr-aktuell-fuer-eine-25-zimmer-wohnung</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/beitrag/lohnt-sich-ein-handywechsel-ueberhaupt-noch-alle-zwei-jahre</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://diskutier.ch/beitrag/studium-abbrechen-nach-drei-semestern-erfahrungen</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
-
-  <!-- Statische Informationsseiten -->
   <url>
-    <loc>https://diskutier.ch/ueber-uns</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <loc>https://diskutier.ch/beitrag/10-millionen-schweiz-rettung-vor-dem-kollaps-oder-wirtschaftlicher-selbstmord</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://diskutier.ch/kontakt</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <loc>https://diskutier.ch/beitrag/flaechendeckend-tempo-30-in-staedten-und-immer-weniger-parkplaetze-sinnvoller-umweltschutz-oder-reiner-krieg-gegen-autofahrer</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://diskutier.ch/datenschutz</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <loc>https://diskutier.ch/beitrag/ueber-330-franken-im-jahr-fuer-die-srg-ob-man-will-oder-nicht-zeit-fuer-die-halbierungs-initiative-oder-ruinieren-wir-damit-den-schweizer-journalismus</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://diskutier.ch/impressum</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <loc>https://diskutier.ch/beitrag/wohnungsnot-in-zuerich-und-genf-sind-die-steigenden-mieten-das-resultat-von-gier-investoren-oder-von-zu-strengen-baugesetzen-und-einsprachen</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://diskutier.ch/richtlinien</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <loc>https://diskutier.ch/beitrag/milizsystem-am-anschlag-sollten-wir-die-allgemeine-wehrpflicht-endlich-abschaffen-und-auf-eine-profi-armee-umstellen</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/beitrag/nachbar-stellt-staendig-sachen-ins-treppenhaus-was-wuerdet-ihr-machen</loc>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/beitrag/chef-erwartet-dass-ich-nach-feierabend-auf-whatsapp-antworte</loc>
+    <lastmod>2026-10-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://diskutier.ch/beitrag/wie-viel-zahlt-ihr-aktuell-fuer-eine-25-zimmer-wohnung</loc>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>

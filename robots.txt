@@ -6,6 +6,7 @@ Allow: /beitrag/
 Allow: /kategorie/
 Allow: /kategorien
 Allow: /beitraege
+Allow: /schweiz-match
 Allow: /ueber-uns
 Allow: /kontakt
 Allow: /datenschutz
