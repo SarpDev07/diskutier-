@@ -10,7 +10,10 @@
 -- 6. Nur aktive Umfragen sind stimmberechtigt.
 -- ==============================================================================
 
--- 0. PGCYPTO EXTENSION FÜR KRYPTOGRAFISCHE HASHES
+-- 0. TRANSAKTIONS-START (ATOMARES ROLLBACK BEI FEHLERN)
+BEGIN;
+
+-- 0a. PGCYPTO EXTENSION FÜR KRYPTOGRAFISCHE HASHES
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- 1. NICHT-DESTRUKTIVE DUPLIKATS-PRÜFUNG (STOPPT DIE MIGRATION BEI KONFLIKTEN)
@@ -339,3 +342,6 @@ $$;
 
 REVOKE ALL ON FUNCTION public.merge_guest_votes(TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.merge_guest_votes(TEXT) TO authenticated, service_role;
+
+-- TRANSAKTIONS-ABSCHLUSS
+COMMIT;
