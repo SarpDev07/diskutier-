@@ -7,14 +7,14 @@
 -- 3. Echte Concurrency-Sicherheit (eliminiert Race Conditions bei Erst-Votes).
 -- 4. Vollständige Säuberung aller alten RLS-Policies und Widerruf von PUBLIC-Rechten.
 -- 5. Serverseitige Missbrauchsbegrenzung für Gast-Abstimmungen.
--- 6. Nur aktive Umfragen sind stimmberechtigt.
+-- 6. search_path = public, extensions, pg_temp für pgcrypto-Kompatibilität in Supabase.
 -- ==============================================================================
 
 -- 0. TRANSAKTIONS-START (ATOMARES ROLLBACK BEI FEHLERN)
 BEGIN;
 
 -- 0a. PGCYPTO EXTENSION FÜR KRYPTOGRAFISCHE HASHES
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- 1. NICHT-DESTRUKTIVE DUPLIKATS-PRÜFUNG (STOPPT DIE MIGRATION BEI KONFLIKTEN)
 DO $$
@@ -53,7 +53,7 @@ END $$;
 
 -- 2. ABWÄRTSKOMPATIBLE UMSTELLUNG BESTEHENDER GAST-STIMMEN AUF SHA-256 HASH
 UPDATE public.poll_votes
-SET session_token = encode(digest(session_token::bytea, 'sha256'), 'hex')
+SET session_token = extensions.encode(extensions.digest(session_token::bytea, 'sha256'), 'hex')
 WHERE user_id IS NULL 
   AND session_token IS NOT NULL 
   AND length(session_token) != 64;
@@ -154,7 +154,7 @@ CREATE OR REPLACE FUNCTION public.cast_guest_vote(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = public, extensions, pg_temp
 AS $$
 DECLARE
   v_token_hash TEXT;
@@ -168,7 +168,6 @@ BEGIN
   END IF;
 
   -- 2. Validierung: Existenz des Polls & der Antwort-Option in public.polls
-  -- Hinweis: public.polls führt keinen separaten is_active-Status; das Vorhandensein des Datensatzes definiert die Gültigkeit.
   SELECT options INTO v_poll_options FROM public.polls WHERE id = p_poll_id;
   IF v_poll_options IS NULL THEN
     RAISE EXCEPTION 'Abstimmung existiert nicht.';
@@ -179,8 +178,8 @@ BEGIN
     RAISE EXCEPTION 'Ungueltige Antwort-Option.';
   END IF;
 
-  -- 3. Kryptografischer Hash (One-Way SHA-256)
-  v_token_hash := encode(digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
+  -- 3. Kryptografischer Hash (One-Way SHA-256 via extensions.digest)
+  v_token_hash := extensions.encode(extensions.digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
 
   -- 4. Atomarer Concurrency-sicherer Rate-Limiting Upsert (Max 20 Stimmen / Minute pro Token)
   INSERT INTO public.poll_guest_rate_limits (token_hash, vote_count, first_vote_at, last_vote_at)
@@ -243,7 +242,7 @@ CREATE OR REPLACE FUNCTION public.cast_user_vote(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = public, extensions, pg_temp
 AS $$
 DECLARE
   v_user_id UUID := auth.uid();
@@ -304,7 +303,7 @@ CREATE OR REPLACE FUNCTION public.merge_guest_votes(
 RETURNS INTEGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = public, extensions, pg_temp
 AS $$
 DECLARE
   v_user_id UUID := auth.uid();
@@ -320,7 +319,7 @@ BEGIN
     RETURN 0;
   END IF;
 
-  v_token_hash := encode(digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
+  v_token_hash := extensions.encode(extensions.digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
 
   -- Atomare Zusammenführung mit Zeilensperre (FOR UPDATE)
   FOR v_rec IN 

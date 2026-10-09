@@ -118,7 +118,7 @@ CREATE OR REPLACE FUNCTION public.cast_guest_vote(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = public, extensions, pg_temp
 AS $$
 DECLARE
   v_token_hash TEXT;
@@ -132,7 +132,6 @@ BEGIN
   END IF;
 
   -- 2. Validierung: Existenz des Polls & der Antwort-Option in public.polls
-  -- Hinweis: public.polls führt keinen separaten is_active-Status; das Vorhandensein des Datensatzes definiert die Gültigkeit.
   SELECT options INTO v_poll_options FROM public.polls WHERE id = p_poll_id;
   IF v_poll_options IS NULL THEN
     RAISE EXCEPTION 'Abstimmung existiert nicht.';
@@ -143,8 +142,8 @@ BEGIN
     RAISE EXCEPTION 'Ungueltige Antwort-Option.';
   END IF;
 
-  -- 3. Kryptografischer Hash (One-Way SHA-256)
-  v_token_hash := encode(digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
+  -- 3. Kryptografischer Hash (One-Way SHA-256 via extensions.digest)
+  v_token_hash := extensions.encode(extensions.digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
 
   -- 4. Atomarer Concurrency-sicherer Rate-Limiting Upsert (Max 20 Stimmen / Minute pro Token)
   INSERT INTO public.poll_guest_rate_limits (token_hash, vote_count, first_vote_at, last_vote_at)
@@ -192,6 +191,112 @@ BEGIN
     'poll_id', p_poll_id,
     'option_index', p_option_index
   );
+END;
+$$;
+
+-- Funktion zur sicheren Nutzer-Abstimmung (cast_user_vote)
+CREATE OR REPLACE FUNCTION public.cast_user_vote(
+  p_poll_id UUID,
+  p_option_index INTEGER
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
+DECLARE
+  v_user_id UUID := auth.uid();
+  v_poll_options JSONB;
+  v_max_option INTEGER;
+BEGIN
+  -- 1. Strikte Authentifizierungsprüfung
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Nicht authentifiziert: Bitte einloggen.';
+  END IF;
+
+  -- 2. Validierung des Polls & der Option
+  SELECT options INTO v_poll_options FROM public.polls WHERE id = p_poll_id;
+  IF v_poll_options IS NULL THEN
+    RAISE EXCEPTION 'Abstimmung existiert nicht.';
+  END IF;
+
+  v_max_option := jsonb_array_length(v_poll_options) - 1;
+  IF p_option_index < 0 OR p_option_index > v_max_option THEN
+    RAISE EXCEPTION 'Ungueltige Antwort-Option.';
+  END IF;
+
+  -- 3. Concurrency-sicherer Upsert
+  LOOP
+    UPDATE public.poll_votes
+    SET option_index = p_option_index, created_at = NOW()
+    WHERE poll_id = p_poll_id AND user_id = v_user_id;
+
+    IF FOUND THEN
+      EXIT;
+    END IF;
+
+    BEGIN
+      INSERT INTO public.poll_votes (poll_id, user_id, option_index, session_token)
+      VALUES (p_poll_id, v_user_id, p_option_index, NULL);
+      EXIT;
+    EXCEPTION WHEN unique_violation THEN
+      -- Race condition: Parallel transaction inserted simultaneously -> Loop will UPDATE
+    END;
+  END LOOP;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'poll_id', p_poll_id,
+    'option_index', p_option_index
+  );
+END;
+$$;
+
+-- Funktion zur sicheren Zusammenführung von Gaststimmen
+CREATE OR REPLACE FUNCTION public.merge_guest_votes(
+  p_session_secret TEXT
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
+DECLARE
+  v_user_id UUID := auth.uid();
+  v_token_hash TEXT;
+  v_merged_count INTEGER := 0;
+  v_rec RECORD;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Nicht autorisiert: Gaststimmen koennen nur in ein aktives Konto uebertragen werden.';
+  END IF;
+
+  IF p_session_secret IS NULL OR length(trim(p_session_secret)) < 16 THEN
+    RETURN 0;
+  END IF;
+
+  v_token_hash := extensions.encode(extensions.digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
+
+  FOR v_rec IN 
+    SELECT id, poll_id, option_index 
+    FROM public.poll_votes 
+    WHERE session_token = v_token_hash
+    FOR UPDATE
+  LOOP
+    IF EXISTS (
+      SELECT 1 FROM public.poll_votes 
+      WHERE poll_id = v_rec.poll_id AND user_id = v_user_id
+    ) THEN
+      DELETE FROM public.poll_votes WHERE id = v_rec.id;
+    ELSE
+      UPDATE public.poll_votes 
+      SET user_id = v_user_id, session_token = NULL 
+      WHERE id = v_rec.id;
+      v_merged_count := v_merged_count + 1;
+    END IF;
+  END LOOP;
+
+  RETURN v_merged_count;
 END;
 $$;
 

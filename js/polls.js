@@ -602,17 +602,67 @@ function renderResultsHTML(container, poll){
 }
 
 // DIREKTE & SICHERE ABSTIMMUNG
+let _isSubmittingVote = false;
 async function submitPollVote(pollId, optionIndex, isFeatured){
   const poll = currentPolls.find(p => String(p.id) === String(pollId)) || (currentPoll && String(currentPoll.id) === String(pollId) ? currentPoll : null) || currentPolls[activeFeaturedIndex] || currentPoll;
   if(!poll) return;
 
-  // Anti-Spam / Rate-Limiting Cooldown
-  if(!checkRateLimit(`vote_${poll.id}`, 350)) return;
+  // Verhindere doppeltes Absenden bei gleicher Wahl
+  if(poll.userVotedIndex === optionIndex){
+    showToast("Du hast diese Option bereits gewählt.");
+    return;
+  }
+
+  // Anti-Spam / Rate-Limiting Cooldown & Concurrent Vote Lock
+  if(_isSubmittingVote) return;
+  if(!checkRateLimit(`vote_${poll.id}`, 400)) return;
+
+  _isSubmittingVote = true;
 
   const previousVotedIndex = poll.userVotedIndex;
   const isVoteChange = (previousVotedIndex !== null && previousVotedIndex !== undefined && previousVotedIndex !== optionIndex);
   
-  // Optimistisches Update
+  // Supabase Sync VOR UI-Update (erst nach bestätigter Speicherung Ergebnisse anzeigen)
+  if(db){
+    const guestSession = getGuestSession();
+    try {
+      let rpcResult = null;
+      if (currentUser) {
+        rpcResult = await db.rpc('cast_user_vote', {
+          p_poll_id: poll.id,
+          p_option_index: optionIndex
+        });
+      } else {
+        rpcResult = await db.rpc('cast_guest_vote', {
+          p_poll_id: poll.id,
+          p_option_index: optionIndex,
+          p_session_secret: guestSession
+        });
+      }
+
+      if (rpcResult && rpcResult.error) {
+        console.error("Supabase Vote Error:", rpcResult.error);
+        _isSubmittingVote = false;
+        
+        let errorMsg = rpcResult.error.message || "Verbindungsfehler";
+        if (errorMsg.includes("Rate-Limit")) {
+          showToast("Zu viele Anfragen: Bitte warte kurz vor der nächsten Abstimmung.", 4000);
+        } else if (errorMsg.includes("digest") || errorMsg.includes("function")) {
+          showToast("Datenbank-Funktion wird aktualisiert. Bitte kurz gedulden.", 4000);
+        } else {
+          showToast(`Stimmabgabe fehlgeschlagen: ${errorMsg}`, 4500);
+        }
+        return;
+      }
+    } catch(err){
+      console.error("Vote Network Exception:", err);
+      _isSubmittingVote = false;
+      showToast("Netzwerkfehler: Stimme konnte nicht gespeichert werden.", 4000);
+      return;
+    }
+  }
+
+  // Erfolgreich in Supabase gespeichert -> Nun lokale Daten & UI aktualisieren
   poll.userVotedIndex = optionIndex;
 
   if(!poll.optionCounts || poll.optionCounts.length === 0 || poll.optionCounts.every(c => c === 0)){
@@ -631,44 +681,7 @@ async function submitPollVote(pollId, optionIndex, isFeatured){
   // Dauerhaft im LocalStorage sichern
   saveLocalVote(poll.id, optionIndex, poll.title);
 
-  // Supabase Sync im Hintergrund über gesicherte RPCs
-  if(db){
-    const guestSession = getGuestSession();
-    try {
-      if (currentUser) {
-        db.rpc('cast_user_vote', {
-          p_poll_id: poll.id,
-          p_option_index: optionIndex
-        }).then(({ error }) => {
-          if (error) {
-            // Fallback
-            db.from("poll_votes").upsert({
-              poll_id: poll.id,
-              option_index: optionIndex,
-              user_id: currentUser.id
-            }, { onConflict: 'poll_id,user_id' }).then();
-          }
-        });
-      } else {
-        db.rpc('cast_guest_vote', {
-          p_poll_id: poll.id,
-          p_option_index: optionIndex,
-          p_session_secret: guestSession
-        }).then(({ error }) => {
-          if (error) {
-            // Fallback
-            db.from("poll_votes").insert([{
-              poll_id: poll.id,
-              session_token: guestSession,
-              option_index: optionIndex
-            }]).then();
-          }
-        });
-      }
-    } catch(e){
-      console.warn("Vote sync error:", e);
-    }
-  }
+  _isSubmittingVote = false;
 
   // GA4 Conversion Tracking
   const stats = typeof SwissMatch !== 'undefined' ? SwissMatch.calculateStats() : null;
