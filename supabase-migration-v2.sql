@@ -53,7 +53,7 @@ END $$;
 
 -- 2. ABWÄRTSKOMPATIBLE UMSTELLUNG BESTEHENDER GAST-STIMMEN AUF SHA-256 HASH
 UPDATE public.poll_votes
-SET session_token = extensions.encode(extensions.digest(session_token::bytea, 'sha256'), 'hex')
+SET session_token = encode(extensions.digest(session_token::bytea, 'sha256'), 'hex')
 WHERE user_id IS NULL 
   AND session_token IS NOT NULL 
   AND length(session_token) != 64;
@@ -154,7 +154,7 @@ CREATE OR REPLACE FUNCTION public.cast_guest_vote(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, extensions, pg_temp
+SET search_path = public, extensions, pg_catalog, pg_temp
 AS $$
 DECLARE
   v_token_hash TEXT;
@@ -178,8 +178,8 @@ BEGIN
     RAISE EXCEPTION 'Ungueltige Antwort-Option.';
   END IF;
 
-  -- 3. Kryptografischer Hash (One-Way SHA-256 via extensions.digest)
-  v_token_hash := extensions.encode(extensions.digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
+  -- 3. Kryptografischer Hash (One-Way SHA-256)
+  v_token_hash := encode(extensions.digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
 
   -- 4. Atomarer Concurrency-sicherer Rate-Limiting Upsert (Max 20 Stimmen / Minute pro Token)
   INSERT INTO public.poll_guest_rate_limits (token_hash, vote_count, first_vote_at, last_vote_at)
@@ -242,7 +242,7 @@ CREATE OR REPLACE FUNCTION public.cast_user_vote(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, extensions, pg_temp
+SET search_path = public, extensions, pg_catalog, pg_temp
 AS $$
 DECLARE
   v_user_id UUID := auth.uid();
@@ -303,7 +303,7 @@ CREATE OR REPLACE FUNCTION public.merge_guest_votes(
 RETURNS INTEGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, extensions, pg_temp
+SET search_path = public, extensions, pg_catalog, pg_temp
 AS $$
 DECLARE
   v_user_id UUID := auth.uid();
@@ -319,7 +319,7 @@ BEGIN
     RETURN 0;
   END IF;
 
-  v_token_hash := extensions.encode(extensions.digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
+  v_token_hash := encode(extensions.digest(trim(p_session_secret)::bytea, 'sha256'), 'hex');
 
   -- Atomare Zusammenführung mit Zeilensperre (FOR UPDATE)
   FOR v_rec IN 
